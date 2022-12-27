@@ -1,0 +1,6 @@
+(executable
+ (public_name featherweightsolidity)
+ (name main)
+ (libraries featherweightsolidity)
+)
+
