@@ -14,11 +14,26 @@ let () =
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
   try
-    let program = Parser.prog Lexer.read lexbuf in
-    let mem = Hashtbl.create 64 in
-    (* Stacks.eval_program mem program;
-    Hashtbl.iter pp_stack mem *)
-    ()
+    let e : expr = Parser.prog Lexer.read lexbuf in
+    let ct: contract_table = Hashtbl.create 64 in
+    let blockchain: blockchain = Hashtbl.create 64 in
+    let sigma: values Stack.t = Stack.create() in
+    let conf: conf = (blockchain, blockchain, sigma, e) in
+    let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
+    let p : program = (ct, blockchain, e) in
+    (* ADD CONTRACTS TO CONTRACT TABLE *)
+    Hashtbl.add ct "bank" (bank_contract());
+    Hashtbl.add ct "bloodbank" (blood_bank_contract());
+    Hashtbl.add ct "donor" (donor_contract());
+    Hashtbl.add ct "eoacontract" (eoa_contract());
+    (* let rec parse_file le = 
+    match le with 
+      | [] -> ()
+      | x :: xs -> let (blockchain, blockchain', sigma, res) = eval_expr ct vars (blockchain, blockchain, sigma, x) in parse_file xs  *)
+    let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
+    match res with 
+      | Revert -> Format.eprintf "\n%s" "REVERTED" ;
+      | _ -> Format.eprintf "\n%s" "SUCESSO";
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

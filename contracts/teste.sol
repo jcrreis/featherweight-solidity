@@ -1,0 +1,1 @@
+new eoacontract.value(1000)(0)

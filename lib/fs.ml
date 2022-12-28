@@ -438,8 +438,6 @@ let rec eval_expr
     begin
       let c = Hashtbl.length blockchain in
       let a = generate_new_ethereum_address() in
-      (* if uniqueness_contract_and_address_property blockchain (VContract c) (VAddress a) then 
-         begin *)
       let contract_def: contract_def = Hashtbl.find ct s in 
       let (t_es, body) = contract_def.constructor in
       if (List.length t_es = List.length le) && ((top conf) != VUnit) then
@@ -472,7 +470,24 @@ let rec eval_expr
         end
       else if (List.length t_es = List.length le) && ((top conf) == VUnit) then
         begin 
-          (blockchain, blockchain', sigma, Revert) (* VER ESTE CASO (NEW-2) *)
+          match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
+          | (_, _, _, Val (VUInt n)) -> 
+                let sv = List.fold_left (fun sv (t_e, s) -> match t_e with 
+                    | C n -> StateVars.add s (Val(VContract(0))) sv
+                    | Bool -> StateVars.add s (Val(VBool(False))) sv
+                    | UInt -> StateVars.add s (Val(VUInt(0))) sv
+                    | Address -> StateVars.add s (Val(VAddress("0x0000000000000000000000000000000000000000"))) sv
+                    | Map (t1, t2) -> StateVars.add s (Val(VMapping(Hashtbl.create 64))) sv
+                    | Unit -> assert false
+                    | TRevert -> assert false
+                  ) StateVars.empty contract_def.state in 
+                Hashtbl.add blockchain (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
+                Hashtbl.add vars "this" (Val(VContract c));
+                List.iter2 (fun (_, s) e -> Hashtbl.add vars s e) t_es le;
+                let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in 
+                List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es;
+                (blockchain, blockchain', sigma, Val(VContract c))
+          | _ -> assert false
         end 
       else 
         (blockchain, blockchain', sigma, Revert) 

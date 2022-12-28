@@ -99,9 +99,9 @@ expr:
     | e1 = expr; OR; e2 = expr { BoolOp(Disj(e1, e2)) }
     | MSGSENDER { MsgSender }
     | MSGVALUE { MsgValue }
+    | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Transfer (e1, e2) }
     | ADDRESS LPAREN; e = expr ;RPAREN{ Address (e) }
     | THIS DOT s = option(ID) { This s }
-    | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Transfer (e1, e2) }
     | e = expr; DOT BALANCE { Balance (e) }
     | e = expr; DOT s = ID { StateRead (e, s) }
     | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
@@ -109,14 +109,15 @@ expr:
     | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
     | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) } 
-    | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { MapWrite (e1, e2, e3) }
-    | NEW contract_name = ID LPAREN; e = expr; RPAREN LPAREN; le = list(expr); RPAREN { New (contract_name, e, le) }
+    | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { MapWrite (e1, e2, e3) } 
+    | NEW; contract_name = ID; e = expr { Revert }
+    | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
     | RETURN e = expr { Return (e) } 
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
-
+    
     // | CONTRACT contract_name = ID LBRACE RBRACE CONSTRUCTOR LPAREN RPAREN LBRACE RBRACE list(declare_function) RBRACE { Revert }
     // | FUNCTION LPAREN; ;RPAREN LBRACE; e = expr; RBRACE { Revert }
     ;
