@@ -9,6 +9,9 @@ let print_position lexbuf =
   Format.eprintf "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
+(* 
+let print_blockchain (blockchain: blockchain) : unit = 
+  Hashtbl.iter *)
 
 let () =
   let cin = open_in fname in

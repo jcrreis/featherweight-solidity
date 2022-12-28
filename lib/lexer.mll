@@ -1,8 +1,16 @@
 {
+    let incr_linenum lexbuf =
+    let pos = lexbuf.Lexing.lex_curr_p in
+    lexbuf.Lexing.lex_curr_p <- { pos with
+      Lexing.pos_lnum = pos.Lexing.pos_lnum + 1;
+      Lexing.pos_bol = pos.Lexing.pos_cnum;
+    }
+
     open Parser
 }
 
-let white = [' ' '\t' '\n']+
+let white = [' ' '\t']+
+let eol = white*("\r")?"\n"
 let digit = ['0'-'9']
 let int = '-'? digit+
 let id = ['a'-'z']+
@@ -10,7 +18,10 @@ let id = ['a'-'z']+
 rule read =
     parse 
     | white { read lexbuf }
-
+    | eol
+        { incr_linenum lexbuf;
+          read lexbuf
+        }
     | "/" { DIV }
     | "+" { PLUS }
     | "*" { TIMES }

@@ -1,1 +1,2 @@
-new eoacontract.value(1000)(0)
+new eoacontract.value(1000)();  
+new eoacontract.value(1000)()
