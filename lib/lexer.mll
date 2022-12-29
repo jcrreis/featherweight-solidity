@@ -62,6 +62,7 @@ rule read =
     | (id as s) { ID s }
     | "true" { TRUE }
     | "false" { FALSE }
+    | "mapping" { MAPPING }
     | "msg.sender" { MSGSENDER }
     | "address" { ADDRESS }
     | "msg.value" { MSGVALUE }

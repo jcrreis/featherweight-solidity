@@ -785,7 +785,7 @@ let bank_contract unit : contract_def =
   {
     name = "Bank";
     state = [(Map(Address, UInt),"balances")];
-    constructor = ([(Map(Address, UInt),"balances")], Return (StateAssign(This None, "balances", Var("balances"))));
+    constructor = ([(Map(Address, UInt),"balances")], (StateAssign(This None, "balances", Var("balances"))));
     functions = [deposit; getBalance; transfer; withdraw];
   }
 
