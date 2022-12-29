@@ -553,8 +553,11 @@ let rec eval_expr
     end
   | CallTopLevel (e1, s, e2, e3, le) -> assert false
   | Revert -> 
-    let _ = Stack.pop sigma in
-    (blockchain, blockchain', sigma, Revert)
+    if top conf != VUnit then 
+      let _ = Stack.pop sigma in 
+      (blockchain, blockchain', sigma, Revert)
+    else 
+      (blockchain, blockchain', sigma, Revert)
   | StateAssign (e1, s , e2) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->

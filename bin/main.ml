@@ -104,6 +104,9 @@ let () =
 
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
     print_blockchain blockchain;
+    match res with 
+    | Revert -> Format.eprintf "Revert@."
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res)
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
