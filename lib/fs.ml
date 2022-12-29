@@ -232,14 +232,8 @@ let rec eval_expr
   let get_address_by_contract (blockchain: blockchain ) (contract: values) : values =
     Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit
   in
-  (* let uniqueness_contract_and_address_property (blockchain: blockchain) (contract: values) (address: values) : bool =
-     let contract' = get_contract_by_address blockchain address in
-     let address' = get_address_by_contract blockchain contract in
-     if contract' = VUnit && address' = VUnit then true else false
-     (* NOT NEEDED, because C and A are always unique????*)
-     in *)
   (*uptbal(β, a, n)*)
-  let update_balance(*  *)
+  let update_balance
       (ct: (string, contract_def) Hashtbl.t)
       (address: values)
       (value: values)
