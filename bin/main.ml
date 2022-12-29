@@ -47,7 +47,7 @@ let bool_op_to_string (b: bool_ops) : string =
 
 let expr_to_string (e: expr) : string =
   match e with 
-    |AritOp (a1) -> arit_op_to_string a1
+    | AritOp (a1) -> arit_op_to_string a1
     | BoolOp (b1) -> bool_op_to_string b1
     | Var (s1) -> s1
     | Val (v1) -> values_to_string v1
@@ -74,41 +74,36 @@ let expr_to_string (e: expr) : string =
 
 
 
-
-(* let print_blockchain (blockchain: blockchain) : unit = 
+let print_blockchain (blockchain: blockchain) : unit = 
   Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
-    | VContract(i), VAddress(s), s', sv', VUInt(n') -> begin 
-      Map.iter (fun k v -> match v with 
-        | k', VUInt(v') -> ) sv';
-    end
+    | VContract(_), VAddress(_), s', sv', VUInt(_) -> 
+      begin
+        Format.eprintf "\n%s, %s, Contract Name: %s, State Variables: \n" (values_to_string c) (values_to_string a) s';
+        StateVars.iter (fun k v -> Format.eprintf "%s ----> %s\n" k (expr_to_string v) ;) sv';
+        Format.eprintf "Balance: %s\n" (values_to_string n);
+      end
     | _ -> assert false
-  ) blockchain *)
+  ) blockchain
 
 let () =
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
   try
-    let e : expr = Parser.prog Lexer.read lexbuf in
+    let e: expr = Parser.prog Lexer.read lexbuf in
     let ct: contract_table = Hashtbl.create 64 in
     let blockchain: blockchain = Hashtbl.create 64 in
     let sigma: values Stack.t = Stack.create() in
     let conf: conf = (blockchain, blockchain, sigma, e) in
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-    let p : program = (ct, blockchain, e) in
+    let p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
     Hashtbl.add ct "bank" (bank_contract());
     Hashtbl.add ct "bloodbank" (blood_bank_contract());
     Hashtbl.add ct "donor" (donor_contract());
     Hashtbl.add ct "eoacontract" (eoa_contract());
-    (* let rec parse_file le = 
-    match le with 
-      | [] -> ()
-      | x :: xs -> let (blockchain, blockchain', sigma, res) = eval_expr ct vars (blockchain, blockchain, sigma, x) in parse_file xs  *)
+
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
-    Format.eprintf "%s" (expr_to_string res);
-    match res with 
-      | Revert -> Format.eprintf "\n%s" "REVERTED" ;
-      | _ -> Format.eprintf "\n%s" "SUCESSO";
+    print_blockchain blockchain;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
