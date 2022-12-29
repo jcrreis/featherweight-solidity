@@ -9,9 +9,80 @@ let print_position lexbuf =
   Format.eprintf "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
-(* 
-let print_blockchain (blockchain: blockchain) : unit = 
-  Hashtbl.iter *)
+let rec values_to_string (v: values) : string =
+  match v with 
+    | VUInt (e1) -> string_of_int e1
+    | VBool (e1) -> begin match e1 with 
+      | True -> "true"
+      | False -> "false"
+    end
+    | VAddress (e1) -> e1
+    | VContract (e1) -> "Contract " ^ (string_of_int e1)
+    | VMapping (e1) -> Hashtbl.fold (fun k v s -> match k, v with
+      | Val(v1), Val(v2) -> values_to_string v1 ^ " -> " ^ values_to_string v2
+      | _ -> assert false) e1 ""
+    | VUnit -> "Unit"
+
+let arit_op_to_string (a: arit_ops) : string =
+  match a with 
+    | Plus (e1, e2) -> "Plus"
+    | Minus (e1, e2) -> "Minus"
+    | Times (e1, e2) -> "Times"
+    | Div (e1, e2) -> "Div"
+    | Mod (e1, e2) -> "Mod"
+    | Exp (e1, e2) -> "Exp"
+
+let bool_op_to_string (b: bool_ops) : string = 
+  match b with 
+    | Conj (e1, e2) -> "And"
+    | Disj (e1, e2) -> "Or"
+    | Neg (e1) -> "Not"
+    | Equals (e1, e2) -> "Equals"
+    | Lesser (e1, e2) -> "LessThan"
+    | LesserOrEquals (e1, e2) -> "LessThanEq"
+    | Greater (e1, e2) -> "GreaterThan"
+    | GreaterOrEquals (e1, e2) -> "GreaterThanEq"
+    | Inequals (e1, e2) -> "Inequals"
+
+
+let expr_to_string (e: expr) : string =
+  match e with 
+    |AritOp (a1) -> arit_op_to_string a1
+    | BoolOp (b1) -> bool_op_to_string b1
+    | Var (s1) -> s1
+    | Val (v1) -> values_to_string v1
+    | This (s1) -> "This"
+    | MsgSender -> "MsgSender"
+    | MsgValue -> "MsgValue"
+    | Balance (e1) -> "Balance"
+    | Address (e1) -> "Address"
+    | StateRead (e1, s1) -> "StateRead"
+    | Transfer (e1, e2) -> "Transfer"
+    | New (s1, e1, el1) -> "New"
+    | Cons (s1, e1) -> "Cons"
+    | Seq (e1, e2) -> "Seq"
+    | Let (t1, s1, e1, e2) -> "Let"
+    | Assign (s1, e1) -> "Assign"
+    | StateAssign (e1, s1, e2) -> "StateAssign"
+    | MapRead (e1, e2) -> "MapRead"
+    | MapWrite (e1, e2, e3) -> "MapWrite"
+    | Call (e1, s1, e2, le) -> "Call"
+    | CallTopLevel (e1, s1, e2, e3, le) -> "CallTopLevel"
+    | Revert -> "Revert"
+    | If (e1, e2, e3) -> "If"
+    | Return (e1) -> "Return"
+
+
+
+
+(* let print_blockchain (blockchain: blockchain) : unit = 
+  Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
+    | VContract(i), VAddress(s), s', sv', VUInt(n') -> begin 
+      Map.iter (fun k v -> match v with 
+        | k', VUInt(v') -> ) sv';
+    end
+    | _ -> assert false
+  ) blockchain *)
 
 let () =
   let cin = open_in fname in
@@ -34,6 +105,7 @@ let () =
       | [] -> ()
       | x :: xs -> let (blockchain, blockchain', sigma, res) = eval_expr ct vars (blockchain, blockchain, sigma, x) in parse_file xs  *)
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
+    Format.eprintf "%s" (expr_to_string res);
     match res with 
       | Revert -> Format.eprintf "\n%s" "REVERTED" ;
       | _ -> Format.eprintf "\n%s" "SUCESSO";

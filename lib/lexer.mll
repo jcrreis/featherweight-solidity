@@ -22,6 +22,7 @@ rule read =
         { incr_linenum lexbuf;
           read lexbuf
         }
+
     | "/" { DIV }
     | "+" { PLUS }
     | "*" { TIMES }
@@ -70,4 +71,4 @@ rule read =
     | "else" { ELSE }
     | "return" { RETURN }
 
-    | eof { EOF }
+    | eof { EOF }   
