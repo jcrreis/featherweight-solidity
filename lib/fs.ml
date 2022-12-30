@@ -846,7 +846,7 @@ let blood_bank_contract unit : contract_def =
   {
     name = "BloodBank";
     state = [(Map(Address, Bool), "healty"); (Address, "doctor"); (UInt, "blood")];
-    constructor = ([(Map(Address, Bool), "healty"); (Address, "doctor"); (UInt, "blood")], Return
+    constructor = ([(Map(Address, Bool), "healty"); (Address, "doctor"); (UInt, "blood")],
                      (Seq((StateAssign(This None, "healty", Var("healty")),
                            Seq((StateAssign(This None, "doctor", Var("doctor"))),
                                StateAssign(This None, "blood", Var("blood")))))));
@@ -877,7 +877,7 @@ let donor_contract unit : contract_def =
   {
     name = "Donor";
     state = [(UInt, "blood"); (Address, "bank")];
-    constructor = ([(UInt, "blood"); (Address,"bank")], Return (Seq(
+    constructor = ([(UInt, "blood"); (Address,"bank")], (Seq(
         StateAssign(This None, "blood", Var("blood")),
         StateAssign(This None, "bank", Var("bank"))
       )));

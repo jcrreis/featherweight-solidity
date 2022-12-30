@@ -121,6 +121,30 @@ expr:
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
     // TODO 
     // | CONTRACT contract_name = ID LBRACE RBRACE CONSTRUCTOR LPAREN RPAREN LBRACE RBRACE list(declare_function) RBRACE { Revert }
-    // | FUNCTION LPAREN; ;RPAREN LBRACE; e = expr; RBRACE { Revert }
+   
     ;
 
+
+declare_variable:
+    | t_e = ID s = ID { (t_e, s) }
+    ;
+
+fun_def:
+    | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable); RPAREN LBRACE; e = expr; RBRACE { {
+                                                                                                    name = fname;
+                                                                                                    rettype = Unit;
+                                                                                                    args = le;
+                                                                                                    body = e;
+                                                                                                }}
+
+contract_def:
+    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable); 
+        CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE 
+        le2 = list(fun_def) RBRACE {  
+                            {
+                                    name = contract_name;
+                                    state = state_variables;
+                                    constructor = (le1, e1);
+                                    functions = le2;
+                            }
+                            }
