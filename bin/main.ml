@@ -43,7 +43,7 @@ let bool_op_to_string (b: bool_ops) : string =
     | Greater (e1, e2) -> "GreaterThan"
     | GreaterOrEquals (e1, e2) -> "GreaterThanEq"
     | Inequals (e1, e2) -> "Inequals"
-
+  
 
 let expr_to_string (e: expr) : string =
   match e with 
@@ -71,7 +71,7 @@ let expr_to_string (e: expr) : string =
     | Revert -> "Revert"
     | If (e1, e2, e3) -> "If"
     | Return (e1) -> "Return"
-
+    | _ -> assert false
 
 
 let print_blockchain (blockchain: blockchain) : unit = 

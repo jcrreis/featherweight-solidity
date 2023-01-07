@@ -108,6 +108,7 @@ expr:
     | e = expr; DOT s = ID { StateRead (e, s) }
     | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
     | e1 = expr; SEMICOLON; e2 = expr { Seq (e1, e2) }
+    | t_exp = ID; s = ID; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { if t_exp = "uint" then Let (UInt, s, e1, e2) else Let (Bool, s, e1, e2) }
     | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
     | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) } 
@@ -119,32 +120,32 @@ expr:
     | RETURN e = expr { Return (e) } 
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
-    // TODO 
-    // | CONTRACT contract_name = ID LBRACE RBRACE CONSTRUCTOR LPAREN RPAREN LBRACE RBRACE list(declare_function) RBRACE { Revert }
-   
     ;
+//     | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable); 
+//         CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE 
+//         le2 = list(fun_def) RBRACE {  
+//                             AddContract({
+//                                     name = contract_name;
+//                                     state = state_variables;
+//                                     constructor = (le1, e1);
+//                                     functions = le2;
+//                             })
+//                             }
+//     ;
 
 
-declare_variable:
-    | t_e = ID s = ID { (t_e, s) }
-    ;
+// declare_variable:
+//     | t_e = ID s = ID { (t_e, s) }
+//     ;
 
-fun_def:
-    | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable); RPAREN LBRACE; e = expr; RBRACE { {
-                                                                                                    name = fname;
-                                                                                                    rettype = Unit;
-                                                                                                    args = le;
-                                                                                                    body = e;
-                                                                                                }}
+// fun_def:
+//     | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable); RPAREN LBRACE; e = expr; RBRACE { 
+                                                                                           
+//                                                                                                 {
+//                                                                                                     name = fname;
+//                                                                                                     rettype = Unit;
+//                                                                                                     args = le;
+//                                                                                                     body = e;
+//                                                                                                 } }
 
-contract_def:
-    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable); 
-        CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE 
-        le2 = list(fun_def) RBRACE {  
-                            {
-                                    name = contract_name;
-                                    state = state_variables;
-                                    constructor = (le1, e1);
-                                    functions = le2;
-                            }
-                            }
+    
