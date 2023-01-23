@@ -2,6 +2,7 @@
 // VALUES
 %token <int> INT
 %token <string> ID
+%token <string> CONTRACT_ID
 %token TRUE
 %token FALSE
 %token MAPPING
@@ -115,14 +116,14 @@ expr:
     | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { MapWrite (e1, e2, e3) }
-    | NEW; _contract_name = ID; _e = expr { Revert }
-    | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
+    // | NEW; _contract_name = CONTRACT_ID; _e = expr { Revert }
+    | NEW; contract_name = CONTRACT_ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
     | RETURN e = expr { Return (e) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
-    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
+    | CONTRACT contract_name = CONTRACT_ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
       CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE
       le2 = list(fun_def) RBRACE {
                           AddContract({
