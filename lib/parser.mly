@@ -13,6 +13,8 @@
 %token VALUE
 %token SENDER
 
+%token BOOL
+
 // ARITHMETIC OPERATORS
 %token PLUS
 %token MINUS
@@ -23,7 +25,7 @@
 
 
 // BOOLEAN OPERATORS
-%token EQ 
+%token EQ
 %token NEQ
 %token LT
 %token GT
@@ -43,15 +45,15 @@
 %token THIS
 %token IF
 %token ELSE
-// %token STATEREAD 
+// %token STATEREAD
 // %token STATEWRITE
 %token TRANSFER
 %token REVERT
 %token RETURN
 
-// %token NEW 
+// %token NEW
 // %token CONS
-// %token SEQ 
+// %token SEQ
 
 // PUNCTUATION
 %token LPAREN
@@ -111,41 +113,42 @@ expr:
     | t_exp = ID; s = ID; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { if t_exp = "uint" then Let (UInt, s, e1, e2) else Let (Bool, s, e1, e2) }
     | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
     | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
-    | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) } 
-    | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { MapWrite (e1, e2, e3) } 
-    | NEW; contract_name = ID; e = expr { Revert }
+    | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
+    | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { MapWrite (e1, e2, e3) }
+    | NEW; _contract_name = ID; _e = expr { Revert }
     | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
-    | RETURN e = expr { Return (e) } 
+    | RETURN e = expr { Return (e) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
-    ;
-//     | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable); 
-//         CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE 
-//         le2 = list(fun_def) RBRACE {  
-//                             AddContract({
-//                                     name = contract_name;
-//                                     state = state_variables;
-//                                     constructor = (le1, e1);
-//                                     functions = le2;
-//                             })
-//                             }
-//     ;
+    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
+      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE
+      le2 = list(fun_def) RBRACE {
+                          AddContract({
+                                  name = contract_name;
+                                  state = state_variables;
+                                  constructor = (le1, e1);
+                                  functions = le2;
+                          })
+                          }
+  ;
 
 
-// declare_variable:
-//     | t_e = ID s = ID { (t_e, s) }
-//     ;
+ declare_variable:
+     | t_e = typ s = ID { (t_e, s) }
+     ;
 
-// fun_def:
-//     | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable); RPAREN LBRACE; e = expr; RBRACE { 
-                                                                                           
-//                                                                                                 {
-//                                                                                                     name = fname;
-//                                                                                                     rettype = Unit;
-//                                                                                                     args = le;
-//                                                                                                     body = e;
-//                                                                                                 } }
+ fun_def:
+     | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
+       RPAREN LBRACE; e = expr; RBRACE {
+         Fs.{ name = fname;
+              rettype = Unit;
+              args = le;
+              body = e;
+      } }
 
-    
+typ:
+     | BOOL { Fs.Bool }
+     | MAPPING LPAREN key = typ; value = typ RPAREN
+       { Fs.Map (key, value) }

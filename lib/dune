@@ -9,3 +9,7 @@
  (name featherweightsolidity)
  (libraries cryptokit)
 )
+
+(env
+ (dev
+  (flags (:standard -w -30))))

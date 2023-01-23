@@ -6,17 +6,45 @@
       Lexing.pos_bol = pos.Lexing.pos_cnum;
     }
 
-    open Parser
+open Parser
+
+let keywords = Hashtbl.create 64
+
+let () =
+  List.iter (fun (k, v) -> Hashtbl.add keywords k v)
+    [ ("contract", CONTRACT);
+      ("function", FUNCTION);
+      ("constructor", CONSTRUCTOR);
+      ("new", NEW);
+      ("value", VALUE);
+      ("sender", SENDER);
+      ("revert", REVERT);
+      ("true", TRUE);
+      ("false", FALSE);
+      ("mapping", MAPPING);
+      ("msg.sender", MSGSENDER);
+      ("address", ADDRESS);
+      ("msg.value", MSGVALUE);
+      ("transfer", TRANSFER);
+      ("this", THIS);
+      ("if", IF);
+      ("else", ELSE);
+      ("return", RETURN);
+      ("bool", BOOL); ]
+
+let find_keyword k =
+  try Hashtbl.find keywords k
+  with Not_found -> ID k
 }
 
 let white = [' ' '\t']+
 let eol = white*("\r")?"\n"
 let digit = ['0'-'9']
 let int = '-'? digit+
-let id = ['a'-'z']+
+let id = ['a'-'z' 'A'-'Z']+
 
 rule read =
-    parse 
+    parse
     | white { read lexbuf }
     | eol
         { incr_linenum lexbuf;
@@ -37,7 +65,7 @@ rule read =
     | "<=" { LEQ }
     | ">=" { GEQ }
     | "==" { EQ }
-    | "!=" { NEQ }   
+    | "!=" { NEQ }
 
     | "=" { ASSIGN }
     | ";" { SEMICOLON }
@@ -50,26 +78,7 @@ rule read =
     | "]" { RBRACKET }
     | "," { COMMA }
 
-    | "contract" { CONTRACT }
-    | "function" { FUNCTION }
-    | "constructor" { CONSTRUCTOR }
-    | "new" { NEW }
-    | "value" { VALUE }
-    | "sender" { SENDER }
-
-    | "revert" { REVERT }
     | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
-    | (id as s) { ID s }
-    | "true" { TRUE }
-    | "false" { FALSE }
-    | "mapping" { MAPPING }
-    | "msg.sender" { MSGSENDER }
-    | "address" { ADDRESS }
-    | "msg.value" { MSGVALUE }
-    | "transfer" { TRANSFER }
-    | "this" { THIS }
-    | "if" { IF }
-    | "else" { ELSE }
-    | "return" { RETURN }
+    | (id as s) { find_keyword s }
 
-    | eof { EOF }   
+    | eof { EOF }
