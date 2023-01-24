@@ -97,10 +97,10 @@ let () =
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
-    Hashtbl.add ct "bank" (bank_contract());
-    Hashtbl.add ct "bloodbank" (blood_bank_contract());
-    Hashtbl.add ct "donor" (donor_contract());
-    Hashtbl.add ct "eoacontract" (eoa_contract());
+    Hashtbl.add ct "Bank" (bank_contract());
+    Hashtbl.add ct "BloodBank" (blood_bank_contract());
+    Hashtbl.add ct "Donor" (donor_contract());
+    Hashtbl.add ct "EOAContract" (eoa_contract());
 
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
     print_blockchain blockchain;

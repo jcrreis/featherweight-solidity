@@ -34,15 +34,10 @@ let () =
       ("uint", UINT);  
     ]
 
-let match_str_with_regex s = 
-  let idregex = Str.regexp "['a'-'z']+" in
-  if Str.string_match idregex s 0 then ID s else CONTRACT_ID s 
-
 
 let find_keyword k =
   try Hashtbl.find keywords k
-  with Not_found -> match_str_with_regex k
-
+  with Not_found -> ID k
 
 
 }
@@ -53,7 +48,7 @@ let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let int = '-'? digit+
 let id = (alpha) (alpha|digit|'_')*
-let contract_id = alpha+
+
 
 rule read =
     parse
@@ -92,6 +87,5 @@ rule read =
 
     | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | (id as s) { find_keyword s }
-    | (contract_id as s) { find_keyword s }
 
     | eof { EOF }
