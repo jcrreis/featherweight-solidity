@@ -15,6 +15,8 @@
 %token SENDER
 
 %token BOOL
+%token UINT
+
 
 // ARITHMETIC OPERATORS
 %token PLUS
@@ -52,7 +54,6 @@
 %token REVERT
 %token RETURN
 
-// %token NEW
 // %token CONS
 // %token SEQ
 
@@ -72,6 +73,10 @@
 %token EOF
 %token SEMICOLON
 
+ 
+%right ASSIGN EQ NEQ LT GT LEQ GEQ AND OR NOT
+%left PLUS MINUS MOD EXP 
+%left TIMES DIV 
 
 %start <Fs.expr> prog
 
@@ -111,7 +116,10 @@ expr:
     | e = expr; DOT s = ID { StateRead (e, s) }
     | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
     | e1 = expr; SEMICOLON; e2 = expr { Seq (e1, e2) }
-    | t_exp = ID; s = ID; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { if t_exp = "uint" then Let (UInt, s, e1, e2) else Let (Bool, s, e1, e2) }
+    | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
+      let (t_e, s) = v in 
+      Let(t_e, s, e1, e2) 
+    }
     | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
     | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
@@ -150,6 +158,8 @@ expr:
       } }
 
 typ:
+     | UINT { Fs.UInt }
+     | ADDRESS { Fs.Address }
      | BOOL { Fs.Bool }
      | MAPPING LPAREN key = typ; value = typ RPAREN
        { Fs.Map (key, value) }

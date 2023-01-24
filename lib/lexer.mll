@@ -30,7 +30,9 @@ let () =
       ("if", IF);
       ("else", ELSE);
       ("return", RETURN);
-      ("bool", BOOL); ]
+      ("bool", BOOL); 
+      ("uint", UINT);  
+    ]
 
 let match_str_with_regex s = 
   let idregex = Str.regexp "['a'-'z']+" in
@@ -48,9 +50,10 @@ let find_keyword k =
 let white = [' ' '\t']+
 let eol = white*("\r")?"\n"
 let digit = ['0'-'9']
+let alpha = ['a'-'z' 'A'-'Z']
 let int = '-'? digit+
-let id = ['a'-'z']+
-let contract_id = ['a'-'z' 'A'-'Z']+
+let id = (alpha) (alpha|digit|'_')*
+let contract_id = alpha+
 
 rule read =
     parse

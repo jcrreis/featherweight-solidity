@@ -1,2 +1,2 @@
-uint x = 1;
-uint y = x + 1
+bool xfdfds = 1;
+bool y = x + 1
