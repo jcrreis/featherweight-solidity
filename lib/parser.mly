@@ -75,8 +75,8 @@
 
  
 %right ASSIGN EQ NEQ LT GT LEQ GEQ AND OR NOT
-%left PLUS MINUS MOD EXP 
-%left TIMES DIV 
+%left PLUS MINUS MOD  
+%left TIMES DIV EXP
 
 %start <Fs.expr> prog
 
@@ -128,7 +128,7 @@ expr:
     | NEW; contract_name = CONTRACT_ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
-    | RETURN e = expr { Return (e) }
+    //| RETURN e = expr { Return (e) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
     | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
     | CONTRACT contract_name = CONTRACT_ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
