@@ -905,7 +905,8 @@ let donor_contract () : contract_def =
     name = "donate";
     rettype = Unit;
     args = [(UInt, "amount")];
-    body = Val(VUnit);
+    (*Return(If(Val(VBool(True)),StateAssign(This None, "blood", AritOp(Minus(StateRead(This None, "blood"),Var "amount"))),Val(VUnit))); *)
+    body = Return(Val(VUnit))
   } in
   let getBank = {
     name = "getBank";
