@@ -525,7 +525,8 @@ let rec eval_expr
               let sv = init_contract_state contract_def.state in
               Hashtbl.add blockchain (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
               Hashtbl.add vars "this" (Val(VContract c));
-              List.iter2 (fun (_, s) e -> Hashtbl.add vars s e) t_es le;
+              List.iter2 (fun (_, s) e -> let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
+                  Hashtbl.add vars s e') t_es le;
               let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
               List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es;
               (blockchain, blockchain', sigma, Val(VContract c))

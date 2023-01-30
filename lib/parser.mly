@@ -72,7 +72,6 @@
 %token EOF
 %token SEMICOLON
 
-// ((this.s).transfer)(1 * 2)
 // %nonassoc RETURN
 
 %nonassoc SEMICOLON LBRACKET ELSE ASSIGN
@@ -84,6 +83,7 @@
 %start <Fs.expr> prog
 
 %%
+
 
 prog :
     | e = expr; EOF { e }
@@ -129,7 +129,7 @@ expr:
     | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
-    // | RETURN e = expr { Return (e) }
+    | RETURN e = expr { Return (e) }
     | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
       CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
