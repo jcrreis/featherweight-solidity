@@ -72,11 +72,14 @@
 %token EOF
 %token SEMICOLON
 
-%left SEMICOLON LBRACKET DOT ELSE ASSIGN
+// ((this.s).transfer)(1 * 2)
+// %nonassoc RETURN
+
+%nonassoc SEMICOLON LBRACKET ELSE ASSIGN
 %left EQ NEQ LT GT LEQ GEQ AND OR NOT
 %left PLUS MINUS MOD  
 %left TIMES DIV EXP 
-
+%nonassoc DOT 
 
 %start <Fs.expr> prog
 
@@ -107,6 +110,8 @@ expr:
     | e1 = expr; GEQ; e2 = expr { BoolOp(GreaterOrEquals(e1, e2)) }
     | e1 = expr; AND; e2 = expr { BoolOp(Conj(e1, e2)) }
     | e1 = expr; OR; e2 = expr { BoolOp(Disj(e1, e2)) }
+    | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
+    | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
     | MSGSENDER { MsgSender }
     | MSGVALUE { MsgValue }
     | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Transfer (e1, e2) }
@@ -115,7 +120,7 @@ expr:
     | e = expr; DOT BALANCE { Balance (e) }
     | e = expr; DOT s = ID { StateRead (e, s) }
     | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
-    | e1 = expr; SEMICOLON; e2 = expr { Seq (e1, e2) }
+    | e1 = expr; SEMICOLON; e2 = expr; SEMICOLON { Seq (e1, e2) }
     | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
     | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
@@ -124,11 +129,9 @@ expr:
     | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
-    //| RETURN e = expr { Return (e) }
-    | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Call (e1, fname, e2, le) }
-    | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { CallTopLevel (e1, fname, e2, e3, le) }
+    // | RETURN e = expr { Return (e) }
     | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
-      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE e1 = expr RBRACE
+      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
                           AddContract({
                                   name = contract_name;
@@ -148,18 +151,32 @@ expr:
      | t_e = typ s = ID { (t_e, s) }
      ;
 
- fun_def:
-     | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
-       RPAREN LBRACE; e = expr; RBRACE {
-         Fs.{ name = fname;
-              rettype = Unit;
-              args = le;
-              body = e;
-      } }
+fun_def:
+    | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
+      RPAREN LBRACE; e = fun_body; RBRACE {
+        Fs.{ name = fname;
+            rettype = Unit;
+            args = le;
+            body = e;
+    } }
+
+// state_variables:
+//   sv = option(separated_list(SEMICOLON, declare_variable) SEMICOLON) {
+//     match sv with 
+//       | None -> []
+//       | Some sv -> sv
+//   }
+
+fun_body: 
+  | e = option(expr) { 
+    match e with
+      | None -> Val(VUnit)
+      | Some e -> e   
+  }
 
 typ:
      | UINT { Fs.UInt }
      | ADDRESS { Fs.Address }
      | BOOL { Fs.Bool }
-     | MAPPING LPAREN key = typ; value = typ RPAREN
+     | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
        { Fs.Map (key, value) }

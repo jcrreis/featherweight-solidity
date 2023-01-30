@@ -18,59 +18,59 @@ let rec values_to_string (v: values) : string =
     end
     | VAddress (e1) -> e1
     | VContract (e1) -> "Contract " ^ (string_of_int e1)
-    | VMapping (e1) -> Hashtbl.fold (fun k v s -> match k, v with
+    | VMapping (e1) -> Hashtbl.fold (fun k v _s -> match k, v with
       | Val(v1), Val(v2) -> values_to_string v1 ^ " -> " ^ values_to_string v2
       | _ -> assert false) e1 ""
     | VUnit -> "Unit"
 
 let arit_op_to_string (a: arit_ops) : string =
   match a with 
-    | Plus (e1, e2) -> "Plus"
-    | Minus (e1, e2) -> "Minus"
-    | Times (e1, e2) -> "Times"
-    | Div (e1, e2) -> "Div"
-    | Mod (e1, e2) -> "Mod"
-    | Exp (e1, e2) -> "Exp"
+    | Plus (_e1, _e2) -> "Plus"
+    | Minus (_e1, _e2) -> "Minus"
+    | Times (_e1, _e2) -> "Times"
+    | Div (_e1, _e2) -> "Div"
+    | Mod (_e1, _e2) -> "Mod"
+    | Exp (_e1, _e2) -> "Exp"
 
 let bool_op_to_string (b: bool_ops) : string = 
   match b with 
-    | Conj (e1, e2) -> "And"
-    | Disj (e1, e2) -> "Or"
-    | Neg (e1) -> "Not"
-    | Equals (e1, e2) -> "Equals"
-    | Lesser (e1, e2) -> "LessThan"
-    | LesserOrEquals (e1, e2) -> "LessThanEq"
-    | Greater (e1, e2) -> "GreaterThan"
-    | GreaterOrEquals (e1, e2) -> "GreaterThanEq"
-    | Inequals (e1, e2) -> "Inequals"
+    | Conj (_e1, _e2) -> "And"
+    | Disj (_e1, _e2) -> "Or"
+    | Neg (_e1) -> "Not"
+    | Equals (_e1, _e2) -> "Equals"
+    | Lesser (_e1, _e2) -> "LessThan"
+    | LesserOrEquals (_e1, _e2) -> "LessThanEq"
+    | Greater (_e1, _e2) -> "GreaterThan"
+    | GreaterOrEquals (_e1, _e2) -> "GreaterThanEq"
+    | Inequals (_e1, _e2) -> "Inequals"
   
 
-let expr_to_string (e: expr) : string =
+let rec expr_to_string (e: expr) : string =
   match e with 
     | AritOp (a1) -> arit_op_to_string a1
     | BoolOp (b1) -> bool_op_to_string b1
     | Var (s1) -> s1
     | Val (v1) -> values_to_string v1
-    | This (s1) -> "This"
+    | This (_s1) -> "This"
     | MsgSender -> "MsgSender"
     | MsgValue -> "MsgValue"
-    | Balance (e1) -> "Balance"
+    | Balance (_e1) -> "Balance"
     | Address (e1) -> "Address"
-    | StateRead (e1, s1) -> "StateRead"
-    | Transfer (e1, e2) -> "Transfer"
-    | New (s1, e1, el1) -> "New"
-    | Cons (s1, e1) -> "Cons"
-    | Seq (e1, e2) -> "Seq"
-    | Let (t1, s1, e1, e2) -> "Let"
-    | Assign (s1, e1) -> "Assign"
-    | StateAssign (e1, s1, e2) -> "StateAssign"
-    | MapRead (e1, e2) -> "MapRead"
-    | MapWrite (e1, e2, e3) -> "MapWrite"
-    | Call (e1, s1, e2, le) -> "Call"
-    | CallTopLevel (e1, s1, e2, e3, le) -> "CallTopLevel"
+    | StateRead (_e1, _s1) -> "StateRead"
+    | Transfer (_e1, _e2) -> "Transfer"
+    | New (_s1, _e1, _el1) -> "New"
+    | Cons (_s1, _e1) -> "Cons"
+    | Seq (_e1, _e2) -> "Seq"
+    | Let (_t1, __s1, _e1, _e2) -> "Let"
+    | Assign (__s1, _e1) -> "Assign"
+    | StateAssign (_e1, _s1, _e2) -> "StateAssign"
+    | MapRead (_e1, _e2) -> "MapRead"
+    | MapWrite (_e1, _e2, _e3) -> "MapWrite"
+    | Call (_e1, _s1, _e2, _le) -> "Call"
+    | CallTopLevel (_e1, _s1, _e2, _e3, _le) -> "CallTopLevel"
     | Revert -> "Revert"
-    | If (e1, e2, e3) -> "If"
-    | Return (e1) -> "Return"
+    | If (_e1, _e2, _e3) -> "If"
+    | Return (_e1) -> "Return"
     | _ -> assert false
 
 
@@ -95,14 +95,14 @@ let () =
     let sigma: values Stack.t = Stack.create() in
     let conf: conf = (blockchain, blockchain, sigma, e) in
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-    let p: program = (ct, blockchain, e) in
+    let _p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
     Hashtbl.add ct "Bank" (bank_contract());
     Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
     Hashtbl.add ct "EOAContract" (eoa_contract());
 
-    let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
+    let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     print_blockchain blockchain;
     match res with 
     | Revert -> Format.eprintf "Revert@."

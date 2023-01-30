@@ -1,2 +1,4 @@
-(test
- (name featherweightsolidity))
+
+(library
+ (name featherweightsolidity_test)
+)
