@@ -595,12 +595,16 @@ let rec eval_expr
                   begin
                     Hashtbl.add vars "msg.sender" (Val(top conf));
                     Hashtbl.add vars "msg.value" (Val(VUInt n));
+                    (* let prev_value = if Hashtbl.mem vars "this"
+                      then Hashtbl.find vars "this" 
+                      else (Val(VContract 0)) in *)
                     Hashtbl.add vars "this" (Val(VContract c));
                     Stack.push (top conf) sigma;
                     begin
                       try
                         List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
                         let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+                        Hashtbl.remove vars "this";
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         (blockchain, blockchain', sigma, es)
                       with Invalid_argument _ -> (blockchain, blockchain', sigma, Revert)
@@ -633,6 +637,9 @@ let rec eval_expr
                   let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain', sigma, e3) in
                   Hashtbl.add vars "msg.sender" e3';
                   Hashtbl.add vars "msg.value" (Val(VUInt n));
+                  (* let prev_value = if Hashtbl.mem vars "this"
+                    then Hashtbl.find vars "this" 
+                    else (Val(VContract 0)) in *)
                   Hashtbl.add vars "this" (Val(VContract c));
                   Stack.push a sigma;
                   begin
@@ -640,6 +647,7 @@ let rec eval_expr
                       List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
                       let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
                       List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
+                      (* Hashtbl.add vars "this" prev_value; *)
                       (blockchain, blockchain', sigma, es)
                     with Invalid_argument _ -> (blockchain, blockchain', sigma, Revert)
                   end
