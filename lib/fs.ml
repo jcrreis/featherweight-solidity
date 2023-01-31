@@ -920,15 +920,15 @@ let blood_bank_contract () : contract_def =
   let donate = {
     (* |Call of expr * string * expr * expr list e.f.value(e)(le) *)
     name = "donate";
-    rettype = Unit;
+    rettype = Bool;
     args = [(UInt, "amount")];
     body = Return(
-        Let(UInt, "donorBlood",Call(Val(VContract(1)),"getBlood",Val(VUInt(0)),[]),
+        Let(UInt, "donorBlood",Call(Cons("Donor", Var "msg.sender"),"getBlood",Val(VUInt(0)),[]),
             If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Conj(
                 BoolOp(Greater(Var("donorBlood"),Val(VUInt(3000)))), BoolOp(Greater(
                     AritOp(Minus(Var("donorBlood"), Var("amount"))), Val(VUInt(0)))))))),
-               StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),
-               Val(VUnit)
+               Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True))),
+               Val(VBool(False))
               )));
   } in
   let getDoctor = {
@@ -961,7 +961,7 @@ let donor_contract () : contract_def =
     rettype = Unit;
     args = [(UInt, "amount")];
     (*Return(If(Val(VBool(True)),StateAssign(This None, "blood", AritOp(Minus(StateRead(This None, "blood"),Var "amount"))),Val(VUnit))); *)
-    body =     Return(Call(Cons("BloodBank", StateRead(This None, "bank")),"getBlood",Val(VUInt 0), []))
+    body =  Return(Call(Cons("BloodBank", StateRead(This None, "bank")),"donate",Val(VUInt 0), [Var "amount"]))
   } in
   let getBank = {
     name = "getBank";
