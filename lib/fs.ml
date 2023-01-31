@@ -474,6 +474,7 @@ let rec eval_expr
         let (_, sv, _) = Hashtbl.find blockchain (VContract c,a) in
         begin try 
           let res = StateVars.find s sv in
+          StateVars.iter (fun k v -> Format.eprintf "\n%s" k) sv;
           (blockchain, blockchain', sigma, res)
         with Not_found -> Format.eprintf "State var : %s NOT FOUND" s; (blockchain, blockchain', sigma, Revert)
         end
