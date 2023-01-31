@@ -1,0 +1,59 @@
+
+** Conflict (shift/reduce) in state 91.
+** Token involved: DOT
+** This state is reached from prog after reading:
+
+expr DOT ID
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+prog 
+expr EOF 
+(?)
+
+** In state 91, looking ahead at DOT, reducing production
+** expr -> expr DOT ID
+** is permitted because of the following sub-derivation:
+
+expr DOT TRANSFER LPAREN expr RPAREN // lookahead token appears
+expr DOT ID . 
+
+** In state 91, looking ahead at DOT, shifting is permitted
+** because of the following sub-derivation:
+
+expr DOT ID . DOT VALUE LPAREN expr RPAREN LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN 
+
+** Conflict (shift/reduce/reduce) in state 52.
+** Tokens involved: SEMICOLON LBRACKET DOT
+** The following explanations concentrate on token SEMICOLON.
+** This state is reached from prog after reading:
+
+declare_variable ASSIGN expr SEMICOLON expr
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+prog 
+expr EOF 
+(?)
+
+** In state 52, looking ahead at SEMICOLON, shifting is permitted
+** because of the following sub-derivation:
+
+declare_variable ASSIGN expr SEMICOLON expr 
+                                       expr . SEMICOLON expr 
+
+** In state 52, looking ahead at SEMICOLON, reducing production
+** expr -> expr SEMICOLON expr
+** is permitted because of the following sub-derivation:
+
+declare_variable ASSIGN expr SEMICOLON expr // lookahead token appears
+                        expr SEMICOLON expr . 
+
+** In state 52, looking ahead at SEMICOLON, reducing production
+** expr -> declare_variable ASSIGN expr SEMICOLON expr
+** is permitted because of the following sub-derivation:
+
+expr SEMICOLON expr // lookahead token appears
+declare_variable ASSIGN expr SEMICOLON expr . 

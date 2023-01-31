@@ -625,10 +625,11 @@ let rec eval_expr
                 (blockchain, blockchain', sigma, Revert)
               else
                 begin
-                  Hashtbl.add vars "msg.sender" e3;
+                  let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain', sigma, e3) in
+                  Hashtbl.add vars "msg.sender" e3';
                   Hashtbl.add vars "msg.value" (Val(VUInt n));
                   Hashtbl.add vars "this" (Val(VContract c));
-                  Stack.push (top conf) sigma;
+                  Stack.push a sigma;
                   begin
                     try
                       List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
@@ -960,8 +961,7 @@ let donor_contract () : contract_def =
     rettype = Unit;
     args = [(UInt, "amount")];
     (*Return(If(Val(VBool(True)),StateAssign(This None, "blood", AritOp(Minus(StateRead(This None, "blood"),Var "amount"))),Val(VUnit))); *)
-    (* Return(Call(Cons("BloodBank", StateRead(This None, "bank")),"getBlood",Val(VUInt 0), [])) *)
-    body = Return(Cons("BloodBank", StateRead(This None, "bank")))
+    body =     Return(Call(Cons("BloodBank", StateRead(This None, "bank")),"getBlood",Val(VUInt 0), []))
   } in
   let getBank = {
     name = "getBank";
