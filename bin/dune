@@ -1,6 +1,7 @@
 (executable
  (public_name featherweightsolidity)
  (name main)
+ (modes byte exe)
  (libraries featherweightsolidity)
 )
 

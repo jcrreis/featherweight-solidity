@@ -472,7 +472,11 @@ let rec eval_expr
       | (_, _, _, Val(VContract c)) ->
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, sv, _) = Hashtbl.find blockchain (VContract c,a) in
-        (blockchain, blockchain', sigma, StateVars.find s sv)
+        begin try 
+          let res = StateVars.find s sv in
+          (blockchain, blockchain', sigma, res)
+        with Not_found -> Format.eprintf "State var : %s NOT FOUND" s; (blockchain, blockchain', sigma, Revert)
+        end
       | _ -> assert false
     end
   (*VER*)
@@ -665,7 +669,11 @@ let rec eval_expr
   | MapRead (e1, e2) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VMapping(m))) ->
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-        (blockchain, blockchain', sigma, Hashtbl.find m e2')
+        begin try
+          let res = Hashtbl.find m e2' in 
+          (blockchain, blockchain', sigma, res)
+        with Not_found -> (blockchain, blockchain', sigma, Revert)
+        end
       | _ -> assert false
     end
   | MapWrite (e1, e2, e3) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with

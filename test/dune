@@ -1,4 +1,5 @@
 
 (library
  (name featherweightsolidity_test)
+ (libraries qcheck)
 )
