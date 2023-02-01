@@ -87,6 +87,17 @@
 
 prog :
     | e = expr; EOF { e }
+    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
+      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
+      le2 = list(fun_def) RBRACE ; EOF {
+                          Fs.AddContract({
+                                  name = contract_name;
+                                  state = state_variables;
+                                  constructor = (le1, e1);
+                                  functions = le2;
+                          })
+                          }
+
     ;
 
 expr:
@@ -130,16 +141,6 @@ expr:
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
     | RETURN e = expr { Return (e) }
-    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
-      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
-      le2 = list(fun_def) RBRACE {
-                          AddContract({
-                                  name = contract_name;
-                                  state = state_variables;
-                                  constructor = (le1, e1);
-                                  functions = le2;
-                          })
-                          }
     | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
       let (t_e, s) = v in 
       Let(t_e, s, e1, e2) 
