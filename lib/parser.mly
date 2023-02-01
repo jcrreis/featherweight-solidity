@@ -87,7 +87,7 @@
 
 prog :
     | e = expr; EOF { e }
-    | cs = list(contract) ; EOF { Fs.Val(VUnit) }
+    | e = contract ; EOF { e }
     ;
 
 contract:
@@ -101,6 +101,7 @@ contract:
                                   functions = le2;
                           })
                           }
+  | c1 = contract; c2 = contract; { Seq (c1, c2) }
   ;
 
 expr:

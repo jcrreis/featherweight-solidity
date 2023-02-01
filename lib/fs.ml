@@ -696,13 +696,18 @@ let rec eval_expr
     let _ = Stack.pop sigma in
     (blockchain, blockchain', sigma, e1')
 
-  | AddContract cdef -> Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit))
-    (* if Hastbl.mem "fb" cdef.functions || Hashtbl.mem "receive" cdef.functions
-      begin then 
+  | AddContract cdef -> 
+    (* Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit)) *)
+    begin 
+      let fun_names = (List.map (fun (f_def) -> f_def.name) cdef.functions) in
+      if List.mem "fb" fun_names || List.mem "receive" fun_names
+      then 
+      begin
         Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit))
       end
-     else 
-        assert false *)
+      else 
+        (blockchain, blockchain', sigma, Revert)
+    end
 
 let rec free_variables (e: expr) : FV.t =
   let rec union_list_set (lst: FV.t list) (set: FV.t): FV.t = match lst with
@@ -1035,3 +1040,4 @@ let rec print_tuples lst =
       Printf.printf "%s : %s;\n" s1 s;
       print_tuples rest
   end
+
