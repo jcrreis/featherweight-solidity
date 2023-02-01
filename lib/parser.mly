@@ -87,9 +87,13 @@
 
 prog :
     | e = expr; EOF { e }
-    | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
+    | cs = list(contract) ; EOF { Fs.Val(VUnit) }
+    ;
+
+contract:
+  | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
       CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
-      le2 = list(fun_def) RBRACE ; EOF {
+      le2 = list(fun_def) RBRACE {
                           Fs.AddContract({
                                   name = contract_name;
                                   state = state_variables;
@@ -97,8 +101,7 @@ prog :
                                   functions = le2;
                           })
                           }
-
-    ;
+  ;
 
 expr:
     | i = INT { Val(VUInt i) }

@@ -8,7 +8,7 @@ contract EOAContract {
     function fb() {
        
     }
-};
+}
 
 contract EOAContract1 {
     uint balance;
@@ -18,7 +18,6 @@ contract EOAContract1 {
     }
 
     function fb() {
-       uint x = 10; 
-       return x;
+
     }
-};
+}
