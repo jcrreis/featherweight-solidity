@@ -104,6 +104,13 @@ contract:
   | c1 = contract; c2 = contract; { Seq (c1, c2) }
   ;
 
+return_expr:
+  | RETURN e = expr SEMICOLON { Fs.Return (e) }
+  ;
+
+statement:
+  | e = expr SEMICOLON { e }
+  ;
 expr:
     | i = INT { Val(VUInt i) }
     | s = ID { Var s }
@@ -144,7 +151,6 @@ expr:
     | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
     | REVERT { Revert }
     | IF LPAREN; e1 = expr; RPAREN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
-    | RETURN e = expr { Return (e) }
     | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
       let (t_e, s) = v in 
       Let(t_e, s, e1, e2) 
@@ -173,10 +179,12 @@ fun_def:
 //   }
 
 fun_body: 
-  | e = option(expr) { 
-    match e with
-      | None -> Val(VUnit)
-      | Some e -> e   
+  | e1 = option(statement) ; e2 = option(return_expr) { 
+    match e1, e2 with
+      | None, None -> Seq(Val(VUnit), Val(VUnit))
+      | None, Some e2 -> Seq(Val(VUnit), e2) 
+      | Some e1, None -> Seq(e1, Val(VUnit))  
+      | Some e1, Some e2 -> Seq(e1, e2)   
   }
 
 typ:
