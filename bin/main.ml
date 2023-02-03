@@ -18,7 +18,7 @@ let rec values_to_string (v: values) : string =
     end
     | VAddress (e1) -> e1
     | VContract (e1) -> "Contract " ^ (string_of_int e1)
-    | VMapping (e1) -> Hashtbl.fold (fun k v _s -> match k, v with
+    | VMapping (e1, t_e) -> Hashtbl.fold (fun k v _s -> match k, v with
       | Val(v1), Val(v2) -> values_to_string v1 ^ " -> " ^ values_to_string v2
       | _ -> assert false) e1 ""
     | VUnit -> "Unit"
@@ -45,11 +45,13 @@ let bool_op_to_string (b: bool_ops) : string =
     | Inequals (_e1, _e2) -> "Inequals"
   
 
-let rec expr_to_string (e: expr) : string =
+let rec expr_to_string (e: expr) tbl : string =
   match e with 
     | AritOp (a1) -> arit_op_to_string a1
     | BoolOp (b1) -> bool_op_to_string b1
-    | Var (s1) -> s1
+    | Var (s1) -> 
+      let v = Hashtbl.find tbl s1 in 
+      expr_to_string v tbl
     | Val (v1) -> values_to_string v1
     | This (_s1) -> "This"
     | MsgSender -> "MsgSender"
@@ -74,12 +76,12 @@ let rec expr_to_string (e: expr) : string =
     | _ -> assert false
 
 
-let print_blockchain (blockchain: blockchain) : unit = 
+let print_blockchain (blockchain: blockchain) tbl : unit = 
   Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
     | VContract(_), VAddress(_), s', sv', VUInt(_) -> 
       begin
         Format.eprintf "\n%s, %s, Contract Name: %s, State Variables: \n" (values_to_string c) (values_to_string a) s';
-        StateVars.iter (fun k v -> Format.eprintf "%s ----> %s\n" k (expr_to_string v) ;) sv';
+        StateVars.iter (fun k v -> Format.eprintf "%s ----> %s\n" k (expr_to_string v tbl) ;) sv';
         Format.eprintf "Balance: %s\n" (values_to_string n);
       end
     | _ -> assert false
@@ -103,10 +105,10 @@ let () =
     Hashtbl.add ct "EOAContract" (eoa_contract());
 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
-    print_blockchain blockchain;
+    print_blockchain blockchain vars;
     match res with 
     | Revert -> Format.eprintf "Revert@."
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res)
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res vars)
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

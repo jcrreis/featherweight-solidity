@@ -7,7 +7,7 @@ contract EOAContract {
 
     function fb() {
         1;
-       return balance
+       return balance;
     }
 }
 

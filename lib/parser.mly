@@ -116,7 +116,7 @@ expr:
     | s = ID { Var s }
     | TRUE { Val(VBool True) }
     | FALSE { Val(VBool False) }
-    | MAPPING { Val(VMapping(Hashtbl.create 64)) }                                       //mapping(type1 => type2)
+    | MAPPING t_e = typ { Val(VMapping(Hashtbl.create 64, t_e)) }                                       //mapping(type1 => type2)
     | e1 = expr; PLUS; e2 = expr { AritOp(Plus(e1, e2)) }
     | e1 = expr; DIV; e2 = expr { AritOp(Div(e1, e2)) }
     | e1 = expr; TIMES; e2 = expr { AritOp(Times(e1, e2)) }
