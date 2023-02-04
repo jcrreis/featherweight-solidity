@@ -976,12 +976,7 @@ let blood_bank_contract () : contract_def =
           (* MapRead(StateRead(This None, "healty"), MsgSender))) *)
     body = Return(
       Let(UInt, "donorBlood",Call(Cons("Donor", MsgSender),"getBlood",Val(VUInt(0)),[]),
-      If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Conj(
-            BoolOp(Greater(Var("donorBlood"),Val(VUInt(3000)))), BoolOp(Greater(
-                AritOp(Minus(Var("donorBlood"), Var("donorBlood"))), Val(VUInt(0)))))))),
-          Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True))),
-          Val(VBool(False))
-          )))
+        AritOp(Plus(Var "amount", Val(VUInt 0)))))
         ;
   } in
   let getDoctor = {
