@@ -231,7 +231,11 @@ let rec values_to_string (v: values) : string =
     end
     | VAddress (e1) -> e1
     | VContract (e1) -> "Contract " ^ (string_of_int e1)
-    | VMapping (e1, _) -> Hashtbl.fold (fun k v _s -> match k, v with
+    | VMapping (e1, _) -> 
+      if Hashtbl.length e1 = 0 then 
+        "[]"
+      else
+        Hashtbl.fold (fun k v _s -> match k, v with
       | Val(v1), Val(v2) -> values_to_string v1 ^ " -> " ^ values_to_string v2
       | _ -> assert false) e1 ""
     | VUnit -> "Unit"
@@ -480,12 +484,14 @@ let rec eval_expr
     end
   | StateRead (e1, s) ->  begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
+        Format.eprintf "%s %s" (expr_to_string e1) s;
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, sv, _) = Hashtbl.find blockchain (VContract c,a) in
         begin try 
+          (* Format.eprintf "AQUIIII"; *)
           let res = StateVars.find s sv in
-          StateVars.iter (fun k v -> Format.eprintf "\n%s" k) sv;
-          (blockchain, blockchain', sigma, res)
+          StateVars.iter (fun k v -> Format.eprintf "\n%s ---> %s \n" k (expr_to_string v)) sv;
+          eval_expr ct vars (blockchain, blockchain', sigma, res) 
         with Not_found -> Format.eprintf "State var : %s NOT FOUND" s; (blockchain, blockchain', sigma, Revert)
         end
       | _ -> assert false
@@ -580,11 +586,11 @@ let rec eval_expr
     Format.eprintf "%d\n" (Hashtbl.length vars);
     Hashtbl.replace vars x e1';
     eval_expr ct vars (blockchain, blockchain', sigma, Val VUnit)
-  | If (e1, _e2, _e3) -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+  | If (e1, e2, e3) -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
     begin match e1' with
       | Val (VBool b) -> begin match b with
-          | True -> eval_expr ct vars conf
-          | False -> eval_expr ct vars conf
+          | True -> eval_expr ct vars (blockchain, blockchain', sigma, e2)
+          | False -> eval_expr ct vars (blockchain, blockchain', sigma, e3)
         end
       | _ -> assert false
     end
@@ -676,6 +682,7 @@ let rec eval_expr
   | StateAssign (e1, s , e2) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
+        Format.eprintf("AQUIIIII");
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (c_name, map, n) = Hashtbl.find blockchain (VContract c, a) in
@@ -962,16 +969,19 @@ let blood_bank_contract () : contract_def =
           Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True))),
           Val(VBool(False))
           ))) *)
+          (* If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Greater(Var("donorBlood"),Val(VUInt(3000)))))),
+          Seq(StateAssign(This None, "blood", Val(VUInt 500000)),Val(VBool(True))),
+              Val(VBool(False))) *)
 
           (* MapRead(StateRead(This None, "healty"), MsgSender))) *)
     body = Return(
       Let(UInt, "donorBlood",Call(Cons("Donor", MsgSender),"getBlood",Val(VUInt(0)),[]),
-        If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Conj(
+      If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Conj(
             BoolOp(Greater(Var("donorBlood"),Val(VUInt(3000)))), BoolOp(Greater(
                 AritOp(Minus(Var("donorBlood"), Var("donorBlood"))), Val(VUInt(0)))))))),
-                Val(VBool(True)),
-                Val(VBool(False))
-                )))
+          Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True))),
+          Val(VBool(False))
+          )))
         ;
   } in
   let getDoctor = {
