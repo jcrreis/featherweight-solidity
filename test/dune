@@ -1,5 +1,11 @@
 
+; (library
+;  (name featherweightsolidity_test)
+;  (libraries qcheck)
+; )
 (library
- (name featherweightsolidity_test)
- (libraries qcheck)
+ (name testsuite)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test))
+ (libraries qcheck featherweightsolidity)
 )

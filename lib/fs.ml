@@ -454,9 +454,6 @@ let rec eval_expr
     end
   | Var(x) ->
           begin try
-            Format.eprintf "AQUIIII";
-            (* Hashtbl.iter (fun k v -> Format.eprintf "%s ----> %s" k (expr_to_string v)) vars; *)
-            Format.eprintf "%s" (expr_to_string (Hashtbl.find vars x));
             (blockchain, blockchain', sigma, Hashtbl.find vars x)
           with Not_found -> Printf.printf  "Couldnt find Var: %s\n" x; (blockchain, blockchain', sigma, Revert)
           end
@@ -487,13 +484,10 @@ let rec eval_expr
     end
   | StateRead (e1, s) ->  begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
-        Format.eprintf "%s %s" (expr_to_string e1) s;
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, sv, _) = Hashtbl.find blockchain (VContract c,a) in
         begin try 
-          (* Format.eprintf "AQUIIII"; *)
           let res = StateVars.find s sv in
-          StateVars.iter (fun k v -> Format.eprintf "\n%s ---> %s \n" k (expr_to_string v)) sv;
           eval_expr ct vars (blockchain, blockchain', sigma, res) 
         with Not_found -> Format.eprintf "State var : %s NOT FOUND" s; (blockchain, blockchain', sigma, Revert)
         end
@@ -586,7 +580,6 @@ let rec eval_expr
     end
   | Assign (x, e1) ->
     let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-    Format.eprintf "%d\n" (Hashtbl.length vars);
     Hashtbl.replace vars x e1';
     eval_expr ct vars (blockchain, blockchain', sigma, Val VUnit)
   | If (e1, e2, e3) -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
@@ -619,7 +612,6 @@ let rec eval_expr
                     begin
                       try
                         List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
-                        Hashtbl.iter (fun  k v -> Format.eprintf "\n%s ---> %s" k (expr_to_string v)) vars;
                         let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
