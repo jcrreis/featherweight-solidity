@@ -685,7 +685,6 @@ let rec eval_expr
   | StateAssign (e1, s , e2) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
-        Format.eprintf("AQUIIIII");
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (c_name, map, n) = Hashtbl.find blockchain (VContract c, a) in
@@ -718,7 +717,6 @@ let rec eval_expr
     else
       (blockchain, blockchain', sigma, e1')
   | AddContract cdef -> 
-    (* Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit)) *)
     begin 
       let fun_names = (List.map (fun (f_def) -> f_def.name) cdef.functions) in
       if List.mem "fb" fun_names || List.mem "receive" fun_names

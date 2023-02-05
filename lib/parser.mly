@@ -91,7 +91,7 @@ prog :
     ;
 
 contract:
-  | CONTRACT contract_name = ID LBRACE state_variables = separated_list(SEMICOLON, declare_variable);
+  | CONTRACT contract_name = ID LBRACE state_variables = list(state_var_def);
       CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
                           Fs.AddContract({
@@ -158,9 +158,12 @@ expr:
   ;
 
 
- declare_variable:
+declare_variable:
      | t_e = typ s = ID { (t_e, s) }
      ;
+
+state_var_def:
+    | e = declare_variable SEMICOLON { e }
 
 fun_def:
     | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
