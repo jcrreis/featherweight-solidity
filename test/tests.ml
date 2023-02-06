@@ -1,6 +1,7 @@
-open Featherweightsolidity  
+open QCheck
+open Featherweightsolidity 
 open Fs 
-
+(* 
 let test_arit_ops = assert false 
 
 let test_bool_ops = assert false 
@@ -19,7 +20,42 @@ let test_new = assert false
 let test =
   QCheck.Test.make ~count:1000 ~name:"list_rev_is_involutive"
    QCheck.(list small_nat)
-   (fun l -> List.rev (List.rev l) = l);;
+   (fun l -> List.rev (List.rev l) = l);; *)
 
+let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
+
+let rec gen_arit_op_ast n = match n with 
+  | 0 -> leafgen_int
+  | n -> Gen.oneof [
+    leafgen_int;
+    Gen.map2 (fun l r -> AritOp(Plus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    Gen.map2 (fun l r -> AritOp(Times(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    Gen.map2 (fun l r -> AritOp(Minus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    Gen.map2 (fun l r -> AritOp(Exp(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+]
+
+let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
+
+let rec gen_bool_op_ast n = match n with 
+  | 0 -> leafgen_bool
+  | n -> Gen.oneof [
+    leafgen_bool;
+    Gen.map (fun e -> BoolOp(Neg e)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(Conj(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(Disj(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(Equals(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(Greater(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(GreaterOrEquals(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(Lesser(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(Inequals(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+    Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
+]
+
+let test =
+QCheck.Test.make ~count:1000 ~name:"my_buggy_test"
+  QCheck.(list small_nat)
+  (fun l -> List.rev l = l);;
 (* we can check right now the property... *)
 QCheck.Test.check_exn test;;
