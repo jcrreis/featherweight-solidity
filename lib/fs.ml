@@ -585,7 +585,7 @@ let rec eval_expr
   | If (e1, e2, e3) -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
     begin match e1' with
       | Val (VBool b) -> begin match b with
-          | True -> eval_expr ct vars (blockchain, blockchain', sigma, e2)
+          | True -> eval_expr ct vars (blockchain, blockchain', sigma, e2) 
           | False -> eval_expr ct vars (blockchain, blockchain', sigma, e3)
         end
       | _ -> assert false
@@ -609,7 +609,7 @@ let rec eval_expr
                     Hashtbl.add vars "msg.value" (Val(VUInt n));
                     Hashtbl.add vars "this" (Val(VContract c));
                     Stack.push (top conf) sigma;
-                    begin
+                    begin   
                       try
                         List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
                         let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
@@ -626,7 +626,7 @@ let rec eval_expr
           | _ -> assert false
         end
       | _ -> assert false
-    end
+    end 
   | CallTopLevel (e1, s, e2, e3, le) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
     | (_, _, _, Val(VContract c)) ->
@@ -950,6 +950,11 @@ let blood_bank_contract () : contract_def =
           )
       );
   } in
+  (* If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Conj(
+            BoolOp(Greater(Var("donorBlood"),Val(VUInt(3000)))), BoolOp(Greater(
+                AritOp(Minus(Var("donorBlood"), Var("amount"))), Val(VUInt(0)))))))),
+          Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True))),
+          Val(VBool(False))) *)
   let donate = {
     (* |Call of expr * string * expr * expr list e.f.value(e)(le) *)
     name = "donate";
@@ -957,11 +962,7 @@ let blood_bank_contract () : contract_def =
     args = [(UInt, "amount")];
     body = Return(
       Let(UInt, "donorBlood",Call(Cons("Donor", MsgSender),"getBlood",Val(VUInt(0)),[]),
-        If(BoolOp(Conj(MapRead(StateRead(This None, "healty"), MsgSender), BoolOp(Conj(
-            BoolOp(Greater(Var("donorBlood"),Val(VUInt(3000)))), BoolOp(Greater(
-                AritOp(Minus(Var("donorBlood"), Var("amount"))), Val(VUInt(0)))))))),
-          Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True))),
-          Val(VBool(False)))))
+      Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True)))))
         ;
   } in
   let getDoctor = {

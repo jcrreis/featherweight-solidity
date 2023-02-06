@@ -143,8 +143,11 @@ expr:
     | e = expr; DOT s = ID { StateRead (e, s) }
     | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
     | e1 = expr; SEMICOLON; e2 = expr; SEMICOLON { Seq (e1, e2) }
+    // this.balance = 0 || balance = 0  e | id
+    | THIS DOT s = ID ; ASSIGN; e1 = expr { StateAssign (This None, s, e1) }
+    // | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
     | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
-    | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { StateAssign (e1, s, e2) }
+  
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
     | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { MapWrite (e1, e2, e3) }
     // | NEW; _contract_name = ID; _e = expr { Revert }
