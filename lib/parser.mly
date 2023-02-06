@@ -92,7 +92,7 @@ prog :
 
 contract:
   | CONTRACT contract_name = ID LBRACE state_variables = list(state_var_def);
-      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable);RPAREN LBRACE; e1 = fun_body ;RBRACE
+      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
                           Fs.AddContract({
                                   name = contract_name;
