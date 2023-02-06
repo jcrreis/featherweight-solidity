@@ -53,9 +53,24 @@ let rec gen_bool_op_ast n = match n with
     Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_bool_op_ast (n/2)) (gen_bool_op_ast (n/2));
 ]
 
-let test =
+let create_new_hash_table = Hashtbl.create 64 
+
+let create_new_stack = Stack.create()
+
+(* let conf: conf = (blockchain, blockchain, sigma, e) in *)
+
+let arb_tree = make ~print:expr_to_string (gen_arit_op_ast 8)
+let test = Test.make ~name:"test eval_expr"
+  (triple create_new_hash_table create_new_hash_table (create_new_hash_table, create_new_hash_table, create_new_stack, arb_tree))
+  (fun (ct, vars, (blockchain, blockchain', sigma, e)) -> 
+    eval_expr ct vars (blockchain, blockchain', sigma, (AritOp(Plus(e,e))))
+    =
+    eval_expr ct vars (blockchain, blockchain', sigma, (AritOp(Times(Val(VUInt 2),e))))
+    )
+
+(* let test =
 QCheck.Test.make ~count:1000 ~name:"my_buggy_test"
   QCheck.(list small_nat)
   (fun l -> List.rev l = l);;
 (* we can check right now the property... *)
-QCheck.Test.check_exn test;;
+QCheck.Test.check_exn test;; *)
