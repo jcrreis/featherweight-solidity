@@ -103,6 +103,8 @@ let () =
     Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
     Hashtbl.add ct "EOAContract" (eoa_contract());
+    let (_, _, _, ppx) = eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Div(Val(VUInt 1),Val(VUInt 0))))) in 
+    Format.eprintf "%s" (expr_to_string ppx vars);
 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     print_blockchain blockchain vars;

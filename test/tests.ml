@@ -62,6 +62,20 @@ let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
 
+let test_division_by_zero = Test.make ~name:"test eval_expr"
+  (arb_tree_arit)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let vars = Hashtbl.create 64 in 
+      let blockchain = Hashtbl.create 64 in  
+      let sigma = Stack.create() in 
+      eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Div(e,Val (VUInt 0)))))
+      =
+      (blockchain, blockchain, sigma, Revert)
+    end
+  ) 
+
 let test_arit_op = Test.make ~name:"test eval_expr"
   (arb_tree_arit)
   (fun (e) -> 
@@ -76,20 +90,43 @@ let test_arit_op = Test.make ~name:"test eval_expr"
     end
   )  
 
-  let test_bool_op = Test.make ~name:"test eval_expr"
-  (arb_tree_bool)
-  (fun (e) -> 
-    begin 
-      let ct = Hashtbl.create 64 in 
-      let vars = Hashtbl.create 64 in 
-      let blockchain = Hashtbl.create 64 in  
-      let sigma = Stack.create() in 
-      eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(e,e))))
-      =
-      eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,e))))
-    end
-  )
+
+let test_bool_op = Test.make ~name:"test eval_expr"
+(arb_tree_bool)
+(fun (e) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(e,e))))
+    =
+    eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,e))))
+  end
+)
+
+let test_if = Test.make ~name:"test eval_expr"
+(arb_tree_bool)
+(fun (e) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool True), e, Revert)))
+    =
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool False), Revert, e)))
+  end
+)
+
+
+let test_suite = [
+  test_division_by_zero; 
+  test_arit_op; 
+  test_bool_op;
+  test_if
+] 
+
 let () =
-  Format.eprintf "OLAAAA";
-  let errcode = QCheck_runner.run_tests_main [test_arit_op; test_bool_op] in 
+  let errcode = QCheck_runner.run_tests_main test_suite in 
   exit errcode

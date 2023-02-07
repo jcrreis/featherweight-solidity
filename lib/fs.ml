@@ -107,7 +107,11 @@ let eval_arit_expr (e: arit_ops) : expr = match e with
       | _ -> assert false
     end
   | Div (e1, e2) -> begin match e1, e2 with
-      | Val (VUInt n1), Val (VUInt n2) -> Val (VUInt (n1 / n2))
+      | Val (VUInt n1), Val (VUInt n2) -> 
+        if n2 = 0 then 
+          Revert
+        else
+          Val (VUInt (n1 / n2))
       | _ -> assert false
     end
   | Times (e1, e2) -> begin match e1, e2 with
@@ -334,15 +338,16 @@ let rec eval_expr
     | TRevert -> assert false
   in
   let init_contract_state (state: (t_exp * string) list) : (expr) StateVars.t =
-    List.fold_left (fun sv (t_e, s) -> match t_e with
-                    | C _n -> StateVars.add s (Val(VContract(0))) sv
-                    | Bool -> StateVars.add s (Val(VBool(False))) sv
-                    | UInt -> StateVars.add s (Val(VUInt(0))) sv
-                    | Address -> StateVars.add s (Val(VAddress("0x0000000000000000000000000000000000000000"))) sv
-                    | Map (_t1, t2) -> StateVars.add s (Val(VMapping(Hashtbl.create 64, t2))) sv
-                    | Fun (_t1, _t2) -> StateVars.add s Revert sv
-                    | Unit -> assert false
-                    | TRevert -> assert false
+    List.fold_left (fun sv (t_e, s) -> 
+                    match t_e with
+                      | C _n -> StateVars.add s (Val(VContract(0))) sv
+                      | Bool -> StateVars.add s (Val(VBool(False))) sv
+                      | UInt -> StateVars.add s (Val(VUInt(0))) sv
+                      | Address -> StateVars.add s (Val(VAddress("0x0000000000000000000000000000000000000000"))) sv
+                      | Map (_t1, t2) -> StateVars.add s (Val(VMapping(Hashtbl.create 64, t2))) sv
+                      | Fun (_t1, _t2) -> StateVars.add s Revert sv
+                      | Unit -> assert false
+                      | TRevert -> assert false
                   ) StateVars.empty state
   in
   match e with
@@ -356,10 +361,17 @@ let rec eval_expr
         end
       | Div (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1', e2)))
+          | e1, Val (VUInt i) -> 
+            if i = 0 
+            then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+            begin  
+              let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1', Val (VUInt i))))
+            end
+          | e1, e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1, e2')))
         end
       | Times (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
