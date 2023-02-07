@@ -58,10 +58,12 @@ let rec gen_bool_op_ast n = match n with
 (* 
 let conf: conf = (blockchain, blockchain, sigma, e) in *)
 
-let arb_tree = make ~print:expr_to_string (gen_arit_op_ast 8)
+let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
-let test = Test.make ~name:"test eval_expr"
-  (arb_tree)
+let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
+
+let test_arit_op = Test.make ~name:"test eval_expr"
+  (arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -73,7 +75,21 @@ let test = Test.make ~name:"test eval_expr"
       eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(Val(VUInt 2),e))))
     end
   )  
+
+  let test_bool_op = Test.make ~name:"test eval_expr"
+  (arb_tree_bool)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let vars = Hashtbl.create 64 in 
+      let blockchain = Hashtbl.create 64 in  
+      let sigma = Stack.create() in 
+      eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(e,e))))
+      =
+      eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,e))))
+    end
+  )
 let () =
   Format.eprintf "OLAAAA";
-  let errcode = QCheck_runner.run_tests_main ~verbose:true [test] in 
+  let errcode = QCheck_runner.run_tests_main [test_arit_op; test_bool_op] in 
   exit errcode
