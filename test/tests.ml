@@ -73,4 +73,7 @@ let test = Test.make ~name:"test eval_expr"
       eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(Val(VUInt 2),e))))
     end
   )  
-
+let () =
+  Format.eprintf "OLAAAA";
+  let errcode = QCheck_runner.run_tests_main ~verbose:true [test] in 
+  exit errcode
