@@ -141,12 +141,31 @@ let test_let = Test.make ~name:"test eval_expr"
   end
 )  
 
+let test_assign = Test.make ~name:"test eval_expr"
+(triple arb_tree_arit arb_tree_arit arb_tree_arit)
+(fun (e1, e2, e3) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (Let(UInt, "x", e1, Seq(Assign("x", e3),e2)))) in 
+    let (_, _, _, valread) =  eval_expr ct vars (blockchain, blockchain, sigma, Var "x") in
+    let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain, sigma, e3) in
+    let (_, _, _, e2') = eval_expr  ct vars (blockchain, blockchain, sigma, e2) in 
+    (valread = e3')
+      &&
+    (res = e2') 
+  end
+)  
+
 let test_suite = [
   test_division_by_zero; 
   test_arit_op; 
   test_bool_op;
   test_if;
-  test_let
+  test_let;
+  test_assign
 ] 
 
 let () =
