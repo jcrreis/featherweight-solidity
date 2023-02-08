@@ -29,8 +29,9 @@ type values =
   | VAddress of string
   | VUnit
   | VContract of int
-  | VMapping of ((expr, expr) Hashtbl.t ) * t_exp(* (values, values) ??? *)
-(*c.f*)
+  | VMapping of ((expr, expr) Hashtbl.t ) * t_exp
+
+
 and arit_ops =
   | Plus of expr * expr
   | Div of expr * expr
@@ -190,7 +191,7 @@ let generate_new_ethereum_address () : string =
   "0x" ^ (String.sub address 24 40)
 
 
-(*sv*)
+
 let state_vars_contract (contract_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp * string) list =
   let contract : contract_def = Hashtbl.find ct contract_name in contract.state
 
@@ -219,9 +220,6 @@ let function_type (contract_name: string) (function_name: string) (ct: (string, 
   with Not_found -> ([], TRevert) (* maybe remove? *)
 
 
-
-(*Top(σ)*)
-(*if sigma = sigma' * a' then a' else if sigma = blockchain then Val(VUnit) *)
 
 let top
     (conf: conf) : values =
@@ -857,6 +855,8 @@ let rec eval_expr
         (blockchain, blockchain', sigma, Revert)
     end
 
+
+
 let rec free_variables (e: expr) : FV.t =
   let rec union_list_set (lst: FV.t list) (set: FV.t): FV.t = match lst with
     | [] -> set
@@ -1010,6 +1010,13 @@ let rec substitute (e: expr) (e': expr) (x: string) : expr =
 
 
 let bank_contract () : contract_def =
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    args = [];
+    body = Return(Val(VUnit));
+  } in
+
   let deposit = {
     name = "deposit";
     rettype = Unit;
@@ -1056,7 +1063,7 @@ let bank_contract () : contract_def =
     name = "Bank";
     state = [(Map(Address, UInt),"balances")];
     constructor = ([(Map(Address, UInt),"balances")], (StateAssign(This None, "balances", Var("balances"))));
-    functions = [deposit; getBalance; transfer; withdraw];
+    functions = [fb;deposit; getBalance; transfer; withdraw];
   }
 
 
@@ -1189,4 +1196,3 @@ let rec print_tuples lst =
       Printf.printf "%s : %s;\n" s1 s;
       print_tuples rest
   end
-

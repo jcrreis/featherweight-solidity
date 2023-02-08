@@ -75,6 +75,15 @@ let rec expr_to_string (e: expr) tbl : string =
     | Return (_e1) -> "Return"
     | _ -> assert false
 
+let rec t_exp_to_string (t_e: t_exp) : string = match t_e with
+  | C n -> "contract(" ^ (Stdlib.string_of_int n) ^ ")"
+  | Bool -> "boolean"
+  | Unit -> "unit"
+  | UInt -> "uint"
+  | Address -> "address"
+  | Map (t_e1, t_e2)-> "mapping(" ^ t_exp_to_string t_e1 ^ " => " ^ t_exp_to_string t_e2 ^ ")"
+  | TRevert -> "revert"
+  | Fun (lt_e, t_e) -> "Fun (" ^ (List.fold_left (fun s t_e -> s ^ t_exp_to_string t_e) "" lt_e) ^ ")" ^ " -> " ^ t_exp_to_string t_e
 
 let print_blockchain (blockchain: blockchain) tbl : unit = 
   Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
@@ -88,6 +97,8 @@ let print_blockchain (blockchain: blockchain) tbl : unit =
   ) blockchain
 
 
+
+
   (* and contract_def = {
     name : string;
     state : (t_exp * string) list;
@@ -99,8 +110,26 @@ let print_blockchain (blockchain: blockchain) tbl : unit =
   
   type contract_table = (string, contract_def) Hashtbl.t *)
 
-(* let print_contract_table (ct: contract_table) : unit = 
-  Hashtbl.iter *)
+let print_contract_table (ct: contract_table) tbl : unit = 
+  Hashtbl.iter (fun k v -> match k, v with 
+    | s', {name = s1; state = s2; constructor = s3; functions = s4} -> 
+      begin
+        Format.eprintf "\nContract Name: %s" s1;
+        Format.eprintf "\nState Variables: \n";
+        List.iter (fun (t, s) -> Format.eprintf "%s ----> %s\n" s (t_exp_to_string t)) s2;
+        Format.eprintf "\nConstructor: \n";
+        List.iter (fun (t, s) -> Format.eprintf "%s ----> %s\n" s (t_exp_to_string t)) (fst s3);
+        Format.eprintf "\nFunctions: \n";
+        List.iter (fun {name = fname; args = fargs; rettype = t_e; body = fbody} -> 
+          Format.eprintf "Function Name: %s\n" fname;
+          Format.eprintf "Arguments: \n";
+          List.iter (fun (t, s) -> Format.eprintf "%s ----> %s\n" s (t_exp_to_string t)) fargs;
+          Format.eprintf "Return Type: %s\n" (t_exp_to_string t_e);
+          Format.eprintf "Body: %s\n" (expr_to_string fbody tbl);
+        ) s4;
+      end
+  ) ct
+
 
 let () =
   let cin = open_in fname in
@@ -114,18 +143,21 @@ let () =
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let _p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
-    Hashtbl.add ct "Bank" (bank_contract());
+    (* Hashtbl.add ct "Bank" (bank_contract());
     Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
-    Hashtbl.add ct "EOAContract" (eoa_contract());
+    Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     let (_, _, _, ppx) = eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(AritOp(Div(Val(VUInt 1),Val(VUInt 0))), Val(VUInt 2))))) in 
     Format.eprintf "%s" (expr_to_string ppx vars);
 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
+    Format.eprintf "Contract Table: @.";
+    print_contract_table ct vars;
+    Format.eprintf "Blockchain: @.";
     print_blockchain blockchain vars;
     match res with 
-    | Revert -> Format.eprintf "Revert@."
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res vars)
+      | Revert -> Format.eprintf "Revert@."
+      | _ -> Format.eprintf "Result: %s@." (expr_to_string res vars)
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

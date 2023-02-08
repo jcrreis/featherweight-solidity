@@ -35,10 +35,6 @@ let rec gen_bool_op_ast n = match n with
 ]
 
 
-
-(* 
-let conf: conf = (blockchain, blockchain, sigma, e) in *)
-
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
@@ -143,21 +139,10 @@ let test_assign = Test.make ~name:"test eval_expr"
   end
 )  
 
-(* 
-| AddContract cdef -> 
-  begin 
-    let fun_names = (List.map (fun (f_def) -> f_def.name) cdef.functions) in
-    if List.mem "fb" fun_names || List.mem "receive" fun_names
-    then 
-    begin
-      Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit))
-    end
-    else 
-      (blockchain, blockchain', sigma, Revert)
-  end *)
 
-(* let test_add_contract_to_ct = Test.make ~name:"test eval_expr"
-(* () *)
+
+let test_add_contract_to_ct = Test.make ~name:"test eval_expr"
+(make Gen.unit)
 (fun () -> 
   begin 
     let ct = Hashtbl.create 64 in 
@@ -169,8 +154,8 @@ let test_assign = Test.make ~name:"test eval_expr"
     (
       (res = Val(VUnit)) && (Hashtbl.mem ct contract.name)
     )
-  end *)
-(* )  *)
+  end
+) 
 
 let test_suite = [
   test_division_by_zero; 
@@ -178,8 +163,8 @@ let test_suite = [
   test_bool_op;
   test_if;
   test_let;
-  test_assign
-  (* test_add_contract_to_ct *)
+  test_assign;
+  test_add_contract_to_ct
 ] 
 
 let () =
