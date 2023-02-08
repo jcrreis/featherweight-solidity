@@ -358,10 +358,18 @@ let rec eval_expr
   | AritOp a1 -> begin match a1 with
       | Plus (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Plus (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Plus (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then
+              (blockchain, blockchain', sigma, Revert)
+            else  
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Plus (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert)
+            else
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Plus (e1', e2)))
         end
       | Div (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
@@ -372,31 +380,62 @@ let rec eval_expr
             else 
             begin  
               let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1', Val (VUInt i))))
+              if e1' = Revert then 
+                (blockchain, blockchain', sigma, Revert) 
+              else  
+                eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1', Val (VUInt i))))
             end
-          | e1, e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1, e2')))
+          | e1, e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Div (e1, e2')))
         end
       | Times (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Times (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Times (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else  
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Times (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Times (e1', e2)))
         end
       | Minus (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Minus (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Minus (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Minus (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Minus (e1', e2)))
         end
       | Exp (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Exp (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Exp (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else    
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Exp (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Exp (e1', e2)))
         end
       | Mod (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
@@ -407,72 +446,147 @@ let rec eval_expr
             else 
             begin  
               let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1', Val (VUInt i))))
+              if e1' = Revert then 
+                (blockchain, blockchain', sigma, Revert) 
+              else    
+                eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1', Val (VUInt i))))
             end
-          | e1, e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1, e2')))
+          | e1, e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1, e2')))
         end
     end
   | BoolOp b1 -> begin match b1 with
       | Neg e1 -> begin match e1 with
           | Val (VBool(_)) -> (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | _ -> eval_expr ct vars (eval_expr ct vars (blockchain, blockchain', sigma, e1))
+          | _ -> 
+            if e1 = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else
+              eval_expr ct vars (eval_expr ct vars (blockchain, blockchain', sigma, e1))
         end
       | Conj (e1, e2) -> begin match e1, e2 with
           | Val (VBool(_)), Val (VBool(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VBool b), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Conj (Val (VBool b), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Conj (e1', e2)))
+          | Val (VBool b), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Conj (Val (VBool b), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Conj (e1', e2)))
         end
       | Disj (e1, e2) -> begin match e1, e2 with
           | Val (VBool(_)), Val (VBool(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VBool b), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Disj (Val (VBool b), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Disj (e1', e2)))
+          | Val (VBool b), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Disj (Val (VBool b), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Disj (e1', e2)))
         end
       | Equals (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (e1', e2)))
         end
       | Greater (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Greater (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Greater (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Greater (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Greater (e1', e2)))
         end
       | GreaterOrEquals (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(GreaterOrEquals (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(GreaterOrEquals (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(GreaterOrEquals (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(GreaterOrEquals (e1', e2)))
         end
       | Lesser (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Lesser (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Lesser (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Lesser (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Lesser (e1', e2)))
         end
       | LesserOrEquals (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(LesserOrEquals (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(LesserOrEquals (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(LesserOrEquals (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(LesserOrEquals (e1', e2)))
         end
       | Inequals (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Inequals (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Inequals (e1', e2)))
+          | Val (VUInt i), e2 -> 
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Inequals (Val (VUInt i), e2')))
+          | e1, e2 -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+            if e1' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Inequals (e1', e2)))
         end
     end
   | Var(x) ->
