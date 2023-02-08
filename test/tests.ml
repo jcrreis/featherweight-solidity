@@ -106,23 +106,7 @@ let test_if = Test.make ~name:"test eval_expr"
   end
 )
 
-(* | Let (_, x, e1, e2) ->
-  begin if Hashtbl.mem vars x  (* verify if x está em vars, modificação à tese do pirro*)
-    then 
-      (blockchain, blockchain', sigma, Revert) 
-    else 
-    let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-      Hashtbl.add vars x e1'; eval_expr ct vars (blockchain, blockchain', sigma, e2)
-  end
-| Assign (x, e1) ->
-  let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-  Hashtbl.replace vars x e1';
-  eval_expr ct vars (blockchain, blockchain', sigma, Val VUnit) *)
-  (* | Var(x) ->
-    begin try
-      (blockchain, blockchain', sigma, Hashtbl.find vars x)
-    with Not_found -> Printf.printf  "Couldnt find Var: %s\n" x; (blockchain, blockchain', sigma, Revert)
-    end *)
+
 let test_let = Test.make ~name:"test eval_expr"
 (pair arb_tree_arit arb_tree_arit)
 (fun (e1, e2) -> 
@@ -159,6 +143,35 @@ let test_assign = Test.make ~name:"test eval_expr"
   end
 )  
 
+(* 
+| AddContract cdef -> 
+  begin 
+    let fun_names = (List.map (fun (f_def) -> f_def.name) cdef.functions) in
+    if List.mem "fb" fun_names || List.mem "receive" fun_names
+    then 
+    begin
+      Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit))
+    end
+    else 
+      (blockchain, blockchain', sigma, Revert)
+  end *)
+
+(* let test_add_contract_to_ct = Test.make ~name:"test eval_expr"
+(* () *)
+(fun () -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = bank_contract() in 
+    let (_, _, _, res) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    (
+      (res = Val(VUnit)) && (Hashtbl.mem ct contract.name)
+    )
+  end *)
+(* )  *)
+
 let test_suite = [
   test_division_by_zero; 
   test_arit_op; 
@@ -166,6 +179,7 @@ let test_suite = [
   test_if;
   test_let;
   test_assign
+  (* test_add_contract_to_ct *)
 ] 
 
 let () =
