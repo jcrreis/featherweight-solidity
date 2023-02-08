@@ -1,29 +1,36 @@
 contract Bank {
 
     uint balance;
+    uint x;
+    uint y; 
 
     constructor() {
 
     }
 
     function deposit(uint amount) {
-        this.balance = this.balance + amount
+        return this.balance;
     }
 
     function getBalance() {
         return this.balance;
     }
 
-    function transfer(address to, uint amount) {
+    function transferTo(address to, uint amount) {
         if(this.balance >= amount) {
-            this.balance = this.balance - amount;
+            this.balance - amount;
         }
+        else {
+            
+        };
     }
 
     function withdraw(uint amount) {
         if(this.balance >= amount) {
-            this.balance = this.balance - amount;
-            msg.sender.transfer(amount);
-        }   
+            this.balance - amount;
+        } 
+        else {
+            
+        };
     }
 }

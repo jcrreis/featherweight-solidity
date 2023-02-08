@@ -87,6 +87,21 @@ let print_blockchain (blockchain: blockchain) tbl : unit =
     | _ -> assert false
   ) blockchain
 
+
+  (* and contract_def = {
+    name : string;
+    state : (t_exp * string) list;
+    constructor : (t_exp * string) list * expr;
+    functions : fun_def list;
+  }
+  
+  
+  
+  type contract_table = (string, contract_def) Hashtbl.t *)
+
+(* let print_contract_table (ct: contract_table) : unit = 
+  Hashtbl.iter *)
+
 let () =
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in

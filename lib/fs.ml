@@ -65,7 +65,7 @@ and expr =
   | New of string * expr * expr list
   | Cons of string * expr
   | Seq of expr * expr
-  | Let of t_exp *  string * expr * expr (* EM SOLIDITY NÃO EXISTE *)
+  | Let of t_exp *  string * expr * expr 
   | Assign of string * expr
   | StateAssign of expr * string * expr
   | MapRead of expr * expr
@@ -127,7 +127,11 @@ let eval_arit_expr (e: arit_ops) : expr = match e with
       | _ -> assert false
     end
   | Mod (e1, e2) -> begin match e1, e2 with
-      | Val (VUInt n1), Val (VUInt n2) -> Val (VUInt (n1 mod n2))
+      | Val (VUInt n1), Val (VUInt n2) -> 
+        if n2 = 0 then
+          Revert
+        else 
+          Val (VUInt (n1 mod n2))
       | _ -> assert false
     end
 
@@ -396,10 +400,17 @@ let rec eval_expr
         end
       | Mod (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_arit_expr a1)
-          | Val (VUInt i), e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (Val (VUInt i), e2')))
-          | e1, e2 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1', e2)))
+          | e1, Val (VUInt i) -> 
+            if i = 0 
+            then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+            begin  
+              let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+              eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1', Val (VUInt i))))
+            end
+          | e1, e2 -> let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            eval_expr ct vars (blockchain, blockchain', sigma, AritOp(Mod (e1, e2')))
         end
     end
   | BoolOp b1 -> begin match b1 with

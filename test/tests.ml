@@ -1,26 +1,7 @@
 open QCheck
 open Featherweightsolidity 
 open Fs 
-(* 
-let test_arit_ops = assert false 
 
-let test_bool_ops = assert false 
-
-
-let test_if = 
-  let _e1 = If(Val(VBool True), Val(VBool True), Val(VBool False)) in 
-  let _e2 = If(Val(VBool False), Val(VBool True), Val(VBool False)) in 
-
-  assert false
-
-let test_var = assert false 
-
-let test_new = assert false
-
-let test =
-  QCheck.Test.make ~count:1000 ~name:"list_rev_is_involutive"
-   QCheck.(list small_nat)
-   (fun l -> List.rev (List.rev l) = l);; *)
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
@@ -29,11 +10,11 @@ let rec gen_arit_op_ast n = match n with
   | n -> Gen.oneof [
     leafgen_int;
     Gen.map2 (fun l r -> AritOp(Plus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
-    Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    (* Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2)); *)
     Gen.map2 (fun l r -> AritOp(Times(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
     Gen.map2 (fun l r -> AritOp(Minus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
     Gen.map2 (fun l r -> AritOp(Exp(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
-    Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+    (* Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));  *)
 ]
 
 let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
@@ -70,9 +51,15 @@ let test_division_by_zero = Test.make ~name:"test eval_expr"
       let vars = Hashtbl.create 64 in 
       let blockchain = Hashtbl.create 64 in  
       let sigma = Stack.create() in 
-      eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Div(e,Val (VUInt 0)))))
+      (eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Div(e,Val (VUInt 0)))))
       =
       (blockchain, blockchain, sigma, Revert)
+      )
+      &&
+      (eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Mod(e,Val (VUInt 0)))))
+      =
+      (blockchain, blockchain, sigma, Revert)
+      )
     end
   ) 
 
@@ -119,12 +106,47 @@ let test_if = Test.make ~name:"test eval_expr"
   end
 )
 
+(* | Let (_, x, e1, e2) ->
+  begin if Hashtbl.mem vars x  (* verify if x está em vars, modificação à tese do pirro*)
+    then 
+      (blockchain, blockchain', sigma, Revert) 
+    else 
+    let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+      Hashtbl.add vars x e1'; eval_expr ct vars (blockchain, blockchain', sigma, e2)
+  end
+| Assign (x, e1) ->
+  let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+  Hashtbl.replace vars x e1';
+  eval_expr ct vars (blockchain, blockchain', sigma, Val VUnit) *)
+  (* | Var(x) ->
+    begin try
+      (blockchain, blockchain', sigma, Hashtbl.find vars x)
+    with Not_found -> Printf.printf  "Couldnt find Var: %s\n" x; (blockchain, blockchain', sigma, Revert)
+    end *)
+let test_let = Test.make ~name:"test eval_expr"
+(pair arb_tree_arit arb_tree_arit)
+(fun (e1, e2) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (Let(UInt, "x", e1, e2))) in 
+    let (_, _, _, valread) =  eval_expr ct vars (blockchain, blockchain, sigma, Var "x") in
+    let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain, sigma, e2) in
+    let (_, _, _, e1') = eval_expr  ct vars (blockchain, blockchain, sigma, e1) in 
+    (valread = e1')
+      &&
+    (res = e2') 
+  end
+)  
 
 let test_suite = [
   test_division_by_zero; 
   test_arit_op; 
   test_bool_op;
-  test_if
+  test_if;
+  test_let
 ] 
 
 let () =

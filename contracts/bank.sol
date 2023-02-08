@@ -7,7 +7,6 @@ contract Bank {
     }
 
     function deposit() {
-        
         return 1;
     }
 
