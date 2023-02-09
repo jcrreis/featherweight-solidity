@@ -156,8 +156,8 @@ solidity_special_functions:
   ;
 
 this_statements:
-  | THIS DOT s = option(ID) { This s }
-  | THIS DOT s = ID ; ASSIGN; e1 = expr { Fs.StateAssign (This None, s, e1) }
+  | THIS { Fs.This None }
+  | THIS DOT s = ID { Fs.This (Some s) }
   ;
 
 variables:
@@ -199,6 +199,7 @@ declare_variable:
 
 state_var_def:
   | e = declare_variable SEMICOLON { e }
+  ;
 
 fun_def:
   | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);

@@ -7,7 +7,7 @@ contract Bank {
     }
 
     function deposit() {
-        return 1;
+        this.balances[msg.sender] = this.balances[msg.sender] + msg.value;
     }
 
     function getBalance() {

@@ -143,10 +143,10 @@ let () =
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let _p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
-    (* Hashtbl.add ct "Bank" (bank_contract());
+    Hashtbl.add ct "Bank" (bank_contract());
     Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
-    Hashtbl.add ct "EOAContract" (eoa_contract()); *)
+    Hashtbl.add ct "EOAContract" (eoa_contract());
     let (_, _, _, ppx) = eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(AritOp(Div(Val(VUInt 1),Val(VUInt 0))), Val(VUInt 2))))) in 
     Format.eprintf "%s" (expr_to_string ppx vars);
 
