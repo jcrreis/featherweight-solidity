@@ -82,6 +82,7 @@ let test_bool_op = Test.make ~name:"test boolean operators"
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
+    (* elemento absorvente *)
     eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(e,e))))
     =
     eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,e))))
@@ -173,8 +174,14 @@ let test_deploy_contract = Test.make ~name:"test deploy contract"
     in
     let args = [Val(VMapping (Hashtbl.create 64, UInt))] in  
     let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
-    let (_, _, _, Val(res)) = eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), args)) in 
-    let (_, _, _, Val(address)) = eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) in
+    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), args)) with
+      | (_, _, _, Val(res)) -> res
+      | _ -> assert false
+    in
+    let address = match eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) with
+      | (_, _, _, Val(address)) -> address
+      | _ -> assert false
+    in
     let (cname, _sv, bal) = Hashtbl.find blockchain (res, address) in 
     (
       cname = contract.name && (bal = n' || bal = VUInt(0)) && 

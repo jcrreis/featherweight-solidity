@@ -1,3 +1,7 @@
+{
+
+}
+
 // VALUES
 %token <int> INT
 %token <string> ID
@@ -99,6 +103,7 @@ return_expr:
 
 statement:
   | e = expr SEMICOLON { e }
+  //SEQ adicionar sequencias operacionais
   ;
 
 arit_expr: 
@@ -121,13 +126,13 @@ bool_expr:
   | e1 = expr; OR; e2 = expr { BoolOp(Disj(e1, e2)) }
   ;
 values: 
-  | i = INT { Val(VUInt i) }
-  | s = ID { Var s }
-  | TRUE { Val(VBool True) }
-  | FALSE { Val(VBool False) }
-  | MAPPING t_e = typ { Fs.Val(VMapping(Hashtbl.create 64, t_e)) }      
-  | MSGSENDER { Fs.MsgSender }
-  | MSGVALUE { Fs.MsgValue }                          
+  | i = INT { Format.eprintf "PASSEI NO VUInt @.";Val(VUInt i) }
+  | s = ID { Format.eprintf "PASSEI NO  %s  @." s; Var s }
+  | TRUE { Format.eprintf "PASSEI NO True @.";Val(VBool True) }
+  | FALSE { Format.eprintf "PASSEI NO False @.";Val(VBool False) }
+  | MAPPING t_e = typ { Format.eprintf "PASSEI NO VMapping @.";Fs.Val(VMapping(Hashtbl.create 64, t_e)) }      
+  | MSGSENDER { Format.eprintf "PASSEI NO MsgSender @.";Fs.MsgSender }
+  | MSGVALUE { Format.eprintf "PASSEI NO MsgValue @.";Fs.MsgValue }                          
   ;
 
 if_statement:
@@ -174,21 +179,23 @@ map_read_write:
   | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Fs.MapWrite (e1, e2, e3) }
   ;
 
+
 expr:
-  | v = values { v }
-  | a = arit_expr { a }   
-  | b = bool_expr { b }
-  | f = function_calls { f }
-  | ssf = solidity_special_functions { ssf }
-  | t = this_statements { t }
-  | m = map_read_write { m }
-  | vars = variables { vars }
-  | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
-  | e1 = expr; SEMICOLON; e2 = expr { Seq (e1, e2) }
-  | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
-  | REVERT { Revert }
-  | e = deploy_new_contract { e }
-  | e = if_statement { e }
+  | v = values { Format.eprintf "PASSEI NO expr values @.";  v }
+  | a = arit_expr { Format.eprintf "PASSEI NO a @.";a }   
+  | b = bool_expr { Format.eprintf "PASSEI NO b @.";b }
+  | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
+  | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
+  | t = this_statements { Format.eprintf "PASSEI NO t @.";t }
+  | m = map_read_write { Format.eprintf "PASSEI NO m @.";m }
+  | vars = variables { Format.eprintf "PASSEI NO vars @.";vars }
+  | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
+  // | e1 = expr; e2 = expr { Format.eprintf "PASSEI NO Seq @.";Seq (e1, e2) }
+  | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
+  // | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
+  // // x = 1 
+  // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
+  | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
   
   ;
 

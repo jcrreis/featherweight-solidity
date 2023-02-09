@@ -58,6 +58,8 @@ rule read =
           read lexbuf
         }
 
+    | "=" { ASSIGN }
+    
     | "/" { DIV }
     | "+" { PLUS }
     | "*" { TIMES }
@@ -74,7 +76,6 @@ rule read =
     | "==" { EQ }
     | "!=" { NEQ }
 
-    | "=" { ASSIGN }
     | ";" { SEMICOLON }
     | "(" { LPAREN }
     | ")" { RPAREN }

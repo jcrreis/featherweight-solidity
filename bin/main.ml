@@ -98,18 +98,6 @@ let print_blockchain (blockchain: blockchain) tbl : unit =
 
 
 
-
-  (* and contract_def = {
-    name : string;
-    state : (t_exp * string) list;
-    constructor : (t_exp * string) list * expr;
-    functions : fun_def list;
-  }
-  
-  
-  
-  type contract_table = (string, contract_def) Hashtbl.t *)
-
 let print_contract_table (ct: contract_table) tbl : unit = 
   Hashtbl.iter (fun k v -> match k, v with 
     | s', {name = s1; state = s2; constructor = s3; functions = s4} -> 
@@ -143,12 +131,10 @@ let () =
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let _p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
-    Hashtbl.add ct "Bank" (bank_contract());
+    (* Hashtbl.add ct "Bank" (bank_contract());
     Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
-    Hashtbl.add ct "EOAContract" (eoa_contract());
-    let (_, _, _, ppx) = eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(AritOp(Div(Val(VUInt 1),Val(VUInt 0))), Val(VUInt 2))))) in 
-    Format.eprintf "%s" (expr_to_string ppx vars);
+    Hashtbl.add ct "EOAContract" (eoa_contract()); *)
 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     Format.eprintf "Contract Table: @.";

@@ -3,11 +3,12 @@ contract Bank {
     mapping(address => uint) balances;
 
     constructor() {
-
+        
     }
 
     function deposit() {
-        this.balances[msg.sender] = this.balances[msg.sender] + msg.value;
+        x = 1; 
+        1;
     }
 
     function getBalance() {
