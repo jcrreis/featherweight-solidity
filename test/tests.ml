@@ -39,7 +39,7 @@ let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
 
-let test_division_by_zero = Test.make ~name:"test eval_expr"
+let test_division_by_zero = Test.make ~name:"test division by zero"
   (arb_tree_arit)
   (fun (e) -> 
     begin 
@@ -59,7 +59,7 @@ let test_division_by_zero = Test.make ~name:"test eval_expr"
     end
   ) 
 
-let test_arit_op = Test.make ~name:"test eval_expr"
+let test_arit_op = Test.make ~name:"test arithmetic operators"
   (arb_tree_arit)
   (fun (e) -> 
     begin 
@@ -74,7 +74,7 @@ let test_arit_op = Test.make ~name:"test eval_expr"
   )  
 
 
-let test_bool_op = Test.make ~name:"test eval_expr"
+let test_bool_op = Test.make ~name:"test boolean operators"
 (arb_tree_bool)
 (fun (e) -> 
   begin 
@@ -88,7 +88,7 @@ let test_bool_op = Test.make ~name:"test eval_expr"
   end
 )
 
-let test_if = Test.make ~name:"test eval_expr"
+let test_if = Test.make ~name:"test if operator"
 (arb_tree_bool)
 (fun (e) -> 
   begin 
@@ -103,7 +103,7 @@ let test_if = Test.make ~name:"test eval_expr"
 )
 
 
-let test_let = Test.make ~name:"test eval_expr"
+let test_let = Test.make ~name:"test let operator"
 (pair arb_tree_arit arb_tree_arit)
 (fun (e1, e2) -> 
   begin 
@@ -121,7 +121,7 @@ let test_let = Test.make ~name:"test eval_expr"
   end
 )  
 
-let test_assign = Test.make ~name:"test eval_expr"
+let test_assign = Test.make ~name:"test assign operator"
 (triple arb_tree_arit arb_tree_arit arb_tree_arit)
 (fun (e1, e2, e3) -> 
   begin 
@@ -141,7 +141,7 @@ let test_assign = Test.make ~name:"test eval_expr"
 
 
 
-let test_add_contract_to_ct = Test.make ~name:"test eval_expr"
+let test_add_contract_to_ct = Test.make ~name:"test add contract to contract table"
 (make Gen.unit)
 (fun () -> 
   begin 
@@ -158,9 +158,7 @@ let test_add_contract_to_ct = Test.make ~name:"test eval_expr"
 ) 
 
 
-(* | New (s, e1, le) -> *)
-
-let test_deploy_contract = Test.make ~name:"test eval_expr"
+let test_deploy_contract = Test.make ~name:"test deploy contract"
 (arb_tree_arit)
 (fun (n) -> 
   begin 
