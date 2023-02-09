@@ -157,6 +157,37 @@ let test_add_contract_to_ct = Test.make ~name:"test eval_expr"
   end
 ) 
 
+
+(* | New (s, e1, le) -> *)
+
+let test_deploy_contract = Test.make ~name:"test eval_expr"
+(arb_tree_arit)
+(fun (n) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = bank_contract() in 
+    let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
+      | (_, _, _, Val(n)) ->  n
+      |_ -> VUInt 0  
+    in
+    let args = [Val(VMapping (Hashtbl.create 64, UInt))] in  
+    let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    let (_, _, _, Val(res)) = eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), args)) in 
+    let (_, _, _, Val(address)) = eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) in
+    let (cname, _sv, bal) = Hashtbl.find blockchain (res, address) in 
+    (
+      cname = contract.name && (bal = n' || bal = VUInt(0)) && 
+      (
+        true
+      )
+    )
+  end
+) 
+
+
 let test_suite = [
   test_division_by_zero; 
   test_arit_op; 
@@ -164,7 +195,8 @@ let test_suite = [
   test_if;
   test_let;
   test_assign;
-  test_add_contract_to_ct
+  test_add_contract_to_ct;
+  test_deploy_contract
 ] 
 
 let () =

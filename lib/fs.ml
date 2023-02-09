@@ -663,13 +663,13 @@ let rec eval_expr
                 Hashtbl.add blockchain (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
                 Hashtbl.add vars "this" (Val(VContract c));
                 List.iter2 (fun (_, s) e -> let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
-                  Hashtbl.add vars s e') t_es le;
+                Hashtbl.add vars s e') t_es le;
                 let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
                 List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es;
                 (blockchain, blockchain', sigma, Val(VContract c))
               | Error () -> (blockchain, blockchain', sigma, Revert)
             end
-          | _ -> assert false
+          | _ -> (blockchain, blockchain', sigma, Revert)
         end
       else if (List.length t_es = List.length le) && ((top conf) == VUnit) then
         begin
@@ -683,7 +683,7 @@ let rec eval_expr
               let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
               List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es;
               (blockchain, blockchain', sigma, Val(VContract c))
-          | _ -> assert false
+          | _ -> (blockchain, blockchain', sigma, Revert)
         end
       else
         (blockchain, blockchain', sigma, Revert)
