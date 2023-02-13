@@ -100,6 +100,7 @@ return_expr:
 
 statement:
   | e = expr SEMICOLON { e }
+  | e = if_statement { e }
   | e1 = statement; e2 = statement { Fs.Seq(e1, e2) }
   ;
 
@@ -141,6 +142,11 @@ if_statement:
       | Some e2, None -> Fs.If(e1, e2, Val(VUnit))  
       | Some e2, Some e3 -> Fs.If(e1, e2, e3)          
     }
+  | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); RBRACE {
+    match e2 with
+      | None -> Fs.If(e1, Val(VUnit), Val(VUnit))
+      | Some e2 ->  Fs.If(e1, e2, Val(VUnit))
+  }
   ;
 
 deploy_new_contract:
