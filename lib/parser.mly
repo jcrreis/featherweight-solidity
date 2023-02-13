@@ -1,7 +1,3 @@
-{
-
-}
-
 // VALUES
 %token <int> INT
 %token <string> ID
@@ -103,6 +99,7 @@ return_expr:
 
 statement:
   | e = expr SEMICOLON { e }
+  | e1 = statement; e2 = statement { Fs.Seq(e1, e2) }
   //SEQ adicionar sequencias operacionais
   ;
 
