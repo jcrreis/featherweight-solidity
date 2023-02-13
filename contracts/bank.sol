@@ -7,8 +7,13 @@ contract Bank {
 
     }
 
+<<<<<<< HEAD
     function deposit() {
         this.balances[msgsender];
+=======
+    function deposit(uint amount) {
+        this.balances[msgsender] = amount;
+>>>>>>> ee9b25c69b9fd8faeafb9988532af3a421b33acd
     }
 
     function getBalance() {

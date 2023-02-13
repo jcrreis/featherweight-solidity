@@ -1,8 +1,4 @@
-%{
- 
-%}
-
-// VALUES
+//VALUES
 %token <int> INT
 %token <string> ID
 %token TRUE
@@ -101,12 +97,10 @@ return_expr:
   | RETURN e = expr SEMICOLON { Fs.Return (e) }
   ;
 
-statement:
-  | e = expr SEMICOLON {  e }
-  ;
 
-seq_statements:
-  | le = list(statement) { Fs.expr_list_to_expr le (Val(VUnit)) }
+statement:
+  | e = expr SEMICOLON { e }
+  | e1 = statement; e2 = statement { Fs.Seq(e1, e2) }
   ;
 
 
@@ -222,7 +216,7 @@ fun_def:
 
 
 fun_body: 
-  | e1 = option(seq_statements) ; e2 = option(return_expr) { 
+  | e1 = option(statement) ; e2 = option(return_expr) { 
     match e1, e2 with
       | None, None -> Seq(Val(VUnit), Val(VUnit))
       | None, Some e2 -> Seq(Val(VUnit), e2) 

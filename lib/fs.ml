@@ -1196,9 +1196,3 @@ let rec print_tuples lst =
       Printf.printf "%s : %s;\n" s1 s;
       print_tuples rest
   end
-
-
-let rec expr_list_to_expr (le: expr list) (e: expr) : expr = match le with 
-  | [] -> e
-  | [e'] -> Seq(e, e') 
-  | e1 :: e2 :: xs -> expr_list_to_expr xs (Seq(e, Seq(e1, e2)))
