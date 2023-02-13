@@ -1,6 +1,6 @@
-{
-
-}
+%{
+ 
+%}
 
 // VALUES
 %token <int> INT
@@ -68,9 +68,9 @@
 
 
 %nonassoc SEMICOLON LBRACKET ASSIGN
-%left EQ NEQ LT GT LEQ GEQ AND OR NOT
 %left PLUS MINUS MOD  
 %left TIMES DIV EXP 
+%left EQ NEQ LT GT LEQ GEQ AND OR NOT
 %nonassoc DOT
 
 %start <Fs.expr> prog
@@ -102,9 +102,13 @@ return_expr:
   ;
 
 statement:
-  | e = expr SEMICOLON { e }
-  //SEQ adicionar sequencias operacionais
+  | e = expr SEMICOLON {  e }
   ;
+
+seq_statements:
+  | le = list(statement) { Fs.expr_list_to_expr le (Val(VUnit)) }
+  ;
+
 
 arit_expr: 
   | e1 = expr; PLUS; e2 = expr { AritOp(Plus(e1, e2)) }
@@ -162,7 +166,7 @@ solidity_special_functions:
 
 this_statements:
   | THIS { Fs.This None }
-  | THIS DOT s = ID { Fs.This (Some s) }
+  // | THIS DOT s = ID { Format.eprintf "PASSEI NO this.%s @." s; Fs.This (Some s) }
   ;
 
 variables:
@@ -170,32 +174,31 @@ variables:
     let (t_e, s) = v in 
     Let(t_e, s, e1, e2) 
   }
-  | e = expr; DOT s = ID { StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Fs.StateAssign (e1, s, e2) }
+  | e = expr; DOT s = ID { Format.eprintf "PASSEI NO STATEREAD @.";StateRead (e, s) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "PASSEI NO STATEASSIGN @.";Fs.StateAssign (e1, s, e2) }
   ;
 
 map_read_write:
-  | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
+  | e1 = expr; LBRACKET; e2 = expr; RBRACKET { Format.eprintf "PASSEI NO MAPREAD @.";MapRead (e1, e2) }
   | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Fs.MapWrite (e1, e2, e3) }
   ;
 
 
 expr:
+  | vars = variables { Format.eprintf "PASSEI NO vars @.";vars }
   | v = values { Format.eprintf "PASSEI NO expr values @.";  v }
   | a = arit_expr { Format.eprintf "PASSEI NO a @.";a }   
   | b = bool_expr { Format.eprintf "PASSEI NO b @.";b }
-  | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
-  | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
+  // | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
+  // | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
   | t = this_statements { Format.eprintf "PASSEI NO t @.";t }
   | m = map_read_write { Format.eprintf "PASSEI NO m @.";m }
-  | vars = variables { Format.eprintf "PASSEI NO vars @.";vars }
-  | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
-  // | e1 = expr; e2 = expr { Format.eprintf "PASSEI NO Seq @.";Seq (e1, e2) }
-  | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
+  // | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
+  // | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
   // | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
-  // // x = 1 
+  // // // x = 1 
   // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
-  | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
+  // | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
   
   ;
 
@@ -219,7 +222,7 @@ fun_def:
 
 
 fun_body: 
-  | e1 = option(statement) ; e2 = option(return_expr) { 
+  | e1 = option(seq_statements) ; e2 = option(return_expr) { 
     match e1, e2 with
       | None, None -> Seq(Val(VUnit), Val(VUnit))
       | None, Some e2 -> Seq(Val(VUnit), e2) 

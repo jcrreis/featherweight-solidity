@@ -3,29 +3,29 @@ contract Bank {
     mapping(address => uint) balances;
 
     constructor() {
-        
+     
+
     }
 
     function deposit() {
-        x = 1; 
-        1;
+        this.balances[msgsender];
     }
 
     function getBalance() {
-        return this.balances[msg.sender];
+        return this.balances[msgsender];
     }
 
-    function transfer(address to, uint amount) {
-        if(this.balances[msg.sender] >= amount) {
-            this.balances[msg.sender] = this.balances[msg.sender] - amount;
-            this.balances[to] = this.balances[msg.sender] + amount;
+    function transferTo(address to, uint amount) {
+        if(this.balances[msgsender] >= amount) {
+            this.balances[msgsender] = this.balances[msgsender] - amount;
+            this.balances[to] = this.balances[msgsender] + amount;
         }
     }
 
     function withdraw(uint amount) {
-        if(this.balances[msg.sender] >= amount) {
-            this.balances[msg.sender] = this.balances[msg.sender] - amount;
-            msg.sender.transfer(amount);
+        if(this.balances[msgsender] >= amount) {
+            this.balances[msgsender] = this.balances[msgsender] - amount;
+            msgsender.transfer(amount);
         }   
     }
 }

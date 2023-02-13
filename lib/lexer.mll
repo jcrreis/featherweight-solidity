@@ -22,9 +22,9 @@ let () =
       ("true", TRUE);
       ("false", FALSE);
       ("mapping", MAPPING);
-      ("msg.sender", MSGSENDER);
+      ("msgsender", MSGSENDER);
       ("address", ADDRESS);
-      ("msg.value", MSGVALUE);
+      ("msgvalue", MSGVALUE);
       ("transfer", TRANSFER);
       ("this", THIS);
       ("if", IF);
@@ -36,6 +36,7 @@ let () =
 
 
 let find_keyword k =
+  Format.eprintf "%s" k;
   try Hashtbl.find keywords k
   with Not_found -> ID k
 
