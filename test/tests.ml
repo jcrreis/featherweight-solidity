@@ -204,6 +204,15 @@ let test_suite = [
   test_deploy_contract
 ] 
 
-let () =
+(* let () =
   let errcode = QCheck_runner.run_tests_main test_suite in 
-  exit errcode
+  exit errcode *)
+
+let () =
+  let suite =
+    List.map QCheck_alcotest.to_alcotest
+      test_suite
+  in
+  Alcotest.run "FS Operational Semantics Tests" [
+    "suite", suite
+  ]

@@ -12,5 +12,5 @@
  ; (package ppx_deriving_qcheck)
  (names
    tests)
- (libraries featherweightsolidity ppx_deriving_qcheck qcheck)
+ (libraries featherweightsolidity ppx_deriving_qcheck qcheck qcheck-alcotest)
  (preprocess (pps ppxlib.metaquot ppx_deriving_qcheck)))
