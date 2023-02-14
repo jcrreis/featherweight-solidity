@@ -1,6 +1,6 @@
 open Featherweightsolidity  
 open Fs 
-
+open Types
 
 let fname = Sys.argv.(1)
 
@@ -135,7 +135,8 @@ let () =
     Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
     Hashtbl.add ct "EOAContract" (eoa_contract()); *)
-
+    let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
+    Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1 vars); 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     Format.eprintf "Contract Table: @.";
     print_contract_table ct vars;

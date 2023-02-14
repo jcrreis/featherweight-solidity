@@ -34,6 +34,10 @@ let rec gen_bool_op_ast n = match n with
     Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
 ]
 
+(* let leafgen_stmt = [
+  New(...) -> "0x0321321"
+  Balance(VAddress("0x0321321")) -> VUInt (n)
+] *)
 
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
@@ -59,6 +63,98 @@ let test_division_by_zero = Test.make ~name:"test division by zero"
     end
   ) 
 
+let test_arit_plus_op = Test.make ~name:"test plus arithmetic operator"
+  (arb_tree_arit)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let vars = Hashtbl.create 64 in 
+      let blockchain = Hashtbl.create 64 in  
+      let sigma = Stack.create() in 
+      let e' = AritOp(Plus(e,e)) in 
+
+      (*Commutative 2e + e = e + 2e *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(e',e))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(e,e'))))
+      ) 
+        && 
+      (*Associative e + (2e) + e = e + e + 2e *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus((AritOp(Plus(e,e'))), e))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus((AritOp(Plus(e,e))), e'))))
+      )
+        &&
+      (* Identity property 0 + e = e *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(Val(VUInt 0),e)))) 
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, e)
+      )
+
+    end
+  )  
+
+let test_arit_minus_op = Test.make ~name:"test minus arithmetic operator"
+  (arb_tree_arit)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let vars = Hashtbl.create 64 in 
+      let blockchain = Hashtbl.create 64 in  
+      let sigma = Stack.create() in 
+      (* let e' = AritOp(Plus(e,e)) in  *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Minus(e,Val(VUInt 0))))) 
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, e)
+      )
+    end
+)  
+
+let test_arit_times_op = Test.make ~name:"test times arithmetic operator"
+  (arb_tree_arit)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let vars = Hashtbl.create 64 in 
+      let blockchain = Hashtbl.create 64 in  
+      let sigma = Stack.create() in 
+      let e' = AritOp(Plus(e,e)) in 
+      (* Commutative 2e + e = e + 2e *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(e',e))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(e,e'))))
+      ) 
+        && 
+      (* Associative e + (2e) + e = e + e + 2e *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times((AritOp(Times(e,e'))), e))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times((AritOp(Times(e,e))), e'))))
+      )
+        &&
+      (*  *)
+      (
+        let (_, _, _, res) = 
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(Val(VUInt 0),e)))) in 
+        
+        (res = Val(VUInt 0) || res = Revert)
+      )
+        && 
+        (* Identity property 1 * e = e *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(Val(VUInt 1),e))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, e)
+      )
+    end
+)  
+
+
 let test_arit_op = Test.make ~name:"test arithmetic operators"
   (arb_tree_arit)
   (fun (e) -> 
@@ -72,7 +168,7 @@ let test_arit_op = Test.make ~name:"test arithmetic operators"
       eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Times(Val(VUInt 2),e))))
     end
   )  
-
+ (* Grupo Abeliano*)
 
 let test_bool_op = Test.make ~name:"test boolean operators"
 (arb_tree_bool)
@@ -88,6 +184,8 @@ let test_bool_op = Test.make ~name:"test boolean operators"
     eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,e))))
   end
 )
+(* De morgan e algebra bool*)
+
 
 let test_if = Test.make ~name:"test if operator"
 (arb_tree_bool)
@@ -159,7 +257,7 @@ let test_add_contract_to_ct = Test.make ~name:"test add contract to contract tab
 ) 
 
 
-let test_deploy_contract = Test.make ~name:"test deploy contract"
+let test_new_contract = Test.make ~name:"test new contract"
 (arb_tree_arit)
 (fun (n) -> 
   begin 
@@ -201,7 +299,10 @@ let test_suite = [
   test_let;
   test_assign;
   test_add_contract_to_ct;
-  test_deploy_contract
+  test_new_contract;
+  test_arit_plus_op;
+  test_arit_minus_op;
+  test_arit_times_op
 ] 
 
 (* let () =
