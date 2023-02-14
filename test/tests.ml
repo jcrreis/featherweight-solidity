@@ -174,9 +174,9 @@ let test_bool_op = Test.make ~name:"test boolean operators"
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
-    (* elemento absorvente *)
-    (* De morgan laws*)
     (
+      (* De morgan laws*)
+      (* https://www.google.com/search?q=algebra+de+boole&client=firefox-b-lm&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiZi6OtkZX9AhXcXaQEHf_NCX0Q_AUoAXoECAEQAw&biw=1918&bih=924&dpr=1#imgrc=_SK3hsXB46ttzM*)
       (
         eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Neg(BoolOp(Conj(e,e))))))
         =
@@ -187,6 +187,17 @@ let test_bool_op = Test.make ~name:"test boolean operators"
         eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Neg(BoolOp(Disj(e,e))))))
         =
         eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(BoolOp(Neg e), BoolOp(Neg e)))))
+      )
+      &&
+      (* elemento absorvente *)
+      (
+        let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(e,Val(VBool False))))) in 
+        (res = Val(VBool False) || res = Revert)
+      )
+      &&
+      (
+        let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,Val(VBool True))))) in 
+        (res = Val(VBool True) || res = Revert)
       )
     )
   end
