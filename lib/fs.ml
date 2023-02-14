@@ -371,7 +371,8 @@ let rec eval_expr
             if e1 = Revert then 
               (blockchain, blockchain', sigma, Revert) 
             else
-              eval_expr ct vars (eval_expr ct vars (blockchain, blockchain', sigma, e1))
+              let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in  
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Neg e1'))
         end
       | Conj (e1, e2) -> begin match e1, e2 with
           | Val (VBool(_)), Val (VBool(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
@@ -752,7 +753,7 @@ let rec eval_expr
       (blockchain, blockchain', sigma, e1')
   | AddContract cdef -> 
     begin 
-      let fun_names = (List.map (fun (f_def) -> f_def.name) cdef.functions) in
+      let fun_names = (List.map (fun (f_def: fun_def) -> f_def.name) cdef.functions) in
       if List.mem "fb" fun_names || List.mem "receive" fun_names
       then 
       begin

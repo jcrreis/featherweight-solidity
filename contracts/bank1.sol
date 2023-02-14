@@ -8,6 +8,10 @@ contract Bank {
 
     }
 
+    function fb(){
+        
+    }
+
     function deposit(uint amount) {
         return this.balance;
     }
@@ -22,7 +26,7 @@ contract Bank {
         }
         else {
             
-        };
+        }
     }
 
     function withdraw(uint amount) {
@@ -31,6 +35,6 @@ contract Bank {
         } 
         else {
             
-        };
+        }
     }
 }

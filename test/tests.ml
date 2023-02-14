@@ -1,7 +1,7 @@
 open QCheck
 open Featherweightsolidity 
 open Fs 
-
+open Types
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
@@ -34,10 +34,6 @@ let rec gen_bool_op_ast n = match n with
     Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
 ]
 
-(* let leafgen_stmt = [
-  New(...) -> "0x0321321"
-  Balance(VAddress("0x0321321")) -> VUInt (n)
-] *)
 
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
@@ -179,9 +175,20 @@ let test_bool_op = Test.make ~name:"test boolean operators"
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
     (* elemento absorvente *)
-    eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(e,e))))
-    =
-    eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(e,e))))
+    (* De morgan laws*)
+    (
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Neg(BoolOp(Conj(e,e))))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Disj(BoolOp(Neg e), BoolOp(Neg e)))))
+      )
+      &&
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Neg(BoolOp(Disj(e,e))))))
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, (BoolOp(Conj(BoolOp(Neg e), BoolOp(Neg e)))))
+      )
+    )
   end
 )
 (* De morgan e algebra bool*)

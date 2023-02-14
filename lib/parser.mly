@@ -69,7 +69,7 @@
 %left EQ NEQ LT GT LEQ GEQ AND OR NOT
 %nonassoc DOT
 
-%start <Fs.expr> prog
+%start <Types.expr> prog
 
 %%
 
@@ -83,7 +83,7 @@ contract:
   | CONTRACT contract_name = ID LBRACE state_variables = list(state_var_def);
       CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
-                          Fs.AddContract({
+                          Types.AddContract({
                                   name = contract_name;
                                   state = state_variables;
                                   constructor = (le1, e1);
@@ -94,14 +94,14 @@ contract:
   ;
 
 return_expr:
-  | RETURN e = expr SEMICOLON { Fs.Return (e) }
+  | RETURN e = expr SEMICOLON { Types.Return (e) }
   ;
 
 
 statement:
   | e = expr SEMICOLON { e }
   | e = if_statement { e }
-  | e1 = statement; e2 = statement { Fs.Seq(e1, e2) }
+  | e1 = statement; e2 = statement { Types.Seq(e1, e2) }
   ;
 
 
@@ -129,23 +129,23 @@ values:
   | s = ID { Format.eprintf "PASSEI NO  %s  @." s; Var s }
   | TRUE { Format.eprintf "PASSEI NO True @.";Val(VBool True) }
   | FALSE { Format.eprintf "PASSEI NO False @.";Val(VBool False) }
-  | MAPPING t_e = typ { Format.eprintf "PASSEI NO VMapping @.";Fs.Val(VMapping(Hashtbl.create 64, t_e)) }      
-  | MSGSENDER { Format.eprintf "PASSEI NO MsgSender @.";Fs.MsgSender }
-  | MSGVALUE { Format.eprintf "PASSEI NO MsgValue @.";Fs.MsgValue }                          
+  | MAPPING t_e = typ { Format.eprintf "PASSEI NO VMapping @.";Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
+  | MSGSENDER { Format.eprintf "PASSEI NO MsgSender @.";Types.MsgSender }
+  | MSGVALUE { Format.eprintf "PASSEI NO MsgValue @.";Types.MsgValue }                          
   ;
 
 if_statement:
   | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); RBRACE ;ELSE; LBRACE; e3 = option(statement); RBRACE { 
     match e2, e3 with 
-      | None, None -> Fs.If(e1, Val(VUnit), Val(VUnit))
-      | None, Some e3 -> Fs.If(e1, Val(VUnit), e3) 
-      | Some e2, None -> Fs.If(e1, e2, Val(VUnit))  
-      | Some e2, Some e3 -> Fs.If(e1, e2, e3)          
+      | None, None -> Types.If(e1, Val(VUnit), Val(VUnit))
+      | None, Some e3 -> Types.If(e1, Val(VUnit), e3) 
+      | Some e2, None -> Types.If(e1, e2, Val(VUnit))  
+      | Some e2, Some e3 -> Types.If(e1, e2, e3)          
     }
   | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); RBRACE {
     match e2 with
-      | None -> Fs.If(e1, Val(VUnit), Val(VUnit))
-      | Some e2 ->  Fs.If(e1, e2, Val(VUnit))
+      | None -> Types.If(e1, Val(VUnit), Val(VUnit))
+      | Some e2 ->  Types.If(e1, e2, Val(VUnit))
   }
   ;
 
@@ -154,19 +154,19 @@ deploy_new_contract:
   ;
 
 function_calls: 
-  | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Fs.Call (e1, fname, e2, le) }
-  | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Fs.CallTopLevel (e1, fname, e2, e3, le) }
+  | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.Call (e1, fname, e2, le) }
+  | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.CallTopLevel (e1, fname, e2, e3, le) }
   ;
 
 solidity_special_functions:
-  | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Fs. Transfer (e1, e2) }
-  | ADDRESS LPAREN; e = expr ;RPAREN{ Fs.Address (e) }
-  | e = expr; DOT BALANCE { Fs.Balance (e) }
+  | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Types. Transfer (e1, e2) }
+  | ADDRESS LPAREN; e = expr ;RPAREN{ Types.Address (e) }
+  | e = expr; DOT BALANCE { Types.Balance (e) }
   ;
 
 this_statements:
-  | THIS { Fs.This None }
-  // | THIS DOT s = ID { Format.eprintf "PASSEI NO this.%s @." s; Fs.This (Some s) }
+  | THIS { Types.This None }
+  // | THIS DOT s = ID { Format.eprintf "PASSEI NO this.%s @." s; Types.This (Some s) }
   ;
 
 variables:
@@ -175,12 +175,12 @@ variables:
     Let(t_e, s, e1, e2) 
   }
   | e = expr; DOT s = ID { Format.eprintf "PASSEI NO STATEREAD @.";StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "PASSEI NO STATEASSIGN @.";Fs.StateAssign (e1, s, e2) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "PASSEI NO STATEASSIGN @.";Types.StateAssign (e1, s, e2) }
   ;
 
 map_read_write:
   | e1 = expr; LBRACKET; e2 = expr; RBRACKET { Format.eprintf "PASSEI NO MAPREAD @.";MapRead (e1, e2) }
-  | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Fs.MapWrite (e1, e2, e3) }
+  | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Types.MapWrite (e1, e2, e3) }
   ;
 
 
@@ -214,7 +214,7 @@ state_var_def:
 fun_def:
   | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
     RPAREN LBRACE; e = fun_body; RBRACE {
-      Fs.{ name = fname;
+      Types.{ name = fname;
           rettype = Unit;
           args = le;
           body = e;
@@ -231,8 +231,8 @@ fun_body:
   }
 
 typ:
-  | UINT { Fs.UInt }
-  | ADDRESS { Fs.Address }
-  | BOOL { Fs.Bool }
+  | UINT { Types.UInt }
+  | ADDRESS { Types.Address }
+  | BOOL { Types.Bool }
   | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
-    { Fs.Map (key, value) }
+    { Types.Map (key, value) }
