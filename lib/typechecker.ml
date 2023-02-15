@@ -7,4 +7,9 @@ let axioms (e: expr) : t_exp = match e with
   | Val (VUnit) -> Unit
   | _ -> assert false
 
-let _typecheck = assert false 
+let rec typecheck (gamma: gamma) (e: expr) : t_exp = match e with 
+  | Val (VBool _) -> axioms e
+  | Val (VUInt _) -> axioms e
+  | Val (VUnit) -> axioms e
+  | Var x -> Hashtbl.find gamma x
+  | _ -> assert false

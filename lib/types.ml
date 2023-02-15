@@ -1,5 +1,4 @@
 module StateVars = Map.Make(String)
-module Gamma = Map.Make (String)
 
 type t_exp =
   | C of int (* * hash_contract_code? *)
@@ -94,3 +93,5 @@ type blockchain = ((values * values), (string * (expr) StateVars.t * values)) Ha
 type conf = (blockchain * blockchain * values Stack.t * expr)
 
 type program = (contract_table * blockchain * expr)
+
+type gamma = (string, t_exp) Hashtbl.t

@@ -41,6 +41,55 @@ let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
 
 
+let rec tshrink e = match e with 
+  | Val(VUInt i) -> Iter.map (fun i' -> Val(VUInt i')) (Shrink.int i)
+  | AritOp(Plus(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> AritOp(Plus(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> AritOp(Plus(l,r'))) (tshrink r))
+  | AritOp(Div(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> AritOp(Div(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> AritOp(Div(l,r'))) (tshrink r))
+  | AritOp(Times(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> AritOp(Times(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> AritOp(Times(l,r'))) (tshrink r))
+  | AritOp(Minus(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> AritOp(Minus(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> AritOp(Minus(l,r'))) (tshrink r))
+  | AritOp(Exp(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> AritOp(Exp(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> AritOp(Exp(l,r'))) (tshrink r))
+  | AritOp(Mod(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> AritOp(Mod(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> AritOp(Mod(l,r'))) (tshrink r))
+  | BoolOp(Neg e) -> Iter.map (fun e' -> BoolOp(Neg e')) (tshrink e)
+  | BoolOp(Conj(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(Conj(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(Conj(l,r'))) (tshrink r))
+  | BoolOp(Disj(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(Disj(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(Disj(l,r'))) (tshrink r))
+  | BoolOp(Equals(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(Equals(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(Equals(l,r'))) (tshrink r))
+  | BoolOp(Greater(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(Greater(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(Greater(l,r'))) (tshrink r))
+  | BoolOp(GreaterOrEquals(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(GreaterOrEquals(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(GreaterOrEquals(l,r'))) (tshrink r))
+  | BoolOp(Lesser(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(Lesser(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(Lesser(l,r'))) (tshrink r))
+  | BoolOp(Inequals(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(Inequals(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(Inequals(l,r'))) (tshrink r))
+  | BoolOp(LesserOrEquals(l,r)) -> Iter.append 
+    (Iter.map (fun l' -> BoolOp(LesserOrEquals(l',r))) (tshrink l)) 
+    (Iter.map (fun r' -> BoolOp(LesserOrEquals(l,r'))) (tshrink r))
+  | _ -> Iter.empty
+
+
+
 let test_contract = 
 let fb = {
   name = "fb";
@@ -59,7 +108,7 @@ let fb = {
 }
 
 let test_division_by_zero = Test.make ~name:"test division by zero"
-  (arb_tree_arit)
+  (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -79,7 +128,7 @@ let test_division_by_zero = Test.make ~name:"test division by zero"
   ) 
 
 let test_arit_plus_op = Test.make ~name:"test plus arithmetic operator"
-  (arb_tree_arit)
+  (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -113,7 +162,7 @@ let test_arit_plus_op = Test.make ~name:"test plus arithmetic operator"
   )  
 
 let test_arit_minus_op = Test.make ~name:"test minus arithmetic operator"
-  (arb_tree_arit)
+  (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -130,7 +179,7 @@ let test_arit_minus_op = Test.make ~name:"test minus arithmetic operator"
 )  
 
 let test_arit_div_op = Test.make ~name:"test div arithmetic operator"
-  (arb_tree_arit)
+  (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -147,7 +196,7 @@ let test_arit_div_op = Test.make ~name:"test div arithmetic operator"
 )  
 
 let test_arit_times_op = Test.make ~name:"test times arithmetic operator"
-  (arb_tree_arit)
+  (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -188,7 +237,7 @@ let test_arit_times_op = Test.make ~name:"test times arithmetic operator"
 
 
 let test_arit_op = Test.make ~name:"test arithmetic operators"
-  (arb_tree_arit)
+  (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
@@ -203,7 +252,7 @@ let test_arit_op = Test.make ~name:"test arithmetic operators"
  (* Grupo Abeliano*)
 
 let test_bool_op = Test.make ~name:"test boolean operators"
-(arb_tree_bool)
+(set_shrink tshrink arb_tree_bool)
 (fun (e) -> 
   begin 
     let ct = Hashtbl.create 64 in 
@@ -242,7 +291,7 @@ let test_bool_op = Test.make ~name:"test boolean operators"
 
 
 let test_if = Test.make ~name:"test if operator"
-(arb_tree_bool)
+(set_shrink tshrink arb_tree_bool)
 (fun (e) -> 
   begin 
     let ct = Hashtbl.create 64 in 
@@ -321,10 +370,9 @@ let test_new_contract = Test.make ~name:"test new contract"
     let sigma = Stack.create() in 
     let contract: contract_def = test_contract in 
     let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
-      | (_, _, _, Val(n)) ->  n
+      | (_, _, _, Val(VUInt n)) -> VUInt n
       |_ -> VUInt 0  
     in
-    (* let args = [Val(VMapping (Hashtbl.create 64, UInt))] in   *)
     let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
     let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
       | (_, _, _, Val(res)) -> res
@@ -338,13 +386,74 @@ let test_new_contract = Test.make ~name:"test new contract"
     
     let test_var1_val = StateVars.find "test_sv1" sv in 
     let test_var2_val = StateVars.find "test_sv2" sv in 
-    Format.eprintf "%s" (expr_to_string test_var2_val);
     (
-      cname = contract.name && (bal = n' || bal = VUInt(0)) && 
+      cname = contract.name && bal = n' && 
       (
         (test_var1_val = Val(VAddress "0x0")) &&
         (test_var2_val = Val(n'))
       )
+    )
+  end
+) 
+
+
+let test_balance = Test.make ~name:"test balance function"
+(arb_tree_arit)
+(fun (n) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = test_contract in 
+    let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
+      | (_, _, _, Val(VUInt n)) -> VUInt n 
+      |_ -> VUInt 0  
+    in
+    let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
+      | (_, _, _, Val(res)) -> res
+      | _ -> assert false
+    in 
+    let address = match eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) with
+      | (_, _, _, Val(address)) -> address
+      | _ -> assert false
+    in
+    let bal = match eval_expr ct vars (blockchain, blockchain, sigma, Balance(Val(address))) with
+      | (_, _, _, Val(bal)) -> bal
+      | _ -> assert false
+    in
+    (
+      bal = n'
+    )
+  end
+) 
+
+let test_address = Test.make ~name:"test address function"
+(set_shrink tshrink arb_tree_arit)
+(fun (n) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = test_contract in 
+    let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
+      | (_, _, _, Val(VUInt n)) -> VUInt n 
+      |_ -> VUInt 0  
+    in
+    let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
+      | (_, _, _, Val(res)) -> res
+      | _ -> assert false
+    in 
+    let address = match eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) with
+      | (_, _, _, Val(address)) -> address
+      | _ -> assert false
+    in
+    let (cname, _sv, _) = Hashtbl.find blockchain (res, address) in
+    (
+      cname = contract.name 
     )
   end
 ) 
@@ -362,6 +471,8 @@ let test_suite = [
   test_arit_minus_op;
   test_arit_times_op;
   test_arit_div_op;
+  test_balance;
+  test_address
   
 ] 
 
