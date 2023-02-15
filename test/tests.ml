@@ -110,6 +110,23 @@ let test_arit_minus_op = Test.make ~name:"test minus arithmetic operator"
     end
 )  
 
+let test_arit_div_op = Test.make ~name:"test div arithmetic operator"
+  (arb_tree_arit)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let vars = Hashtbl.create 64 in 
+      let blockchain = Hashtbl.create 64 in  
+      let sigma = Stack.create() in 
+      (* let e' = AritOp(Plus(e,e)) in  *)
+      (
+        eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Div(e,Val(VUInt 1))))) 
+        =
+        eval_expr ct vars (blockchain, blockchain, sigma, e)
+      )
+    end
+)  
+
 let test_arit_times_op = Test.make ~name:"test times arithmetic operator"
   (arb_tree_arit)
   (fun (e) -> 
@@ -320,7 +337,8 @@ let test_suite = [
   test_new_contract;
   test_arit_plus_op;
   test_arit_minus_op;
-  test_arit_times_op
+  test_arit_times_op;
+  test_arit_div_op
 ] 
 
 (* let () =
@@ -328,6 +346,7 @@ let test_suite = [
   exit errcode *)
 
 let () =
+  Format.eprintf "%s" (Gen.string_printable); 
   let suite =
     List.map QCheck_alcotest.to_alcotest
       test_suite
