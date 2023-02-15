@@ -5,6 +5,7 @@ open Types
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
+
 let rec gen_arit_op_ast n = match n with 
   | 0 -> leafgen_int
   | n -> Gen.oneof [
@@ -38,6 +39,21 @@ let rec gen_bool_op_ast n = match n with
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
+
+
+let test_contract = 
+let fb = {
+  name = "fb";
+  rettype = Unit;
+  args = [];
+  body = Return(Val(VUnit));
+} in  
+{
+  name = "Test";
+  state = [(Map(Address, UInt), "test_map"); (Address, "test_sv1"); (UInt, "test_sv2")];
+  constructor = ([], Val(VUnit));
+  functions = [fb];
+}
 
 let test_division_by_zero = Test.make ~name:"test division by zero"
   (arb_tree_arit)
@@ -283,7 +299,7 @@ let test_add_contract_to_ct = Test.make ~name:"test add contract to contract tab
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
-    let contract: contract_def = bank_contract() in 
+    let contract: contract_def = test_contract in 
     let (_, _, _, res) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
     (
       (res = Val(VUnit)) && (Hashtbl.mem ct contract.name)
@@ -300,14 +316,14 @@ let test_new_contract = Test.make ~name:"test new contract"
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
-    let contract: contract_def = bank_contract() in 
+    let contract: contract_def = test_contract in 
     let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
       | (_, _, _, Val(n)) ->  n
       |_ -> VUInt 0  
     in
-    let args = [Val(VMapping (Hashtbl.create 64, UInt))] in  
+    (* let args = [Val(VMapping (Hashtbl.create 64, UInt))] in   *)
     let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
-    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), args)) with
+    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [])) with
       | (_, _, _, Val(res)) -> res
       | _ -> assert false
     in
@@ -341,9 +357,6 @@ let test_suite = [
   test_arit_div_op
 ] 
 
-(* let () =
-  let errcode = QCheck_runner.run_tests_main test_suite in 
-  exit errcode *)
 
 let () =
   Format.eprintf "%s" (Gen.string_printable); 
