@@ -1,4 +1,5 @@
 module StateVars = Map.Make(String)
+module Gamma = Map.Make (String)
 
 type t_exp =
   | C of int (* * hash_contract_code? *)

@@ -51,7 +51,10 @@ let fb = {
 {
   name = "Test";
   state = [(Map(Address, UInt), "test_map"); (Address, "test_sv1"); (UInt, "test_sv2")];
-  constructor = ([], Val(VUnit));
+  constructor = ([(Address, "test_sv1"); (UInt, "test_sv2")], Seq(
+    (StateAssign(This None, "test_sv1", Var("test_sv1"))),
+    (StateAssign(This None, "test_sv2", Var("test_sv2"))) 
+  ));
   functions = [fb];
 }
 
@@ -323,7 +326,7 @@ let test_new_contract = Test.make ~name:"test new contract"
     in
     (* let args = [Val(VMapping (Hashtbl.create 64, UInt))] in   *)
     let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
-    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [])) with
+    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
       | (_, _, _, Val(res)) -> res
       | _ -> assert false
     in
@@ -331,24 +334,20 @@ let test_new_contract = Test.make ~name:"test new contract"
       | (_, _, _, Val(address)) -> address
       | _ -> assert false
     in
-    let (cname, _sv, bal) = Hashtbl.find blockchain (res, address) in 
+    let (cname, sv, bal) = Hashtbl.find blockchain (res, address) in
+    
+    let test_var1_val = StateVars.find "test_sv1" sv in 
+    let test_var2_val = StateVars.find "test_sv2" sv in 
+    Format.eprintf "%s" (expr_to_string test_var2_val);
     (
       cname = contract.name && (bal = n' || bal = VUInt(0)) && 
       (
-        true
+        (test_var1_val = Val(VAddress "0x0")) &&
+        (test_var2_val = Val(n'))
       )
     )
   end
 ) 
-
-let is_alpha alpha = 
-  match alpha with 
-  |  'a' .. 'z' -> true
-  | 'A' .. 'Z' -> true 
-  | _ -> false;;
-
-
-let gen_char = Gen.oneof[ Gen.map (fun s -> if is_alpha s then s else 'a') Gen.char]
 
 let test_suite = [
   test_division_by_zero; 
@@ -368,8 +367,8 @@ let test_suite = [
 
 let () =
 
-  gen_char |> Gen.generate1 |> Format.eprintf "%c";
   (* Gen.string_printable  |> Gen.generate1 |> Format.eprintf "%s 1----- -----"; *)
+
   let suite =
     List.map QCheck_alcotest.to_alcotest
       test_suite
