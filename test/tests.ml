@@ -341,6 +341,14 @@ let test_new_contract = Test.make ~name:"test new contract"
   end
 ) 
 
+let is_alpha alpha = 
+  match alpha with 
+  |  'a' .. 'z' -> true
+  | 'A' .. 'Z' -> true 
+  | _ -> false;;
+
+
+let gen_char = Gen.oneof[ Gen.map (fun s -> if is_alpha s then s else 'a') Gen.char]
 
 let test_suite = [
   test_division_by_zero; 
@@ -354,12 +362,14 @@ let test_suite = [
   test_arit_plus_op;
   test_arit_minus_op;
   test_arit_times_op;
-  test_arit_div_op
+  test_arit_div_op;
+  
 ] 
 
-
 let () =
-  Format.eprintf "%s" (Gen.string_printable); 
+
+  gen_char |> Gen.generate1 |> Format.eprintf "%c";
+  (* Gen.string_printable  |> Gen.generate1 |> Format.eprintf "%s 1----- -----"; *)
   let suite =
     List.map QCheck_alcotest.to_alcotest
       test_suite
