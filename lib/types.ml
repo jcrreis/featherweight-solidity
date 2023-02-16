@@ -85,7 +85,6 @@ and contract_def = {
 }
 
 
-
 type contract_table = (string, contract_def) Hashtbl.t
 
 type blockchain = ((values * values), (string * (expr) StateVars.t * values)) Hashtbl.t
@@ -95,3 +94,5 @@ type conf = (blockchain * blockchain * values Stack.t * expr)
 type program = (contract_table * blockchain * expr)
 
 type gamma = (string, t_exp) Hashtbl.t
+
+exception TypeMismatch of t_exp * t_exp 

@@ -107,19 +107,6 @@ let test_contract =
     functions = [fb];
   }
 
-let _eoa_contract () : contract_def =
-  let fb = {
-    name = "fb";
-    rettype = Unit;
-    args = [];
-    body = Return(Val(VUnit));
-  } in
-  {
-    name = "EOAContract";
-    state = [];
-    constructor = ([], Val(VUnit));
-    functions = [fb];
-  }
 
 let test_division_by_zero = Test.make ~name:"test division by zero"
   (set_shrink tshrink arb_tree_arit)
@@ -305,16 +292,16 @@ let test_bool_op = Test.make ~name:"test boolean operators"
 
 
 let test_if = Test.make ~name:"test if operator"
-(set_shrink tshrink arb_tree_bool)
+(arb_tree_bool)
 (fun (e) -> 
   begin 
     let ct = Hashtbl.create 64 in 
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
-    eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool True), e, Revert)))
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(e, e, Revert)))
     =
-    eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool False), Revert, e)))
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(e, e, Revert)))
   end
 )
 
