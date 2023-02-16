@@ -529,6 +529,7 @@ let rec eval_expr
       | (_, _, _, Val(VContract c)) ->
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, sv, _) = Hashtbl.find blockchain (VContract c,a) in
+        Format.eprintf "AQUII";
         begin try 
           let res = StateVars.find s sv in
           eval_expr ct vars (blockchain, blockchain', sigma, res) 

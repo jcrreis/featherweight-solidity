@@ -458,6 +458,67 @@ let test_address = Test.make ~name:"test address function"
   end
 ) 
 
+let test_stateread = Test.make ~name:"test state read"
+(set_shrink tshrink arb_tree_arit)
+(fun (n) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = test_contract in 
+    let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
+      | (_, _, _, Val(VUInt n)) -> VUInt n 
+      |_ -> VUInt 0  
+    in
+    let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) in
+    (
+      let (_, _, _, sr1) = eval_expr ct vars (blockchain, blockchain, sigma, StateRead(res, "test_sv1")) in 
+      let (_, _, _, sr2) = eval_expr ct vars (blockchain, blockchain, sigma, StateRead(res, "test_sv2")) in 
+      (sr1 = Val(VAddress "0x0")) && (sr2 = Val(n')) 
+    )
+  end
+) 
+
+let test_statewrite= Test.make ~name:"test state write"
+(set_shrink tshrink arb_tree_arit)
+(fun (n) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = test_contract in 
+    let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
+      | (_, _, _, Val(VUInt n)) -> VUInt n 
+      |_ -> VUInt 0  
+    in
+    let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
+      | (_, _, _, Val(res)) -> res
+      | _ -> assert false
+    in 
+    let address = match eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) with
+      | (_, _, _, Val(address)) -> address
+      | _ -> assert false
+    in
+    (
+      let (blockchain, _, _, sa1) = eval_expr ct vars (blockchain, blockchain, sigma, StateAssign(Val(res), "test_sv1", Val(VAddress "0x1"))) in 
+      let (blockchain, _, _, sa2) = eval_expr ct vars (blockchain, blockchain, sigma, StateAssign(Val(res), "test_sv2", Val(n'))) in 
+      let (_, sv, _) = Hashtbl.find blockchain (res, address) in  
+
+      (sa1 = Val(VAddress "0x1")) && (sa2 = Val(n')) 
+      &&
+      ((StateVars.find "test_sv2" sv) = Val(n'))
+      &&
+      ((StateVars.find "test_sv1" sv) = Val(VAddress "0x1"))
+    )
+  end
+) 
+
+
+
 let test_suite = [
   test_division_by_zero; 
   test_arit_op; 
@@ -472,8 +533,9 @@ let test_suite = [
   test_arit_times_op;
   test_arit_div_op;
   test_balance;
-  test_address
-  
+  test_address;
+  test_stateread;
+  test_statewrite
 ] 
 
 let () =
