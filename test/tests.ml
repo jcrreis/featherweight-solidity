@@ -91,21 +91,35 @@ let rec tshrink e = match e with
 
 
 let test_contract = 
-let fb = {
-  name = "fb";
-  rettype = Unit;
-  args = [];
-  body = Return(Val(VUnit));
-} in  
-{
-  name = "Test";
-  state = [(Map(Address, UInt), "test_map"); (Address, "test_sv1"); (UInt, "test_sv2")];
-  constructor = ([(Address, "test_sv1"); (UInt, "test_sv2")], Seq(
-    (StateAssign(This None, "test_sv1", Var("test_sv1"))),
-    (StateAssign(This None, "test_sv2", Var("test_sv2"))) 
-  ));
-  functions = [fb];
-}
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    args = [];
+    body = Return(Val(VUnit));
+  } in  
+  {
+    name = "Test";
+    state = [(Map(Address, UInt), "test_map"); (Address, "test_sv1"); (UInt, "test_sv2")];
+    constructor = ([(Address, "test_sv1"); (UInt, "test_sv2")], Seq(
+      (StateAssign(This None, "test_sv1", Var("test_sv1"))),
+      (StateAssign(This None, "test_sv2", Var("test_sv2"))) 
+    ));
+    functions = [fb];
+  }
+
+let _eoa_contract () : contract_def =
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    args = [];
+    body = Return(Val(VUnit));
+  } in
+  {
+    name = "EOAContract";
+    state = [];
+    constructor = ([], Val(VUnit));
+    functions = [fb];
+  }
 
 let test_division_by_zero = Test.make ~name:"test division by zero"
   (set_shrink tshrink arb_tree_arit)
@@ -516,6 +530,47 @@ let test_statewrite= Test.make ~name:"test state write"
     )
   end
 ) 
+
+(* let test_transfer= Test.make ~name:"test transfer function"
+(set_shrink tshrink arb_tree_arit)
+(fun (n) -> 
+  begin 
+    let ct = Hashtbl.create 64 in 
+    let vars = Hashtbl.create 64 in 
+    let blockchain = Hashtbl.create 64 in  
+    let sigma = Stack.create() in 
+    let contract: contract_def = eoa_contract in 
+    let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
+      | (_, _, _, Val(VUInt n)) -> VUInt n 
+      |_ -> VUInt 0  
+    in
+    let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+    let c1 = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [])) with
+      | (_, _, _, Val(res)) -> res
+      | _ -> assert false
+    in 
+    let c2 = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(VUInt 1000000), [])) with
+      | (_, _, _, Val(res)) -> res
+      | _ -> assert false
+    in 
+    let address = match eval_expr ct vars (blockchain, blockchain, sigma, Address(Val(res))) with
+      | (_, _, _, Val(address)) -> address
+      | _ -> assert false
+    in
+    (
+      let (blockchain, _, _, sa1) = eval_expr ct vars (blockchain, blockchain, sigma, StateAssign(Val(res), "test_sv1", Val(VAddress "0x1"))) in 
+      let (blockchain, _, _, sa2) = eval_expr ct vars (blockchain, blockchain, sigma, StateAssign(Val(res), "test_sv2", Val(n'))) in 
+      let (_, sv, _) = Hashtbl.find blockchain (res, address) in  
+
+      (sa1 = Val(VAddress "0x1")) && (sa2 = Val(n')) 
+      &&
+      ((StateVars.find "test_sv2" sv) = Val(n'))
+      &&
+      ((StateVars.find "test_sv1" sv) = Val(VAddress "0x1"))
+    )
+  end
+)  *)
+
 
 
 
