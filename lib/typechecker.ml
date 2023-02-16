@@ -11,7 +11,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
   | Val (VUnit), _ -> raise (TypeMismatch (Unit, t))
   | Val (VAddress _), Address -> ()
   | Val (VAddress _), _ -> raise (TypeMismatch (Address, t))
-  | Val (VContract n), C y -> ()
+  | Val (VContract _n), C _y -> ()
   | Val (VContract n), _ -> raise (TypeMismatch (C n, t))
   | Var x, t -> 
     let t_x = Hashtbl.find gamma x in
@@ -108,37 +108,29 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) : unit = match e with
       typecheck gamma e1 UInt;
       typecheck gamma e2 UInt
   end
-  | Revert -> axioms gamme e t 
+  | Revert -> axioms gamma e t 
   | Balance e1 -> 
     if t <> UInt then 
       raise (TypeMismatch (UInt, t));
     typecheck gamma e1 Address;
-  | Address e1 -> 
-    let t = typecheck gamma e1 in 
-    begin match t with 
+  | Address _e1 -> 
+    if t <> Address then 
+      raise (TypeMismatch (Address, t))
+    (* let t = typecheck gamma e1 in  *)
+    (* begin match t with 
       | C _ -> Address 
       | _ -> assert false 
-    end
-  | Return e1 -> typecheck gamma e1 t
-  | Seq (_, e2) ->  
-    let t2 = typecheck gamma e2 in 
-    t2
-  | If (e1, e2, e3) -> 
-    let t1 = typecheck gamma e1 in  
-    if t1 = Bool then 
-      begin 
-      let t2 = typecheck gamma e2 in 
-      let t3 = typecheck gamma e3 in 
-      if compareType t2 t3 
-        then t2
-      else assert false
-      end 
-    else assert false 
-  | Assign (s, e1) -> 
-    let t_s = Hashtbl.find gamma s in 
-    let t1 = typecheck gamma e1 in 
-    if t_s = t1 
-      then t_s
+    end *)
     else
-      assert false   
+      assert false
+  | Return e1 -> typecheck gamma e1 t
+  | Seq (_, e2) ->
+    typecheck gamma e2 t
+  | If (e1, e2, e3) -> 
+    typecheck gamma e1 Bool;
+    typecheck gamma e2 t;
+    typecheck gamma e3 t
+  | Assign (s, e1) -> 
+    let t_x = Hashtbl.find gamma s in
+    typecheck gamma e1 t_x
   | _ -> assert false
