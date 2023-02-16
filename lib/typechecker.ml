@@ -1,12 +1,13 @@
 open Types 
 
-let axioms (e: expr) : t_exp = match e with 
+let axioms (gamma: gamma) (e: expr) : t_exp = match e with 
   | Val(VBool _) -> Bool  
   | Val (VUInt n) -> if n >= 0 then UInt else assert false
   | Revert -> TRevert
   | Val (VUnit) -> Unit
   | Val (VAddress _) -> Address
   | Val (VContract n) -> C n
+  | Var x -> Hashtbl.find gamma x
   | _ -> assert false
 
 let compareType (t1: t_exp) (t2: t_exp) : bool = 
@@ -16,11 +17,12 @@ let compareType (t1: t_exp) (t2: t_exp) : bool =
 
 
 let rec typecheck (gamma: gamma) (e: expr) : t_exp = match e with 
-  | Val (VBool _) -> axioms e
-  | Val (VUInt _) -> axioms e
-  | Val (VUnit) -> axioms e
-  | Val (VAddress _) -> axioms e
-  | Val (VContract _) -> axioms e
+  | Val (VBool _) -> axioms gamma e
+  | Val (VUInt _) -> axioms gamma e
+  | Val (VUnit) -> axioms gamma e
+  | Val (VAddress _) -> axioms gamma e
+  | Val (VContract _) -> axioms gamma e
+  | Var _ -> axioms gamma e
   | AritOp a -> begin match a with 
     | Plus (e1, e2) -> 
       let t1 = typecheck gamma e1 in 
@@ -129,8 +131,7 @@ let rec typecheck (gamma: gamma) (e: expr) : t_exp = match e with
       else
         assert false
   end
-  | Revert -> axioms e
-  | Var x -> Hashtbl.find gamma x
+  | Revert -> axioms gamma e
   | Balance e1 -> let t = typecheck gamma e1 in 
     if compareType t Address 
       then UInt 
@@ -138,12 +139,30 @@ let rec typecheck (gamma: gamma) (e: expr) : t_exp = match e with
       assert false
   | Address e1 -> 
     let t = typecheck gamma e1 in 
-    if compareType t (C 0) (* TODO ---- *)
-      then Address 
-    else 
-      assert false
+    begin match t with 
+      | C _ -> Address 
+      | _ -> assert false 
+    end
   | Return e1 -> typecheck gamma e1 
   | Seq (_, e2) ->  
     let t2 = typecheck gamma e2 in 
     t2
+  | If (e1, e2, e3) -> 
+    let t1 = typecheck gamma e1 in  
+    if t1 = Bool then 
+      begin 
+      let t2 = typecheck gamma e2 in 
+      let t3 = typecheck gamma e3 in 
+      if compareType t2 t3 
+        then t2
+      else assert false
+      end 
+    else assert false 
+  | Assign (s, e1) -> 
+    let t_s = Hashtbl.find gamma s in 
+    let t1 = typecheck gamma e1 in 
+    if t_s = t1 
+      then t_s
+    else
+      assert false   
   | _ -> assert false
