@@ -2,6 +2,8 @@ open QCheck
 open Featherweightsolidity 
 open Fs 
 open Types
+open Pprinters
+
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
