@@ -34,29 +34,6 @@ let rec values_to_string (v: values) : string =
       | _ -> assert false) e1 ""
     | VUnit -> "Unit"
   
-
-let arit_op_to_string (a: arit_ops) : string =
-  match a with 
-    | Plus (_e1, _e2) -> "Plus"
-    | Minus (_e1, _e2) -> "Minus"
-    | Times (_e1, _e2) -> "Times"
-    | Div (_e1, _e2) -> "Div"
-    | Mod (_e1, _e2) -> "Mod"
-    | Exp (_e1, _e2) -> "Exp"
-
-let bool_op_to_string (b: bool_ops) : string = 
-  match b with 
-    | Conj (_e1, _e2) -> "And"
-    | Disj (_e1, _e2) -> "Or"
-    | Neg (_e1) -> "Not"
-    | Equals (_e1, _e2) -> "Equals"
-    | Lesser (_e1, _e2) -> "LessThan"
-    | LesserOrEquals (_e1, _e2) -> "LessThanEq"
-    | Greater (_e1, _e2) -> "GreaterThan"
-    | GreaterOrEquals (_e1, _e2) -> "GreaterThanEq"
-    | Inequals (_e1, _e2) -> "Inequals"
-    
-
 let rec expr_to_string (e: expr) : string =
   match e with 
     | AritOp (a1) -> begin match a1 with 
@@ -81,28 +58,28 @@ let rec expr_to_string (e: expr) : string =
     | Var (s1) -> s1 
     | Val (v1) -> values_to_string v1
     | This (s1) -> begin match s1 with 
-      | None -> "this."
-      | Some s -> "this." ^s
+      | None -> "this"
+      | Some s -> "this." ^ s
     end
     | MsgSender -> "msg.sender"
     | MsgValue -> "msg.value"
     | Balance (e1) -> "Balance(" ^ expr_to_string e1 ^ ")"
     | Address (e1) -> "Address(" ^ expr_to_string e1 ^ ")"
-    | StateRead (_e1, _s1) -> "StateRead"
-    | Transfer (_e1, _e2) -> "Transfer"
-    | New (_s1, _e1, _el1) -> "New"
-    | Cons (_s1, _e1) -> "Cons"
-    | Seq (_e1, _e2) -> "Seq"
-    | Let (_t1, _s1, _e1, _e2) -> "Let"
-    | Assign (_s1, _e1) -> "Assign"
-    | StateAssign (_e1, _s1, _e2) -> "StateAssign"
-    | MapRead (_e1, _e2) -> "MapRead"
-    | MapWrite (_e1, _e2, _e3) -> "MapWrite"
+    | StateRead (e1, s1) -> expr_to_string e1 ^ "." ^ s1
+    | Transfer (e1, e2) -> expr_to_string e1 ^ ".transfer(" ^ expr_to_string e2 ^ ")"
+    | New (s1, e1, _el1) -> "new " ^ s1 ^ "(" ^ expr_to_string e1 ^ ")" 
+    | Cons (s1, e1) -> s1 ^ "(" ^ expr_to_string e1 ^ ")"
+    | Seq (e1, e2) -> "\n" ^ expr_to_string e1 ^ ";\n" ^ expr_to_string e2 ^ ";"
+    | Let (t1, s1, e1, e2) -> t_exp_to_string t1 ^ " " ^ s1 ^ " = " ^ expr_to_string e1 ^ ";" ^ expr_to_string e2 
+    | Assign (s1, e1) -> s1 ^ " = " ^ expr_to_string e1 
+    | StateAssign (e1, s1, e2) -> expr_to_string e1 ^ "." ^ s1 ^ " = " ^ expr_to_string e2 ^ ";"
+    | MapRead (e1, e2) -> expr_to_string e1 ^ "[" ^ expr_to_string e2 ^ "]"
+    | MapWrite (e1, e2, e3) -> expr_to_string e1 ^ "[" ^ expr_to_string e2 ^ "]" ^ " = " ^ expr_to_string e3 
     | Call (_e1, _s1, _e2, _le) -> "Call"
     | CallTopLevel (_e1, _s1, _e2, _e3, _le) -> "CallTopLevel"
-    | Revert -> "Revert"
-    | If (_e1, _e2, _e3) -> "If"
-    | Return (_e1) -> "Return"
+    | Revert -> "revert()"
+    | If (e1, e2, e3) -> "if(" ^ expr_to_string e1 ^ ")" ^ " then " ^ expr_to_string e2 ^ " else " ^ expr_to_string e3 
+    | Return (e1) -> "return " ^ expr_to_string e1
     | _ -> assert false
 
   

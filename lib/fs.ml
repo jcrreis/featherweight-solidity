@@ -468,23 +468,35 @@ let rec eval_expr
       | _ -> assert false
     end
   (*VER*)
-  | Transfer (e1, e2) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
-      | (_, _, _, Val(VAddress a)) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
-          | (_, _, _, Val(VUInt v)) ->
-            let res = update_balance ct (VAddress a) (VUInt (-v)) vars conf in
-            begin match res with
-              | Ok blockchain ->
-                Hashtbl.add vars "msg.sender" (Val(VAddress a));
-                Hashtbl.add vars "msg.value" (Val(VUInt v));
-                Hashtbl.add vars "this" (Val(get_contract_by_address blockchain (VAddress a)));
-                Stack.push (VAddress a) sigma;
-                (blockchain, blockchain', sigma, Val VUnit)
-              | Error () -> (blockchain, blockchain', sigma, Revert)
-            end
-          | _ -> assert false
-        end
-      | _ -> assert false
-    end
+  | Transfer (e1, e2) -> 
+    if (top conf) = VUnit 
+      then (blockchain, blockchain', sigma, Revert)
+    else 
+      begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
+        | (_, _, _, Val(VAddress a)) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
+            | (_, _, _, Val(VUInt v)) ->
+              let res = update_balance ct (VAddress a) (VUInt (-v)) vars conf in
+              begin match res with
+                | Ok blockchain ->
+                  let res = update_balance ct (VAddress a) (VUInt (-v)) vars conf in
+                  begin match res with 
+                    | Ok blockchain -> 
+                      let ctr: values = get_contract_by_address blockchain (VAddress a) in 
+                      let (cname, _, _) = Hashtbl.find blockchain (ctr, VAddress a) in 
+                      Hashtbl.add vars "msg.sender" (Val(top conf));
+                      Hashtbl.add vars "msg.value" (Val(VUInt v));
+                      Hashtbl.add vars "this" (Val ctr);
+                      Stack.push (VAddress a) sigma;
+                      let (_, e) = function_body cname "fb" [] ct in 
+                      (blockchain, blockchain', sigma, e)
+                    | Error () -> (blockchain, blockchain', sigma, Revert)
+                  end
+                | Error () -> (blockchain, blockchain', sigma, Revert)
+              end
+            | _ -> assert false
+          end
+        | _ -> assert false
+      end
   (*VER*)
   | New (s, e1, le) ->
     begin
