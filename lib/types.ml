@@ -21,7 +21,7 @@ type values =
   | VAddress of string
   | VUnit
   | VContract of int
-  | VMapping of ((expr, expr) Hashtbl.t ) * t_exp
+  | VMapping of ((expr, expr) Hashtbl.t ) * t_exp (* alteração de piro, adicionei t_exp para facilitar a geração de valores default *)
 
 
 and arit_ops =

@@ -29,6 +29,15 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) : unit = match e with
   | Val (VUnit) -> axioms gamma e t
   | Val (VAddress _) -> axioms gamma e t
   | Val (VContract _) -> axioms gamma e t
+  (* ((expr, expr) Hashtbl.t ) * t_exp *)
+  (* | Map of t_exp * t_exp *)
+
+  | Val (VMapping (m, t_exp)) -> 
+    let (t1, t2) = match t with 
+      | Map (t1, t2) -> (t1, t2)
+      | _ -> raise (TypeMismatch (Map (t_exp, t_exp), t)) (* first hand of tuple, how to know what value should we have? *)
+    in 
+    Hashtbl.iter (fun k v -> typecheck gamma k t1; typecheck gamma v t2) m
   | Var _ -> axioms gamma e t
   | AritOp a -> begin match a with 
     | Plus (e1, e2) -> 
@@ -133,4 +142,11 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) : unit = match e with
   | Assign (s, e1) -> 
     let t_x = Hashtbl.find gamma s in
     typecheck gamma e1 t_x
+    (* how do we know what type we are expecting for our map? what are the values for t1 and t2? *)
+  (* | MapRead (e1, e2) ->  
+  | MapWrite (e1, e2, e3) -> *)
+  | Transfer (e1, e2) ->
+    typecheck gamma e2 UInt;
+    typecheck gamma e1 Address
+  (* | Const (s, e1) ->  *) (* CASTING CONTRACTS MIGHT BE A PROBLEM! ALWAYS THROW A WARNING *)
   | _ -> assert false
