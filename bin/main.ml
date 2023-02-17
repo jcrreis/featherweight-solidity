@@ -2,7 +2,7 @@ open Featherweightsolidity
 open Fs 
 open Types
 open Pprinters
-
+open Contracts
 
 let fname = Sys.argv.(1)
 
