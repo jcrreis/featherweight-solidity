@@ -294,16 +294,19 @@ let test_bool_op = Test.make ~name:"test boolean operators"
 
 
 let test_if = Test.make ~name:"test if operator"
-(arb_tree_bool)
+(set_shrink tshrink arb_tree_bool)
 (fun (e) -> 
   begin 
     let ct = Hashtbl.create 64 in 
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
-    eval_expr ct vars (blockchain, blockchain, sigma, (If(e, e, Revert)))
+    let e' = match eval_expr ct vars (blockchain, blockchain, sigma, e) with 
+      | (_, _, _, e) -> if e = Revert then Val(VBool False) else e 
+    in 
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(e', e, Revert)))
     =
-    eval_expr ct vars (blockchain, blockchain, sigma, (If(e, e, Revert)))
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(e', e, Revert)))
   end
 )
 
