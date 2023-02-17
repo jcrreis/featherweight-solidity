@@ -312,7 +312,7 @@ let test_if = Test.make ~name:"test if operator"
 
 
 let test_let = Test.make ~name:"test let operator"
-(pair arb_tree_arit arb_tree_arit)
+(pair (set_shrink tshrink arb_tree_arit) (set_shrink tshrink arb_tree_arit))
 (fun (e1, e2) -> 
   begin 
     let ct = Hashtbl.create 64 in 
