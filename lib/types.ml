@@ -48,7 +48,7 @@ and expr =
   | BoolOp of bool_ops
   | Var of string
   | Val of values
-  | This of string option (*This ("") === This, else This.fname*)
+  | This of string option
   | MsgSender
   | MsgValue
   | Balance of expr

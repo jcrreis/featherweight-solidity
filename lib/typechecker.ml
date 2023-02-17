@@ -1,5 +1,5 @@
 open Types 
-
+(* open Utils *)
 
 let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
@@ -29,9 +29,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
   | Val (VUnit) -> axioms gamma e t
   | Val (VAddress _) -> axioms gamma e t
   | Val (VContract _) -> axioms gamma e t
-  (* ((expr, expr) Hashtbl.t ) * t_exp *)
-  (* | Map of t_exp * t_exp *)
-
   | Val (VMapping (m, t_exp)) -> 
     let (t1, t2) = match t with 
       | Map (t1, t2) -> (t1, t2)
@@ -135,6 +132,10 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
   | Return e1 -> typecheck gamma e1 t ct 
   | Seq (_, e2) ->
     typecheck gamma e2 t ct
+  | MsgSender -> 
+    typecheck gamma e Address ct 
+  | MsgValue ->
+    typecheck gamma e UInt ct 
   | If (e1, e2, e3) -> 
     typecheck gamma e1 Bool ct;
     typecheck gamma e2 t ct;
@@ -146,12 +147,29 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
   (* | MapRead (e1, e2) ->  
   | MapWrite (e1, e2, e3) -> *)
   | Transfer (e1, e2) ->
-    typecheck gamma e2 UInt ct;
-    typecheck gamma e1 Address ct
+    if t <> Unit then 
+      raise (TypeMismatch (Unit, t))
+    else
+      begin
+      typecheck gamma e2 UInt ct;
+      typecheck gamma e1 Address ct
+      end
   | New (s, e, le) ->
+    (* type check contract ...*)
     typecheck gamma e UInt ct;
     let c_def: contract_def = Hashtbl.find ct s in
     let (ts, _) = c_def.constructor in
-    List.iter2 (fun (t_cx, _) e_cx -> typecheck gamma e_cx t_cx ct ) ts le; (* Verify all parameters have same type to the ones defined in the contract constructor*)
-  (* | Const (s, e1) ->  *) (* CASTING CONTRACTS MIGHT BE A PROBLEM! ALWAYS THROW A WARNING *)
+    List.iter2 (fun (t_cx, _) e_cx -> typecheck gamma e_cx t_cx ct ) ts le (* Verify all parameters have same type to the ones defined in the contract constructor*)
+  (* | Call (e1, s, e2, le) -> 
+    typecheck gamma e1 C(1) ct;
+    typecheck gamma e2 UInt ct;
+    () *)
+  | Cons (_s, _e1) -> assert false
+     (* CASTING CONTRACTS MIGHT BE A PROBLEM! ALWAYS THROW A WARNING *)
+  | CallTopLevel (_e1, _s, _e2, _e3, _le) -> assert false
+  | Let (t_e, s, e1, e2) -> 
+    typecheck gamma e1 t_e ct;
+    Hashtbl.add gamma s t_e;
+    typecheck gamma e2 Unit ct;
+    (* typecheck e2 with ???*)
   | _ -> assert false

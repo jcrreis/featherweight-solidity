@@ -153,3 +153,12 @@ let rec substitute (e: expr) (e': expr) (x: string) : expr =
   | _ -> assert false
 
 (* Blockchain maps cases? *)
+
+let function_type (contract_name: string) (function_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp list * t_exp) =
+  let contract : contract_def = Hashtbl.find ct contract_name in
+  let functions_def : fun_def list = contract.functions in
+  try
+    let f = List.find (fun (x : fun_def) -> x.name = function_name) (functions_def) in
+    let t_es = List.map (fun (t_e, _) -> t_e) f.args in
+    (t_es, f.rettype)
+  with Not_found -> ([], TRevert) (* maybe remove? *)
