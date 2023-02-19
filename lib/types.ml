@@ -70,6 +70,7 @@ and expr =
   | Return of expr
   | AddContract of contract_def
 
+  
 and fun_def = {
   name : string;
   rettype : t_exp;
