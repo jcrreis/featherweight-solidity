@@ -11,9 +11,9 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
   | Val (VUnit), _ -> raise (TypeMismatch (Unit, t))
   | Val (VAddress _), Address -> ()
   | Val (VAddress _), _ -> raise (TypeMismatch (Address, t))
-  | Val (VContract _), C (-1) -> ()
-  | Val (VContract n), C (y) -> if n <> y then raise (TypeMismatch (C y, t)) else ()
-  | Val (VContract n), _ -> raise (TypeMismatch (C n, t))
+  | Val (VContract _), C -1 -> ()
+  | Val (VContract n), C y -> if n <> y then raise (TypeMismatch (C (y), t)) else ()
+  | Val (VContract n), _ -> raise (TypeMismatch (C (n), t))
   | MsgSender, Address -> ()
   | MsgSender, _ -> raise (TypeMismatch (Address, t))
   | MsgValue, UInt -> ()
@@ -149,29 +149,33 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
     if t <> Unit then 
       raise (TypeMismatch (Unit, t))
     else
-      begin
       typecheck gamma e2 UInt ct;
       typecheck gamma e1 Address ct
-      end
   | New (s, e, le) ->
     (* type check contract ...*)
-    typecheck gamma e UInt ct;
-    let c_def: contract_def = Hashtbl.find ct s in
-    let (ts, _) = function_type c_def.name "constructor" ct in
-    List.iter2 (fun t_cx e_cx -> typecheck gamma e_cx t_cx ct ) ts le;
-    typecheck gamma e (C(-1)) ct
+    if t <> (C(-1)) then 
+      raise (TypeMismatch (C(-1), t))
+    else
+      typecheck gamma e UInt ct;
+      let c_def: contract_def = Hashtbl.find ct s in
+      let (ts, _) = function_type c_def.name "constructor" ct in
+      List.iter2 (fun t_cx e_cx -> typecheck gamma e_cx t_cx ct ) ts le;
     (* Verify all parameters have same type to the ones defined in the contract constructor*)
   (* | Call (e1, s, e2, le) -> 
-    typecheck gamma e1 C(1) ct;
+    typecheck gamma e1 (C(-1, "")) ct;
     typecheck gamma e2 UInt ct;
     () *)
   | Cons (_, e1) -> 
     typecheck gamma e1 Address ct;
     typecheck gamma e (C(-1)) ct
-  | CallTopLevel (_e1, _s, _e2, _e3, _le) -> assert false
+  (* | CallTopLevel (e1, s, e2, e3, le) -> 
+    typecheck gamma e1 (C(-1, "")) ct;
+    typecheck gamma e2 UInt ct;
+    typecheck gamma e3 Address ct;  *)
+
   | Let (t_e, s, e1, e2) -> 
     typecheck gamma e1 t_e ct;
     Hashtbl.add gamma s t_e;
-    typecheck gamma e2 Unit ct;
+    typecheck gamma e2 t ct;
     (* typecheck e2 with ???*)
   | _ -> assert false

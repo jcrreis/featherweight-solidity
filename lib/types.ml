@@ -1,7 +1,7 @@
 module StateVars = Map.Make(String)
 
 type t_exp =
-  | C of int (* * hash_contract_code? *)
+  | C of int  (* * hash_contract_code? *)
   | Bool
   | Unit
   | UInt

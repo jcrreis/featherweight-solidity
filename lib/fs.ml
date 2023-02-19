@@ -168,7 +168,7 @@ let rec eval_expr
   let init_contract_state (state: (t_exp * string) list) : (expr) StateVars.t =
     List.fold_left (fun sv (t_e, s) -> 
                     match t_e with
-                      | C _n -> StateVars.add s (Val(VContract(0))) sv
+                      | C (_n) -> StateVars.add s (Val(VContract(0))) sv
                       | Bool -> StateVars.add s (Val(VBool(False))) sv
                       | UInt -> StateVars.add s (Val(VUInt(0))) sv
                       | Address -> StateVars.add s (Val(VAddress("0x0000000000000000000000000000000000000000"))) sv
@@ -448,7 +448,6 @@ let rec eval_expr
       | (_, _, _, Val(VContract c)) ->
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, sv, _) = Hashtbl.find blockchain (VContract c,a) in
-        Format.eprintf "AQUII";
         begin try 
           let res = StateVars.find s sv in
           eval_expr ct vars (blockchain, blockchain', sigma, res) 

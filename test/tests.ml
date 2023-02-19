@@ -37,6 +37,23 @@ let rec gen_bool_op_ast n = match n with
     Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
 ]
 
+(* | Let of t_exp *  string * expr * expr  *)
+let _gen_let_expr (t_e: t_exp) (s: string) (e1: expr) (e2: expr) : expr = Let(t_e, s, e1, e2)
+
+let _gen_assign_expr (s: string) (e1: expr) : expr = Assign(s, e1)
+
+let _gen_seq_expr (e1: expr) (e2: expr) : expr = Seq(e1, e2)
+
+(* let rec _gen_expr_ast n = match n with 
+  | 0 -> [
+    leafgen_bool;
+    leafgen_int;
+  ]
+  | _n -> Gen.oneof [
+    leafgen_bool;
+    leafgen_int;
+    Gen.map2 (fun l r -> BoolOp(Conj(l,r))) (_gen_expr_ast (n/2)) (_gen_expr_ast (n/2));
+] *)
 
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 

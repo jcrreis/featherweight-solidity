@@ -1,7 +1,7 @@
 open Types
 
 let rec t_exp_to_string (t_e: t_exp) : string = match t_e with
-| C n -> "contract(" ^ (Stdlib.string_of_int n) ^ ")"
+| C (n) -> "contract" ^ "(" ^ (Stdlib.string_of_int n) ^ ")"
 | Bool -> "boolean"
 | Unit -> "unit"
 | UInt -> "uint"
