@@ -1,5 +1,5 @@
 open Types 
-(* open Utils *)
+open Utils
 
 let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
@@ -11,8 +11,13 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
   | Val (VUnit), _ -> raise (TypeMismatch (Unit, t))
   | Val (VAddress _), Address -> ()
   | Val (VAddress _), _ -> raise (TypeMismatch (Address, t))
-  | Val (VContract _n), C _y -> ()
+  | Val (VContract _), C (-1) -> ()
+  | Val (VContract n), C (y) -> if n <> y then raise (TypeMismatch (C y, t)) else ()
   | Val (VContract n), _ -> raise (TypeMismatch (C n, t))
+  | MsgSender, Address -> ()
+  | MsgSender, _ -> raise (TypeMismatch (Address, t))
+  | MsgValue, UInt -> ()
+  | MsgValue, _ -> raise (TypeMismatch (UInt, t))
   | Var x, t -> 
     let t_x = Hashtbl.find gamma x in
     if t_x <> t then raise (TypeMismatch (t_x, t))
@@ -21,7 +26,6 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
 
 let compareType (t1: t_exp) (t2: t_exp) : bool = 
   t1 = t2 || t1 = TRevert || t2 = TRevert 
-
 
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = match e with 
   | Val (VBool _) -> axioms gamma e t
@@ -119,23 +123,18 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
     if t <> UInt then 
       raise (TypeMismatch (UInt, t));
     typecheck gamma e1 Address ct;
-  | Address _e1 -> 
+  | Address e1 -> 
     if t <> Address then 
       raise (TypeMismatch (Address, t))
-    (* let t = typecheck gamma e1 in  *)
-    (* begin match t with 
-      | C _ -> Address 
-      | _ -> assert false 
-    end *)
     else
-      assert false
+      typecheck gamma e1 (C(-1)) ct
   | Return e1 -> typecheck gamma e1 t ct 
   | Seq (_, e2) ->
     typecheck gamma e2 t ct
   | MsgSender -> 
-    typecheck gamma e Address ct 
+    axioms gamma e t  
   | MsgValue ->
-    typecheck gamma e UInt ct 
+    axioms gamma e t  
   | If (e1, e2, e3) -> 
     typecheck gamma e1 Bool ct;
     typecheck gamma e2 t ct;
@@ -158,14 +157,17 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
     (* type check contract ...*)
     typecheck gamma e UInt ct;
     let c_def: contract_def = Hashtbl.find ct s in
-    let (ts, _) = c_def.constructor in
-    List.iter2 (fun (t_cx, _) e_cx -> typecheck gamma e_cx t_cx ct ) ts le (* Verify all parameters have same type to the ones defined in the contract constructor*)
+    let (ts, _) = function_type c_def.name "constructor" ct in
+    List.iter2 (fun t_cx e_cx -> typecheck gamma e_cx t_cx ct ) ts le;
+    typecheck gamma e (C(-1)) ct
+    (* Verify all parameters have same type to the ones defined in the contract constructor*)
   (* | Call (e1, s, e2, le) -> 
     typecheck gamma e1 C(1) ct;
     typecheck gamma e2 UInt ct;
     () *)
-  | Cons (_s, _e1) -> assert false
-     (* CASTING CONTRACTS MIGHT BE A PROBLEM! ALWAYS THROW A WARNING *)
+  | Cons (_, e1) -> 
+    typecheck gamma e1 Address ct;
+    typecheck gamma e (C(-1)) ct
   | CallTopLevel (_e1, _s, _e2, _e3, _le) -> assert false
   | Let (t_e, s, e1, e2) -> 
     typecheck gamma e1 t_e ct;
