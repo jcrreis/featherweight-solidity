@@ -33,8 +33,8 @@ let () =
     let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
     Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1); 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
-    Format.eprintf "Contract Table: @.";
-    print_contract_table ct vars;
+    (* Format.eprintf "Contract Table: @.";
+    print_contract_table ct vars; *)
     Format.eprintf "Blockchain: @.";
     print_blockchain blockchain vars;
     typecheck (Hashtbl.create 64) (MsgSender) (Address) ct;
