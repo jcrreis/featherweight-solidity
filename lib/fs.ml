@@ -4,7 +4,7 @@
 
 open Cryptokit
 open Types
-
+open Utils
 
 let eval_arit_expr (e: arit_ops) : expr = match e with
   | Plus (e1, e2) -> begin match e1, e2 with
@@ -128,12 +128,6 @@ let rec eval_expr
     (conf: conf) : conf
   =
   let (blockchain, blockchain', sigma, e) = conf in
-  let get_contract_by_address (blockchain: blockchain ) (address: values) : values =
-    Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k2 = address then k1 else acc) blockchain VUnit
-  in
-  let get_address_by_contract (blockchain: blockchain ) (contract: values) : values =
-    Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit
-  in
   (*uptbal(β, a, n)*)
   let update_balance
       (ct: (string, contract_def) Hashtbl.t)

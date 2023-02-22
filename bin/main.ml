@@ -4,7 +4,7 @@ open Types
 open Pprinters
 open Contracts
 open Typechecker 
-
+open Utils
 
 let fname = Sys.argv.(1)
 
@@ -27,17 +27,20 @@ let () =
     let _p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
     (* Hashtbl.add ct "Bank" (bank_contract());
-    Hashtbl.add ct "BloodBank" (blood_bank_contract());
+      Hashtbl.add ct "BloodBank" (blood_bank_contract());
     Hashtbl.add ct "Donor" (donor_contract());
     Hashtbl.add ct "EOAContract" (eoa_contract()); *)
+    (* Hashtbl.add ct "Bank" (bank_contract()); *)
+    
     let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
     Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1); 
+    Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract())));
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     (* Format.eprintf "Contract Table: @.";
     print_contract_table ct vars; *)
     Format.eprintf "Blockchain: @.";
     print_blockchain blockchain vars;
-    typecheck (Hashtbl.create 64) (MsgSender) (Address) ct;
+    typecheck (Hashtbl.create 64) (MsgSender) (UInt) ct blockchain;
     match res with 
       | Revert -> Format.eprintf "Revert@."
       | _ -> Format.eprintf "Result: %s@." (expr_to_string res)

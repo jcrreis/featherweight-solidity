@@ -1,4 +1,5 @@
 open Types
+open Cryptokit
 
 module FV = Set.Make(String)
 module FN = Set.Make(String)
@@ -162,3 +163,14 @@ let function_type (contract_name: string) (function_name: string) (ct: (string, 
     let t_es = List.map (fun (t_e, _) -> t_e) f.args in
     (t_es, f.rettype)
   with Not_found -> ([], TRevert) (* maybe remove? *)
+
+let encode_contract (content: string) : string =
+  let keccak_key = hash_string (Hash.keccak 256) content in
+  let encoder = transform_string (Hexa.encode()) keccak_key in
+  encoder
+
+let get_contract_by_address (blockchain: blockchain ) (address: values) : values =
+  Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k2 = address then k1 else acc) blockchain VUnit
+
+let get_address_by_contract (blockchain: blockchain ) (contract: values) : values =
+  Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit

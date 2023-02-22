@@ -82,6 +82,20 @@ let rec expr_to_string (e: expr) : string =
     | Return (e1) -> "return " ^ expr_to_string e1
     | _ -> assert false
 
+
+let function_to_string (func: fun_def) : string = "function " ^ func.name ^ "(" ^ 
+    (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" func.args) ^ "){" ^
+    (expr_to_string func.body)
+    ^ "}"
+  
+let contract_to_string (contract: contract_def) : string = 
+  let (params, e) = contract.constructor in
+  "contract " ^ contract.name ^ "{" ^ 
+  (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ";") "" contract.state) ^ 
+  " constructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){" ^
+  (expr_to_string e) ^ "}" ^ (List.fold_left (fun s f -> s ^ (function_to_string f)) "" contract.functions)
+
+  
   
 let print_blockchain (blockchain: blockchain) _tbl : unit = 
   Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
