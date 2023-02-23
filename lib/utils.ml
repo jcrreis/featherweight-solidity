@@ -169,6 +169,7 @@ let encode_contract (content: string) : string =
   let encoder = transform_string (Hexa.encode()) keccak_key in
   encoder
 
+
 let get_contract_by_address (blockchain: blockchain ) (address: values) : values =
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k2 = address then k1 else acc) blockchain VUnit
 

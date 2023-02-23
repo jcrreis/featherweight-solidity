@@ -9,6 +9,7 @@ type t_exp =
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
   | TRevert
+  (* | Topo  *)
 
 type b_val =
   | True

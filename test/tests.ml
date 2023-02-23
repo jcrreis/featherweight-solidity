@@ -54,8 +54,14 @@ let leafgen_type = Gen.oneof [ Gen.map (fun i -> match (i mod 4) with
                                                               ) Gen.int]
 
 let _arb_type = make ~print:t_exp_to_string (leafgen_type)
+
+let arb_string = 
+  let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
+  Gen.string_of ch
+
 (* | Let of t_exp *  string * expr * expr  *)
 let _gen_let_expr (s: string) (e1: expr) (e2: expr) : expr = Let(UInt, s, e1, e2)
+
 
 let _gen_assign_expr (s: string) (e1: expr) : expr = Assign(s, e1)
 
@@ -621,7 +627,9 @@ let test_suite = [
 
 let () =
 
-  (* (make Gen.int).gen |> Gen.generate1 |> Format.eprintf "%d 1----- -----"; *)
+  (* Generate string  with gen*)
+  arb_string |> Gen.generate1 |> print_endline;
+
 
   let suite =
     List.map QCheck_alcotest.to_alcotest
