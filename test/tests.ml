@@ -621,7 +621,7 @@ let test_suite = [
 
 let () =
 
-  (* Gen.numeral_string    |> Gen.generate1 |> Format.eprintf "%s 1----- -----"; *)
+  (* (make Gen.int).gen |> Gen.generate1 |> Format.eprintf "%d 1----- -----"; *)
 
   let suite =
     List.map QCheck_alcotest.to_alcotest
