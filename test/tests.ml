@@ -7,7 +7,6 @@ open Pprinters
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
-
 let rec gen_arit_op_ast n = match n with 
   | 0 -> leafgen_int
   | n -> Gen.oneof [
@@ -37,8 +36,26 @@ let rec gen_bool_op_ast n = match n with
     Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
 ]
 
+(* type t_exp =
+  | C of int  (* * hash_contract_code? *)
+  | Bool
+  | Unit
+  | UInt
+  | Address
+  | Map of t_exp * t_exp
+  | Fun of t_exp list * t_exp
+  | TRevert *)
+let leafgen_type = Gen.oneof [ Gen.map (fun i -> match (i mod 4) with 
+                                                  | 0 -> Bool
+                                                  | 1 -> UInt
+                                                  | 2 -> Address
+                                                  | 3 -> Map (Address, UInt)
+                                                  | _ -> Map (UInt, Address)
+                                                              ) Gen.int]
+
+let _arb_type = make ~print:t_exp_to_string (leafgen_type)
 (* | Let of t_exp *  string * expr * expr  *)
-let _gen_let_expr (t_e: t_exp) (s: string) (e1: expr) (e2: expr) : expr = Let(t_e, s, e1, e2)
+let _gen_let_expr (s: string) (e1: expr) (e2: expr) : expr = Let(UInt, s, e1, e2)
 
 let _gen_assign_expr (s: string) (e1: expr) : expr = Assign(s, e1)
 
@@ -604,7 +621,7 @@ let test_suite = [
 
 let () =
 
-  (* Gen.string_printable  |> Gen.generate1 |> Format.eprintf "%s 1----- -----"; *)
+  (* Gen.numeral_string    |> Gen.generate1 |> Format.eprintf "%s 1----- -----"; *)
 
   let suite =
     List.map QCheck_alcotest.to_alcotest

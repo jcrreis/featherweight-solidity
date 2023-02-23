@@ -162,7 +162,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma e1 (C(-1, "")) ct blockchain;
     typecheck gamma e2 UInt ct blockchain;
     () *)
-  | Cons (s, e1) -> 
+  | Cons (_s, e1) -> 
     typecheck gamma e1 Address ct blockchain;
     (* get_contract_by_address blockchain a*)
     (* typecheck gamma e (C(-1)) ct blockchain *)
