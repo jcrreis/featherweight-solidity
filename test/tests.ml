@@ -41,7 +41,7 @@ let leafgen_type = Gen.oneofl[Bool; UInt; Address; Map (Address, UInt); Map (UIn
                                                             
 let _arb_type = make ~print:t_exp_to_string (leafgen_type)
 
-let arb_string = 
+let gen_string = 
   let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
   Gen.string_of ch
 
@@ -614,7 +614,7 @@ let test_suite = [
 let () =
 
   (* Generate string  with gen*)
-  arb_string |> Gen.generate1 |> print_endline;
+  gen_string |> Gen.generate1 |> print_endline;
 
 
   let suite =
