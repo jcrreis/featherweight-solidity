@@ -36,30 +36,16 @@ let rec gen_bool_op_ast n = match n with
     Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
 ]
 
-(* type t_exp =
-  | C of int  (* * hash_contract_code? *)
-  | Bool
-  | Unit
-  | UInt
-  | Address
-  | Map of t_exp * t_exp
-  | Fun of t_exp list * t_exp
-  | TRevert *)
-let leafgen_type = Gen.oneof [ Gen.map (fun i -> match (i mod 4) with 
-                                                  | 0 -> Bool
-                                                  | 1 -> UInt
-                                                  | 2 -> Address
-                                                  | 3 -> Map (Address, UInt)
-                                                  | _ -> Map (UInt, Address)
-                                                              ) Gen.int]
 
+let leafgen_type = Gen.oneofl[Bool; UInt; Address; Map (Address, UInt); Map (UInt, Address)]
+                                                            
 let _arb_type = make ~print:t_exp_to_string (leafgen_type)
 
 let arb_string = 
   let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
   Gen.string_of ch
 
-(* | Let of t_exp *  string * expr * expr  *)
+
 let _gen_let_expr (s: string) (e1: expr) (e2: expr) : expr = Let(UInt, s, e1, e2)
 
 
