@@ -4,7 +4,7 @@ open Fs
 open Types
 open Pprinters
 
-let _gen_string = 
+let gen_string = 
   let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
   Gen.string_of ch
 
@@ -13,6 +13,8 @@ let leafgen_type = Gen.oneofl[Bool; UInt; Address; Map (Address, UInt); Map (UIn
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
 let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
+
+let leafgen_str = Gen.oneof [Gen.map (fun s -> s) gen_string]
 
 let rec gen_arit_op_ast n = match n with 
   | 0 -> leafgen_int
@@ -46,7 +48,11 @@ let rec gen_bool_op_ast n = match n with
                                                             
 let _arb_type = make ~print:t_exp_to_string (leafgen_type)
 
-(* let _gen_let_expr n = match n with  *)
+let _gen_let_expr n = 
+  let select_expr = Gen.oneof [leafgen_int;leafgen_bool] in 
+  match n with 
+  | 0 -> Gen.oneof[Gen.map (fun t_e s e1 e2 -> Let(t_e, s, e1, e2)) leafgen_type leafgen_type select_expr select_expr ]
+  | n -> assert false
 
 
 let _gen_assign_expr (s: string) (e1: expr) : expr = Assign(s, e1)
