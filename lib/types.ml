@@ -6,10 +6,11 @@ type t_exp =
   | Unit
   | UInt
   | Address
+  (* | Address of t_exp *)
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
   | TRevert
-  (* | Topo  *)
+  | CTop 
 
 type b_val =
   | True

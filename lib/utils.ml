@@ -155,6 +155,14 @@ let rec substitute (e: expr) (e': expr) (x: string) : expr =
 
 (* Blockchain maps cases? *)
 
+let generate_new_ethereum_address () : string =
+  (* https://ethereum.stackexchange.com/questions/3542/how-are-ethereum-addresses-generated*)
+  let rsa_key = RSA.new_key 512 in
+  let rsa_public_key = rsa_key.e in
+  let keccak_key = hash_string (Hash.keccak 256) rsa_public_key in
+  let address = transform_string (Hexa.encode()) keccak_key in
+  "0x" ^ (String.sub address 24 40)
+
 let function_type (contract_name: string) (function_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp list * t_exp) =
   let contract : contract_def = Hashtbl.find ct contract_name in
   let functions_def : fun_def list = contract.functions in

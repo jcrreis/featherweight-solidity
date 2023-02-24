@@ -2,7 +2,6 @@
  * *)
 (* msg.sender.transfer(x) to payable(msg.sender).transfer(x) *)
 
-open Cryptokit
 open Types
 open Utils
 
@@ -86,16 +85,6 @@ let eval_bool_expr (e: bool_ops) : expr = match e with
     end
 
 
-let generate_new_ethereum_address () : string =
-  (* https://ethereum.stackexchange.com/questions/3542/how-are-ethereum-addresses-generated*)
-  let rsa_key = RSA.new_key 512 in
-  let rsa_public_key = rsa_key.e in
-  let keccak_key = hash_string (Hash.keccak 256) rsa_public_key in
-  let address = transform_string (Hexa.encode()) keccak_key in
-  "0x" ^ (String.sub address 24 40)
-
-
-
 let state_vars_contract (contract_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp * string) list =
   let contract : contract_def = Hashtbl.find ct contract_name in contract.state
 
@@ -158,6 +147,7 @@ let rec eval_expr
     | Fun (_t1, _t2) -> Revert
     | Unit -> assert false
     | TRevert -> assert false
+    | CTop -> assert false
   in
   let init_contract_state (state: (t_exp * string) list) : (expr) StateVars.t =
     List.fold_left (fun sv (t_e, s) -> 
@@ -170,6 +160,7 @@ let rec eval_expr
                       | Fun (_t1, _t2) -> StateVars.add s Revert sv
                       | Unit -> assert false
                       | TRevert -> assert false
+                      | CTop -> assert false
                   ) StateVars.empty state
   in
   match e with

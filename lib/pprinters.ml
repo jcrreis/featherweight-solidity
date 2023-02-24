@@ -1,15 +1,15 @@
 open Types
 
 let rec t_exp_to_string (t_e: t_exp) : string = match t_e with
-| C (n) -> "contract" ^ "(" ^ (Stdlib.string_of_int n) ^ ")"
-| Bool -> "boolean"
-| Unit -> "unit"
-| UInt -> "uint"
-| Address -> "address"
-| Map (t_e1, t_e2)-> "mapping(" ^ t_exp_to_string t_e1 ^ " => " ^ t_exp_to_string t_e2 ^ ")"
-| TRevert -> "revert"
-| Fun (lt_e, t_e) -> "Fun (" ^ (List.fold_left (fun s t_e -> s ^ t_exp_to_string t_e) "" lt_e) ^ ")" ^ " -> " ^ t_exp_to_string t_e
-
+  | C (n) -> "contract" ^ "(" ^ (Stdlib.string_of_int n) ^ ")"
+  | Bool -> "boolean"
+  | Unit -> "unit"
+  | UInt -> "uint"
+  | Address -> "address"
+  | Map (t_e1, t_e2)-> "mapping(" ^ t_exp_to_string t_e1 ^ " => " ^ t_exp_to_string t_e2 ^ ")"
+  | TRevert -> "revert"
+  | Fun (lt_e, t_e) -> "Fun (" ^ (List.fold_left (fun s t_e -> s ^ t_exp_to_string t_e) "" lt_e) ^ ")" ^ " -> " ^ t_exp_to_string t_e
+  | CTop -> assert false
 
 let rec print_tuples lst =
   begin match lst with

@@ -4,8 +4,15 @@ open Fs
 open Types
 open Pprinters
 
+let _gen_string = 
+  let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
+  Gen.string_of ch
+
+let leafgen_type = Gen.oneofl[Bool; UInt; Address; Map (Address, UInt); Map (UInt, Address)]
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
+
+let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
 
 let rec gen_arit_op_ast n = match n with 
   | 0 -> leafgen_int
@@ -19,7 +26,6 @@ let rec gen_arit_op_ast n = match n with
     Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));  
 ]
 
-let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
 
 let rec gen_bool_op_ast n = match n with 
   | 0 -> leafgen_bool
@@ -37,16 +43,10 @@ let rec gen_bool_op_ast n = match n with
 ]
 
 
-let leafgen_type = Gen.oneofl[Bool; UInt; Address; Map (Address, UInt); Map (UInt, Address)]
                                                             
 let _arb_type = make ~print:t_exp_to_string (leafgen_type)
 
-let gen_string = 
-  let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
-  Gen.string_of ch
-
-
-let _gen_let_expr (s: string) (e1: expr) (e2: expr) : expr = Let(UInt, s, e1, e2)
+(* let _gen_let_expr n = match n with  *)
 
 
 let _gen_assign_expr (s: string) (e1: expr) : expr = Assign(s, e1)
@@ -67,6 +67,10 @@ let _gen_seq_expr (e1: expr) (e2: expr) : expr = Seq(e1, e2)
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
+
+(* let _gen_let_expr = Gen.oneof [ Gen.map (fun t_e s -> match t_e with 
+  | _ -> Let(t_e, s, gen_string |> Gen.generate1 , gen_string |> Gen.generate1)
+) leafgen_type gen_string] *)
 
 
 let rec tshrink e = match e with 
@@ -614,7 +618,7 @@ let test_suite = [
 let () =
 
   (* Generate string  with gen*)
-  gen_string |> Gen.generate1 |> print_endline;
+  (* gen_string |> Gen.generate1 |> print_endline; *)
 
 
   let suite =
