@@ -14,7 +14,7 @@ let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
 let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
 
-let leafgen_str = Gen.oneof [Gen.map (fun s -> s) gen_string]
+let _leafgen_str = Gen.oneof [Gen.map (fun s -> s) gen_string]
 
 let rec gen_arit_op_ast n = match n with 
   | 0 -> leafgen_int
@@ -45,19 +45,37 @@ let rec gen_bool_op_ast n = match n with
 ]
 
 
-                                                            
-let _arb_type = make ~print:t_exp_to_string (leafgen_type)
+(* let arb_string = make gen_string *)
+(* 
+let arb_type = make ~print:t_exp_to_string (leafgen_type) *)
 
-let _gen_let_expr n = 
-  let select_expr = Gen.oneof [leafgen_int;leafgen_bool] in 
+let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
+
+let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
+(* (t_e, s, e1, e2) *)
+(* (quad leafgen_type leafgen_type select_expr select_expr) *)
+
+let gen_if_expr n = 
+  let gen_expr = Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_op_ast 8) (gen_arit_op_ast 8) (gen_arit_op_ast 8) in 
   match n with 
-  | 0 -> Gen.oneof[Gen.map (fun t_e s e1 e2 -> Let(t_e, s, e1, e2)) leafgen_type leafgen_type select_expr select_expr ]
-  | n -> assert false
+    | 0 -> gen_expr
+    | _n -> assert false  
+
+let arb_if_expr = make ~print:expr_to_string (gen_if_expr 0) 
+
+let gen_let_expr n = 
+  let gen_expr = Gen.map3 (fun t_e e1 e2 -> (t_e, e1, e2)) leafgen_type leafgen_int leafgen_int in 
+  match n with 
+    | 0 -> Gen.oneof[ Gen.map2 (fun (t_e, e1 ,e2) s -> Let(t_e, s,e1, e2)) gen_expr gen_string]
+    | _n -> assert false
+  
+let _arb_let_expr = make ~print:expr_to_string (gen_let_expr 0) 
+  
+(* Call of expr * string * expr * expr list *)
+
+let _gen_call_expr = Call(Val(VContract 1), "fun", Val (VUInt 0), [])
 
 
-let _gen_assign_expr (s: string) (e1: expr) : expr = Assign(s, e1)
-
-let _gen_seq_expr (e1: expr) (e2: expr) : expr = Seq(e1, e2)
 
 (* let rec _gen_expr_ast n = match n with 
   | 0 -> [
@@ -70,9 +88,7 @@ let _gen_seq_expr (e1: expr) (e2: expr) : expr = Seq(e1, e2)
     Gen.map2 (fun l r -> BoolOp(Conj(l,r))) (_gen_expr_ast (n/2)) (_gen_expr_ast (n/2));
 ] *)
 
-let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
-let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
 
 (* let _gen_let_expr = Gen.oneof [ Gen.map (fun t_e s -> match t_e with 
   | _ -> Let(t_e, s, gen_string |> Gen.generate1 , gen_string |> Gen.generate1)
@@ -124,6 +140,24 @@ let rec tshrink e = match e with
   | BoolOp(LesserOrEquals(l,r)) -> Iter.append 
     (Iter.map (fun l' -> BoolOp(LesserOrEquals(l',r))) (tshrink l)) 
     (Iter.map (fun r' -> BoolOp(LesserOrEquals(l,r'))) (tshrink r))
+  | If (e1, e2, e3) -> 
+    let i' = 
+    Iter.append
+    (Iter.map (fun e1' -> If(e1', e2, e3)) (tshrink e1))
+    (Iter.map (fun e2' -> If(e1, e2', e3)) (tshrink e2))
+    in 
+    Iter.append 
+    i'
+    (Iter.map (fun e3' -> If(e1, e2, e3')) (tshrink e3))
+  | Let (t_e, s, e2, e3) -> 
+    let i' = 
+    Iter.append
+    (Iter.map (fun e3' -> Let(t_e, s, e2, e3')) (tshrink e3))
+    (Iter.map (fun e2' -> Let(t_e, s, e2', e3)) (tshrink e2))
+    in 
+    Iter.append
+    i'
+    (Iter.map (fun s' -> Let(t_e, s', e2, e3)) (Shrink.string s))
   | _ -> Iter.empty
 
 
@@ -330,19 +364,22 @@ let test_bool_op = Test.make ~name:"test boolean operators"
 
 
 let test_if = Test.make ~name:"test if operator"
-(set_shrink tshrink arb_tree_bool)
+(set_shrink tshrink arb_if_expr)
 (fun (e) -> 
   begin 
     let ct = Hashtbl.create 64 in 
     let vars = Hashtbl.create 64 in 
     let blockchain = Hashtbl.create 64 in  
     let sigma = Stack.create() in 
-    let e' = match eval_expr ct vars (blockchain, blockchain, sigma, e) with 
-      | (_, _, _, e) -> if e = Revert then Val(VBool False) else e 
+    let (e1, e2, e3) = match e with 
+      | If (e1, e2, e3) -> 
+        let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain, sigma, e1) in
+        if e1' <> Revert then (e1, e2, e3) else (Val(VBool False), e2, e3)
+      | _ -> assert false 
     in 
-    eval_expr ct vars (blockchain, blockchain, sigma, (If(e', e, Revert)))
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(e1, e2, e3)))
     =
-    eval_expr ct vars (blockchain, blockchain, sigma, (If(e', e, Revert)))
+    eval_expr ct vars (blockchain, blockchain, sigma, (If(BoolOp(Neg(e1)), e3, e2)))
   end
 )
 
@@ -626,6 +663,7 @@ let () =
   (* Generate string  with gen*)
   (* gen_string |> Gen.generate1 |> print_endline; *)
 
+  (gen_let_expr 0) |> Gen.generate1 |> expr_to_string |> print_endline;
 
   let suite =
     List.map QCheck_alcotest.to_alcotest
