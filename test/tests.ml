@@ -45,15 +45,9 @@ let rec gen_bool_op_ast n = match n with
 ]
 
 
-(* let arb_string = make gen_string *)
-(* 
-let arb_type = make ~print:t_exp_to_string (leafgen_type) *)
-
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
 let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
-(* (t_e, s, e1, e2) *)
-(* (quad leafgen_type leafgen_type select_expr select_expr) *)
 
 let gen_if_expr n = 
   let gen_expr = Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_op_ast 8) (gen_arit_op_ast 8) (gen_arit_op_ast 8) in 
@@ -74,25 +68,6 @@ let _arb_let_expr = make ~print:expr_to_string (gen_let_expr 0)
 (* Call of expr * string * expr * expr list *)
 
 let _gen_call_expr = Call(Val(VContract 1), "fun", Val (VUInt 0), [])
-
-
-
-(* let rec _gen_expr_ast n = match n with 
-  | 0 -> [
-    leafgen_bool;
-    leafgen_int;
-  ]
-  | _n -> Gen.oneof [
-    leafgen_bool;
-    leafgen_int;
-    Gen.map2 (fun l r -> BoolOp(Conj(l,r))) (_gen_expr_ast (n/2)) (_gen_expr_ast (n/2));
-] *)
-
-
-
-(* let _gen_let_expr = Gen.oneof [ Gen.map (fun t_e s -> match t_e with 
-  | _ -> Let(t_e, s, gen_string |> Gen.generate1 , gen_string |> Gen.generate1)
-) leafgen_type gen_string] *)
 
 
 let rec tshrink e = match e with 
