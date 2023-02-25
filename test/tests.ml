@@ -70,7 +70,7 @@ let rec gen_let_expr n =
   | 0 -> Gen.map2 (fun (t_e, e1 ,e2) s -> Let(t_e, s,e1, e2)) gen_expr gen_string
   | n -> Gen.map3 (fun (t_e, e1 ,_) s e2 -> Let(t_e, s, e1, e2)) gen_expr gen_string (gen_let_expr (n/2))
 
-let _arb_let_expr = make ~print:expr_to_string (gen_let_expr 0) 
+let arb_let_expr = make ~print:expr_to_string (gen_let_expr 3) 
 
 
 let _gen_call_expr = Call(Val(VContract 1), "fun", Val (VUInt 0), [])
@@ -374,20 +374,28 @@ let test_if = Test.make ~name:"test if operator"
 
 
 let test_let = Test.make ~name:"test let operator"
-    (pair (set_shrink tshrink arb_tree_arit) (set_shrink tshrink arb_tree_arit))
-    (fun (e1, e2) -> 
+    (* (pair (set_shrink tshrink arb_tree_arit) (set_shrink tshrink arb_tree_arit)) *)
+    (set_shrink tshrink arb_let_expr)
+    (fun (e) -> 
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
          let blockchain = Hashtbl.create 64 in  
          let sigma = Stack.create() in 
-         let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (Let(UInt, "x", e1, e2))) in 
+         (* let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (Let(UInt, "x", e1, e2))) in 
          let (_, _, _, valread) =  eval_expr ct vars (blockchain, blockchain, sigma, Var "x") in
          let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain, sigma, e2) in
          let (_, _, _, e1') = eval_expr  ct vars (blockchain, blockchain, sigma, e1) in 
          (valread = e1')
          &&
-         (res = e2') 
+         (res = e2')  *)
+         let (s, e1, _e2) = match e with 
+           | Let (_, s, e1, e2) -> 
+             let (_, _, _, _e') = eval_expr ct vars (blockchain, blockchain, sigma, e) in
+             (s, e1, e2)
+           | _ -> assert false 
+          in
+         (Hashtbl.find vars s) = e1 
        end
     )  
 

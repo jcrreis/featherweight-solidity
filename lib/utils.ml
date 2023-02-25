@@ -174,8 +174,8 @@ let function_type (contract_name: string) (function_name: string) (ct: (string, 
 
 let encode_contract (content: string) : string =
   let keccak_key = hash_string (Hash.keccak 256) content in
-  let encoder = transform_string (Hexa.encode()) keccak_key in
-  encoder
+  let encoded_contract = transform_string (Hexa.encode()) keccak_key in
+  encoded_contract
 
 
 let get_contract_by_address (blockchain: blockchain ) (address: values) : values =
