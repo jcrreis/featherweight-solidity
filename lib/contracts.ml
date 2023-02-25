@@ -96,9 +96,9 @@ let blood_bank_contract () : contract_def =
     rettype = Bool;
     args = [(UInt, "amount")];
     body = Return(
-      Let(UInt, "donorBlood",Call(Cons("Donor", MsgSender),"getBlood",Val(VUInt(0)),[]),
-      Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True)))))
-        ;
+        Let(UInt, "donorBlood",Call(Cons("Donor", MsgSender),"getBlood",Val(VUInt(0)),[]),
+            Seq(StateAssign(This None, "blood", AritOp(Plus(StateRead(This None, "blood"), Var("amount")))),Val(VBool(True)))))
+    ;
   } in
   let getDoctor = {
     name = "getDoctor";
@@ -116,9 +116,9 @@ let blood_bank_contract () : contract_def =
     name = "BloodBank";
     state = [(Map(Address, Bool), "healty"); (Address, "doctor"); (UInt, "blood")];
     constructor = ([(Map(Address, Bool), "healty"); (Address, "doctor"); (UInt, "blood")],
-                     (Seq((StateAssign(This None, "healty", Var("healty")),
-                           Seq((StateAssign(This None, "doctor", Var("doctor"))),
-                               StateAssign(This None, "blood", Var("blood")))))));
+                   (Seq((StateAssign(This None, "healty", Var("healty")),
+                         Seq((StateAssign(This None, "doctor", Var("doctor"))),
+                             StateAssign(This None, "blood", Var("blood")))))));
 
     (* constructor = ([], Val(VUnit));           *)
     functions = [setHealth; isHealty; donate; getDoctor; getBlood];

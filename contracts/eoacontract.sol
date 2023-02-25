@@ -1,7 +1,7 @@
 contract EOAContract {
-    uint balance;
+    uint256 balance;
 
-    constructor () {
+    constructor() {
         1;
         return 1;
     }
@@ -12,9 +12,9 @@ contract EOAContract {
 }
 
 contract EOAContract2 {
-    uint balance;
+    uint256 balance;
 
-    constructor () {
+    constructor() {
         1;
         return 1;
     }
@@ -23,4 +23,3 @@ contract EOAContract2 {
         return balance;
     }
 }
-
