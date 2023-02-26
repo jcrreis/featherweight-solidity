@@ -382,20 +382,28 @@ let test_let = Test.make ~name:"test let operator"
          let vars = Hashtbl.create 64 in 
          let blockchain = Hashtbl.create 64 in  
          let sigma = Stack.create() in 
-         (* let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (Let(UInt, "x", e1, e2))) in 
-         let (_, _, _, valread) =  eval_expr ct vars (blockchain, blockchain, sigma, Var "x") in
-         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain, sigma, e2) in
-         let (_, _, _, e1') = eval_expr  ct vars (blockchain, blockchain, sigma, e1) in 
-         (valread = e1')
-         &&
-         (res = e2')  *)
-         let (s, e1, _e2) = match e with 
-           | Let (_, s, e1, e2) -> 
-             let (_, _, _, _e') = eval_expr ct vars (blockchain, blockchain, sigma, e) in
-             (s, e1, e2)
+
+         let (s1, e1, e2) = match e with 
+           | Let (_, s1, e1, e2) -> 
+            let (_, _, _, _e') = eval_expr ct vars (blockchain, blockchain, sigma, e) in
+             (s1, e1, e2)
            | _ -> assert false 
-          in
-         (Hashtbl.find vars s) = e1 
+         in
+         let (s2, e1', e2') = match e2 with 
+           | Let (_, s2, e1', e2') -> 
+             (s2, e1', e2')
+           | _ -> assert false
+         in
+         let (s3, e1'') = match e2' with 
+           | Let (_, s3, e1'', _) -> 
+             (s3, e1'')
+           | _ -> assert false 
+         in 
+         (Hashtbl.find vars s1) = e1 
+         &&
+         (Hashtbl.find vars s2) = e1'
+         &&
+         (Hashtbl.find vars s3) = e1''
        end
     )  
 
