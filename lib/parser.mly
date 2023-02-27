@@ -85,6 +85,7 @@ contract:
       le2 = list(fun_def) RBRACE {
                           Types.AddContract({
                                   name = contract_name;
+                                  super = Some ("TODO");
                                   state = state_variables;
                                   constructor = (le1, e1);
                                   functions = le2;
@@ -215,6 +216,7 @@ fun_def:
   | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
     RPAREN LBRACE; e = fun_body; RBRACE {
       Types.{ name = fname;
+          annotation = "TODO";
           rettype = Unit;
           args = le;
           body = e;

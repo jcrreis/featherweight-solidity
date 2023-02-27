@@ -1,4 +1,4 @@
-open Types
+(* open Types
 
 let bank_contract () : contract_def =
   let fb = {
@@ -166,4 +166,4 @@ let eoa_contract () : contract_def =
     state = [];
     constructor = ([], Val(VUnit));
     functions = [fb];
-  }
+  } *)

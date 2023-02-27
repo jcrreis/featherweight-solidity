@@ -77,12 +77,14 @@ and expr =
 and fun_def = {
   name : string;
   rettype : t_exp;
+  annotation: string;  
   args : (t_exp * string) list;
   body : expr;
 }
 
 and contract_def = {
   name : string;
+  super : string option;
   state : (t_exp * string) list;
   constructor : (t_exp * string) list * expr;
   functions : fun_def list;

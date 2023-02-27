@@ -147,11 +147,13 @@ let test_contract =
   let fb = {
     name = "fb";
     rettype = Unit;
+    annotation = "TODO";
     args = [];
     body = Return(Val(VUnit));
   } in  
   {
     name = "Test";
+    super = None;
     state = [(Map(Address, UInt), "test_map"); (Address, "test_sv1"); (UInt, "test_sv2")];
     constructor = ([(Address, "test_sv1"); (UInt, "test_sv2")], Seq(
         (StateAssign(This None, "test_sv1", Var("test_sv1"))),
@@ -668,7 +670,7 @@ let () =
   (* Generate string  with gen*)
   (* gen_string |> Gen.generate1 |> print_endline; *)
 
-  (gen_if_expr 3) |>  Gen.generate1  |> expr_to_string |> print_endline;
+  (* (gen_if_expr 3) |>  Gen.generate1  |> expr_to_string |> print_endline; *)
 
   let suite =
     List.map QCheck_alcotest.to_alcotest

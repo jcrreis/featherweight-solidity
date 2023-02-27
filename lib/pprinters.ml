@@ -112,7 +112,7 @@ let print_blockchain (blockchain: blockchain) _tbl : unit =
 
 let print_contract_table (ct: contract_table) _tbl : unit = 
   Hashtbl.iter (fun k v -> match k, v with 
-      | _s', {name = s1; state = s2; constructor = s3; functions = s4} -> 
+      | _s', {name = s1; super = _s5 ; state = s2; constructor = s3; functions = s4} -> 
         begin
           Format.eprintf "\nContract Name: %s" s1;
           Format.eprintf "\nState Variables: \n";
@@ -120,7 +120,7 @@ let print_contract_table (ct: contract_table) _tbl : unit =
           Format.eprintf "\nConstructor: \n";
           List.iter (fun (t, s) -> Format.eprintf "%s ----> %s\n" s (t_exp_to_string t)) (fst s3);
           Format.eprintf "\nFunctions: \n";
-          List.iter (fun {name = fname; args = fargs; rettype = t_e; body = fbody} -> 
+          List.iter (fun {name = fname; annotation = _annon; args = fargs; rettype = t_e; body = fbody} -> 
               Format.eprintf "Function Name: %s\n" fname;
               Format.eprintf "Arguments: \n";
               List.iter (fun (t, s) -> Format.eprintf "%s ----> %s\n" s (t_exp_to_string t)) fargs;
