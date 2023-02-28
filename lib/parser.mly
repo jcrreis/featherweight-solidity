@@ -126,13 +126,13 @@ bool_expr:
   | e1 = expr; OR; e2 = expr { BoolOp(Disj(e1, e2)) }
   ;
 values: 
-  | i = INT { Format.eprintf "PASSEI NO VUInt @.";Val(VUInt i) }
-  | s = ID { Format.eprintf "PASSEI NO  %s  @." s; Var s }
-  | TRUE { Format.eprintf "PASSEI NO True @.";Val(VBool True) }
-  | FALSE { Format.eprintf "PASSEI NO False @.";Val(VBool False) }
-  | MAPPING t_e = typ { Format.eprintf "PASSEI NO VMapping @.";Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
-  | MSGSENDER { Format.eprintf "PASSEI NO MsgSender @.";Types.MsgSender }
-  | MSGVALUE { Format.eprintf "PASSEI NO MsgValue @.";Types.MsgValue }                          
+  | i = INT { Val(VUInt i) }
+  | s = ID { Var s }
+  | TRUE {  Val(VBool True) }
+  | FALSE { Val(VBool False) }
+  | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
+  | MSGSENDER { Types.MsgSender }
+  | MSGVALUE { Types.MsgValue }                          
   ;
 
 if_statement:
@@ -175,25 +175,25 @@ variables:
     let (t_e, s) = v in 
     Let(t_e, s, e1, e2) 
   }
-  | e = expr; DOT s = ID { Format.eprintf "PASSEI NO STATEREAD @.";StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "PASSEI NO STATEASSIGN @.";Types.StateAssign (e1, s, e2) }
+  | e = expr; DOT s = ID { StateRead (e, s) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (e1, s, e2) }
   ;
 
 map_read_write:
-  | e1 = expr; LBRACKET; e2 = expr; RBRACKET { Format.eprintf "PASSEI NO MAPREAD @.";MapRead (e1, e2) }
+  | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
   | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Types.MapWrite (e1, e2, e3) }
   ;
 
 
 expr:
-  | vars = variables { Format.eprintf "PASSEI NO vars @.";vars }
-  | v = values { Format.eprintf "PASSEI NO expr values @.";  v }
-  | a = arit_expr { Format.eprintf "PASSEI NO a @.";a }   
-  | b = bool_expr { Format.eprintf "PASSEI NO b @.";b }
+  | vars = variables { vars }
+  | v = values { v }
+  | a = arit_expr { a }   
+  | b = bool_expr { b }
   // | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
   // | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
-  | t = this_statements { Format.eprintf "PASSEI NO t @.";t }
-  | m = map_read_write { Format.eprintf "PASSEI NO m @.";m }
+  | t = this_statements { t }
+  | m = map_read_write { m }
   // | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
   // | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
   // | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }

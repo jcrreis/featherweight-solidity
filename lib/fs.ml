@@ -110,6 +110,33 @@ let top
     Stack.top sigma
   with Stack.Empty -> VUnit
 
+let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
+  match contract.super with
+    | None -> []
+    | Some (super_name) ->
+      let super_contract = Hashtbl.find ct super_name in
+      super_name :: get_contract_hierarchy super_contract ct
+
+      (* state : (t_exp * string) list;
+      constructor : (t_exp * string) list * expr;
+      functions : fun_def list; *)
+
+let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : contract_def =
+  let join_two_contract_constructors (constructor1: (t_exp * string) list * expr) (constructor2: (t_exp * string) list * expr) : (t_exp * string) list * expr =
+    let (args1, body1) = constructor1 in
+    let (args2, body2) = constructor2 in
+    let args = args1 @ args2 in
+    let body = Seq(body1, body2) in
+    (args, body)
+  in
+  let contract_hierarchy = get_contract_hierarchy contract ct in
+  List.fold_left (fun (ctr: contract_def) (contract_name: string) ->
+      let contract = Hashtbl.find ct contract_name in
+      let state = ctr.state @ contract.state in
+      let constructor = join_two_contract_constructors (ctr.constructor) (contract.constructor) in
+      let functions = ctr.functions @ contract.functions in
+      {name = ctr.name; state = state; super = ctr.super; constructor = constructor; functions = functions}
+    ) contract contract_hierarchy
 
 let rec eval_expr
     (ct: (string, contract_def) Hashtbl.t)

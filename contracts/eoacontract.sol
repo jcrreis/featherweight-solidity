@@ -1,5 +1,5 @@
 contract EOAContract {
-    uint256 balance;
+    uint balance;
 
     constructor() {
         1;
@@ -12,7 +12,7 @@ contract EOAContract {
 }
 
 contract EOAContract2 {
-    uint256 balance;
+    uint balance;
 
     constructor() {
         1;

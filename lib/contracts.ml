@@ -1,5 +1,6 @@
-(* open Types
+open Types
 
+(*
 let bank_contract () : contract_def =
   let fb = {
     name = "fb";
@@ -167,3 +168,51 @@ let eoa_contract () : contract_def =
     constructor = ([], Val(VUnit));
     functions = [fb];
   } *)
+
+let eoa_contract () : contract_def =
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    annotation = "Top";
+    args = [];
+    body = Return(Val(VUnit));
+  } in
+  {
+    name = "EOAContract";
+    super = Some "A";
+    state = [];
+    constructor = ([], Val(VUnit));
+    functions = [fb];
+  }
+
+let a_contract () : contract_def =
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    annotation = "Top";
+    args = [];
+    body = Return(Val(VUnit));
+  } in
+  {
+    name = "A";
+    super = Some "B";
+    state = [];
+    constructor = ([], Val(VUnit));
+    functions = [fb];
+  }
+
+let b_contract () : contract_def =
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    annotation = "Top";
+    args = [];
+    body = Return(Val(VUnit));
+  } in
+  {
+    name = "B";
+    super = None;
+    state = [];
+    constructor = ([], Val(VUnit));
+    functions = [fb];
+  }

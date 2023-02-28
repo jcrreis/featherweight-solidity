@@ -4,7 +4,6 @@ open Types
 open Pprinters
 open Contracts
 open Typechecker 
-open Utils
 
 let fname = Sys.argv.(1)
 
@@ -32,9 +31,17 @@ let () =
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
 
+    Hashtbl.add ct "EOAContract" (eoa_contract());
+    Hashtbl.add ct "A" (a_contract());
+    Hashtbl.add ct "B" (b_contract());
+   
+    let lst = get_contract_hierarchy (eoa_contract()) ct in  
+    List.iter (fun x -> Format.eprintf "%s" x) lst;
+    
+
     let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
     Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1); 
-    Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract())));
+    (* Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract()))); *)
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     (* Format.eprintf "Contract Table: @.";
        print_contract_table ct vars; *)

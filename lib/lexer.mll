@@ -36,7 +36,6 @@ let () =
 
 
 let find_keyword k =
-  Format.eprintf "%s" k;
   try Hashtbl.find keywords k
   with Not_found -> ID k
 
