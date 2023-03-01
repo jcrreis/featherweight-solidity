@@ -69,7 +69,7 @@ let rec expr_to_string (e: expr) : string =
   | Transfer (e1, e2) -> expr_to_string e1 ^ ".transfer(" ^ expr_to_string e2 ^ ")"
   | New (s1, e1, _el1) -> "new " ^ s1 ^ "(" ^ expr_to_string e1 ^ ")" 
   | Cons (s1, e1) -> s1 ^ "(" ^ expr_to_string e1 ^ ")"
-  | Seq (e1, e2) -> "\n" ^ expr_to_string e1 ^ ";\n" ^ expr_to_string e2 ^ ";"
+  | Seq (e1, e2) -> "\n" ^ expr_to_string e1 ^ ";\n" ^ expr_to_string e2 ^ ";\n"
   | Let (t1, s1, e1, e2) -> t_exp_to_string t1 ^ " " ^ s1 ^ " = " ^ expr_to_string e1 ^ ";" ^ expr_to_string e2 
   | Assign (s1, e1) -> s1 ^ " = " ^ expr_to_string e1 
   | StateAssign (e1, s1, e2) -> expr_to_string e1 ^ "." ^ s1 ^ " = " ^ expr_to_string e2 ^ ";"

@@ -110,49 +110,6 @@ let top
     Stack.top sigma
   with Stack.Empty -> VUnit
 
-let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
-  match contract.super with
-    | None -> []
-    | Some (super_name) ->
-      let super_contract = Hashtbl.find ct super_name in
-      super_name :: get_contract_hierarchy super_contract ct
-
-      (* state : (t_exp * string) list;
-      constructor : (t_exp * string) list * expr;
-      functions : fun_def list; *)
-
-let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : contract_def =
-  let append_function_to_list (contract_functions: fun_def list) (f: fun_def) : fun_def list = 
-    let rec is_allowed_to_append (c_functions: fun_def list) (fdef: fun_def) : bool =  
-      match c_functions with 
-        | [] -> true 
-        | x :: xs -> 
-          if x.name = fdef.name && x.args = fdef.args then false else is_allowed_to_append xs fdef 
-    in
-    let can_append = is_allowed_to_append contract_functions f in  
-    if can_append then contract_functions @ [f] else contract_functions
-  in 
-  let rec append_super_functions_to_contract (contract_funs: fun_def list) (super_contract_funs: fun_def list) : fun_def list =
-    match super_contract_funs with 
-      | [] -> contract_funs 
-      | x :: xs -> append_super_functions_to_contract (append_function_to_list contract_funs x) xs 
-  in
-
-  let join_two_contract_constructors (constructor1: (t_exp * string) list * expr) (constructor2: (t_exp * string) list * expr) : (t_exp * string) list * expr =
-    let (args1, body1) = constructor1 in
-    let (args2, body2) = constructor2 in
-    let args = args1 @ args2 in
-    let body = Seq(body1, body2) in
-    (args, body)
-  in
-  let contract_hierarchy = get_contract_hierarchy contract ct in
-  List.fold_left (fun (ctr: contract_def) (contract_name: string) ->
-      let contract = Hashtbl.find ct contract_name in
-      let state = ctr.state @ contract.state in
-      let constructor = join_two_contract_constructors ctr.constructor contract.constructor in
-      let functions = append_super_functions_to_contract ctr.functions contract.functions in
-      {name = ctr.name; state = state; super = ctr.super; constructor = constructor; functions = functions}
-    ) contract contract_hierarchy
 
 let rec eval_expr
     (ct: (string, contract_def) Hashtbl.t)
@@ -555,11 +512,23 @@ let rec eval_expr
       else
         (blockchain, blockchain', sigma, Revert)
     end
-  | Cons (s, e1) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with (*Contract_Name(address) C(e)*)  (*CAST*)
+  | Cons (s, e1) -> 
+    begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with (*Contract_Name(address) C(e)*)  (*CAST*)
       | (_, _, _, Val(VAddress a)) ->
         let c = get_contract_by_address blockchain (VAddress a) in
         let (cname, _, _) = Hashtbl.find blockchain (c, VAddress a) in
-        if cname = s then
+        let contract_def: contract_def = Hashtbl.find ct cname in  
+        let contract_hierarchy: string list = get_contract_hierarchy contract_def ct in 
+        let rec is_contract_or_supercontract (hierarchy: string list) (c_name: string) : bool =
+          match hierarchy with 
+            | [] -> false 
+            | x :: xs -> 
+              if x = c_name then 
+                true 
+              else 
+                is_contract_or_supercontract xs c_name 
+        in 
+        if is_contract_or_supercontract contract_hierarchy s then
           (blockchain, blockchain', sigma, Val c)
         else
           (blockchain, blockchain', sigma, Revert)

@@ -183,3 +183,69 @@ let get_contract_by_address (blockchain: blockchain ) (address: values) : values
 
 let get_address_by_contract (blockchain: blockchain ) (contract: values) : values =
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit
+
+let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
+  match contract.super with
+    | None -> []
+    | Some (super_name) ->
+      let super_contract = Hashtbl.find ct super_name in
+      super_name :: get_contract_hierarchy super_contract ct
+
+(* 
+      and fun_def = {
+        name : string;
+        rettype : t_exp;
+        annotation: string;  
+        args : (t_exp * string) list;
+        body : expr;
+      }
+       *)
+
+let fsender (contract_name: string) (function_name: string) (ct: contract_table) : string option = 
+  let contract_def: contract_def = Hashtbl.find ct contract_name in  
+  let functions_list: fun_def list = contract_def.functions in 
+  let rec find_function_def (f_list: fun_def list) (function_name: string) : string option =
+    match f_list with 
+      | [] -> None 
+      | x :: xs -> 
+        if x.name = function_name then 
+          Some x.annotation 
+        else 
+          find_function_def xs function_name 
+  in
+  find_function_def functions_list function_name  
+
+
+let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : contract_def =
+  let append_function_to_list (contract_functions: fun_def list) (f: fun_def) : fun_def list = 
+    let rec is_allowed_to_append (c_functions: fun_def list) (fdef: fun_def) : bool =  
+      match c_functions with 
+        | [] -> true 
+        | x :: xs -> 
+          if x.name = fdef.name && x.args = fdef.args then false else is_allowed_to_append xs fdef 
+    in
+    let can_append = is_allowed_to_append contract_functions f in  
+    if can_append then contract_functions @ [f] else contract_functions
+  in 
+  let rec append_super_functions_to_contract (contract_funs: fun_def list) (super_contract_funs: fun_def list) : fun_def list =
+    match super_contract_funs with 
+      | [] -> contract_funs 
+      | x :: xs -> append_super_functions_to_contract (append_function_to_list contract_funs x) xs 
+  in
+
+  let join_two_contract_constructors (constructor1: (t_exp * string) list * expr) (constructor2: (t_exp * string) list * expr) : (t_exp * string) list * expr =
+    let (args1, body1) = constructor1 in
+    let (args2, body2) = constructor2 in
+    let args = args1 @ args2 in
+    let body = Seq(body1, body2) in
+    (args, body)
+  in
+  let contract_hierarchy = get_contract_hierarchy contract ct in
+  List.fold_left (fun (ctr: contract_def) (contract_name: string) ->
+      let contract = Hashtbl.find ct contract_name in
+      let state = ctr.state @ contract.state in
+      let constructor = join_two_contract_constructors ctr.constructor contract.constructor in
+      let functions = append_super_functions_to_contract ctr.functions contract.functions in
+      {name = ctr.name; state = state; super = ctr.super; constructor = constructor; functions = functions}
+    ) contract contract_hierarchy
+  

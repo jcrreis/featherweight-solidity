@@ -177,12 +177,19 @@ let eoa_contract () : contract_def =
     args = [];
     body = Return(Val(VUnit));
   } in
+  let getBlood = {
+    name = "getBlood";
+    annotation = "Top";
+    rettype = UInt;
+    args = [];
+    body = Return(StateRead(This None, "blood"));
+  } in
   {
     name = "EOAContract";
     super = Some "A";
     state = [];
     constructor = ([], Val(VUnit));
-    functions = [fb];
+    functions = [fb;getBlood];
   }
 
 let a_contract () : contract_def =
@@ -193,12 +200,19 @@ let a_contract () : contract_def =
     args = [];
     body = Return(Val(VUnit));
   } in
+  let getDoctor = {
+    name = "getDoctor";
+    annotation = "Top";
+    rettype = Address;
+    args = [];
+    body = Return(StateRead(This None, "doctor"));
+  } in
   {
     name = "A";
     super = Some "B";
     state = [];
     constructor = ([], Val(VUnit));
-    functions = [fb];
+    functions = [fb;getDoctor];
   }
 
 let b_contract () : contract_def =
@@ -209,10 +223,17 @@ let b_contract () : contract_def =
     args = [];
     body = Return(Val(VUnit));
   } in
+  let getBalance = {
+    name = "getBalance";
+    annotation = "Top";
+    rettype = UInt;
+    args = [];
+    body = MapRead(StateRead(This None,"balances"),MsgSender)
+  } in
   {
     name = "B";
     super = None;
     state = [];
     constructor = ([], Val(VUnit));
-    functions = [fb];
+    functions = [fb;getBalance];
   }
