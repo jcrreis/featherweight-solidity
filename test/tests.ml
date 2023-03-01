@@ -388,16 +388,19 @@ let test_let = Test.make ~name:"test let operator"
          let (s1, e1, e2) = match e with 
            | Let (_, s1, e1, e2) -> 
             let (_, _, _, _e') = eval_expr ct vars (blockchain, blockchain, sigma, e) in
+            let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, e1) in 
              (s1, e1, e2)
            | _ -> assert false 
          in
          let (s2, e1', e2') = match e2 with 
            | Let (_, s2, e1', e2') -> 
+            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain, sigma, e1') in 
              (s2, e1', e2')
            | _ -> assert false
          in
          let (s3, e1'') = match e2' with 
            | Let (_, s3, e1'', _) -> 
+            let (_, _, _, e1'') = eval_expr ct vars (blockchain, blockchain, sigma, e1'') in
              (s3, e1'')
            | _ -> assert false 
          in 

@@ -121,7 +121,7 @@ let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_d
       constructor : (t_exp * string) list * expr;
       functions : fun_def list; *)
 
-(* let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : contract_def =
+let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : contract_def =
   let append_function_to_list (contract_functions: fun_def list) (f: fun_def) : fun_def list = 
     let rec is_allowed_to_append (c_functions: fun_def list) (fdef: fun_def) : bool =  
       match c_functions with 
@@ -152,7 +152,7 @@ let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_d
       let constructor = join_two_contract_constructors ctr.constructor contract.constructor in
       let functions = append_super_functions_to_contract ctr.functions contract.functions in
       {name = ctr.name; state = state; super = ctr.super; constructor = constructor; functions = functions}
-    ) contract contract_hierarchy *)
+    ) contract contract_hierarchy
 
 let rec eval_expr
     (ct: (string, contract_def) Hashtbl.t)
