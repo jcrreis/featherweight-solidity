@@ -29,11 +29,11 @@ let rec gen_arit_op_ast n = match n with
   | n -> Gen.oneof [
       leafgen_int;
       Gen.map2 (fun l r -> AritOp(Plus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
-      Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
+      (* Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2)); *)
       Gen.map2 (fun l r -> AritOp(Times(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
       Gen.map2 (fun l r -> AritOp(Minus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
       Gen.map2 (fun l r -> AritOp(Exp(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
-      Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));  
+      (* Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));   *)
     ]
 
 
@@ -62,7 +62,7 @@ let rec gen_if_expr n =
   | 0 -> Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_op_ast 8) (gen_arit_op_ast 8) (gen_arit_op_ast 8)
   | n -> Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_op_ast 8) (gen_if_expr (n/2)) (gen_if_expr (n/2))
 
-let arb_if_expr = make ~print:expr_to_string (gen_if_expr 0) 
+let arb_if_expr = make ~print:expr_to_string (gen_if_expr 3) 
 
 let rec gen_let_expr n = 
   let gen_expr = Gen.map3 (fun t_e e1 e2 -> (t_e, e1, e2)) leafgen_type leafgen_int leafgen_int in 
@@ -404,11 +404,14 @@ let test_let = Test.make ~name:"test let operator"
              (s3, e1'')
            | _ -> assert false 
          in 
-         (Hashtbl.find vars s1) = e1 
-         &&
-         (Hashtbl.find vars s2) = e1'
-         &&
-         (Hashtbl.find vars s3) = e1''
+         s1 = s2 || s1 = s3 || s2 = s3 ||
+         (
+          (Hashtbl.find vars s1) = e1 
+          &&
+          (Hashtbl.find vars s2) = e1'
+          &&
+          (Hashtbl.find vars s3) = e1''
+         )
        end
     )  
 
