@@ -521,12 +521,12 @@ let rec eval_expr
         let contract_hierarchy: string list = get_contract_hierarchy contract_def ct in 
         let rec is_contract_or_supercontract (hierarchy: string list) (c_name: string) : bool =
           match hierarchy with 
-            | [] -> false 
-            | x :: xs -> 
-              if x = c_name then 
-                true 
-              else 
-                is_contract_or_supercontract xs c_name 
+          | [] -> false 
+          | x :: xs -> 
+            if x = c_name then 
+              true 
+            else 
+              is_contract_or_supercontract xs c_name 
         in 
         if is_contract_or_supercontract contract_hierarchy s then
           (blockchain, blockchain', sigma, Val c)

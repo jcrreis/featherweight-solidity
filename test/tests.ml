@@ -29,11 +29,11 @@ let rec gen_arit_op_ast n = match n with
   | n -> Gen.oneof [
       leafgen_int;
       Gen.map2 (fun l r -> AritOp(Plus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
-      (* Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2)); *)
+      Gen.map2 (fun l r -> AritOp(Div(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
       Gen.map2 (fun l r -> AritOp(Times(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
       Gen.map2 (fun l r -> AritOp(Minus(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
       Gen.map2 (fun l r -> AritOp(Exp(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
-      (* Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));   *)
+      Gen.map2 (fun l r -> AritOp(Mod(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));  
     ]
 
 
@@ -52,6 +52,32 @@ let rec gen_bool_op_ast n = match n with
       Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_op_ast (n/2)) (gen_arit_op_ast (n/2));
     ]
 
+let rec gen_arit_revert_safe_ast n = match n with 
+  | 0 -> leafgen_int
+  | n -> Gen.oneof [
+      leafgen_int;
+      Gen.map2 (fun l r -> AritOp(Plus(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> AritOp(Times(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> AritOp(Minus(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> AritOp(Exp(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+    ]
+
+let rec gen_bool_revert_safe_ast n = match n with
+  | 0 -> leafgen_bool
+  | n -> Gen.oneof [
+      leafgen_bool;
+      Gen.map (fun e -> BoolOp(Neg e)) (gen_bool_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(Conj(l,r))) (gen_bool_revert_safe_ast (n/2)) (gen_bool_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(Disj(l,r))) (gen_bool_revert_safe_ast (n/2)) (gen_bool_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(Equals(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(Greater(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(GreaterOrEquals(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(Lesser(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(Inequals(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+      Gen.map2 (fun l r -> BoolOp(LesserOrEquals(l,r))) (gen_arit_revert_safe_ast (n/2)) (gen_arit_revert_safe_ast (n/2));
+    ]
+
+
 
 let arb_tree_arit = make ~print:expr_to_string (gen_arit_op_ast 8)
 
@@ -59,10 +85,10 @@ let arb_tree_bool = make ~print:expr_to_string (gen_bool_op_ast 8)
 
 let rec gen_if_expr n = 
   match n with 
-  | 0 -> Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_op_ast 8) (gen_arit_op_ast 8) (gen_arit_op_ast 8)
-  | n -> Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_op_ast 8) (gen_if_expr (n/2)) (gen_if_expr (n/2))
+  | 0 -> Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_revert_safe_ast 8) (gen_arit_op_ast 8) (gen_arit_op_ast 8)
+  | n -> Gen.map3 (fun e1 e2 e3 -> If(e1, e2, e3)) (gen_bool_revert_safe_ast 8) (gen_if_expr (n/2)) (gen_if_expr (n/2))
 
-let arb_if_expr = make ~print:expr_to_string (gen_if_expr 3) 
+let arb_if_expr = make ~print:expr_to_string (gen_if_expr 8) 
 
 let rec gen_let_expr n = 
   let gen_expr = Gen.map3 (fun t_e e1 e2 -> (t_e, e1, e2)) leafgen_type leafgen_int leafgen_int in 
@@ -385,68 +411,35 @@ let test_let = Test.make ~name:"test let operator"
          let blockchain = Hashtbl.create 64 in  
          let sigma = Stack.create() in 
 
-         let (s1, e1, e2) = match e with 
+         let (s1, e1, e2, ef) = match e with 
            | Let (_, s1, e1, e2) -> 
-            let (_, _, _, _e') = eval_expr ct vars (blockchain, blockchain, sigma, e) in
-            let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, e1) in 
-             (s1, e1, e2)
+             let (_, _, _, ef) = eval_expr ct vars (blockchain, blockchain, sigma, e) in
+             let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, e1) in 
+             (s1, e1, e2, ef)
            | _ -> assert false 
          in
          let (s2, e1', e2') = match e2 with 
            | Let (_, s2, e1', e2') -> 
-            let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain, sigma, e1') in 
+             let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain, sigma, e1') in 
              (s2, e1', e2')
            | _ -> assert false
          in
          let (s3, e1'') = match e2' with 
            | Let (_, s3, e1'', _) -> 
-            let (_, _, _, e1'') = eval_expr ct vars (blockchain, blockchain, sigma, e1'') in
+             let (_, _, _, e1'') = eval_expr ct vars (blockchain, blockchain, sigma, e1'') in
              (s3, e1'')
            | _ -> assert false 
          in 
-        if s1 = s2 && s2 = s3 then 
-          (
-            (Hashtbl.find vars s1) = e1''
-            &&
-            (Hashtbl.find vars s2) = e1''
-            &&
-            (Hashtbl.find vars s3) = e1''
-          )
-        else 
-        if s1 = s2 then 
-          (
-            (Hashtbl.find vars s1) = e1' 
-            &&
-            (Hashtbl.find vars s2) = e1'
-            &&
-            (Hashtbl.find vars s3) = e1''
-          )
-        else 
-          if s1 = s3 then 
-            (
-              (Hashtbl.find vars s1) = e1''  
-              &&
-              (Hashtbl.find vars s2) = e1'
-              &&
-              (Hashtbl.find vars s3) = e1''
-            )
-          else
-            if s2 = s3 then 
-              (
-                (Hashtbl.find vars s1) = e1 
-                &&
-                (Hashtbl.find vars s2) = e1''
-                &&
-                (Hashtbl.find vars s3) = e1''
-              ) 
-          else 
-              (
-                (Hashtbl.find vars s1) = e1 
-                &&
-                (Hashtbl.find vars s2) = e1'
-                &&
-                (Hashtbl.find vars s3) = e1''
-              )
+         if s1 = s2 || s1 = s3 || s2 = s3 then 
+           ef = Revert 
+         else 
+           (
+             (Hashtbl.find vars s1) = e1 
+             &&
+             (Hashtbl.find vars s2) = e1'
+             &&
+             (Hashtbl.find vars s3) = e1''
+           )
        end
     )  
 
