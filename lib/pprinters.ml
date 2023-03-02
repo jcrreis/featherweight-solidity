@@ -5,7 +5,7 @@ let rec t_exp_to_string (t_e: t_exp) : string = match t_e with
   | Bool -> "boolean"
   | Unit -> "unit"
   | UInt -> "uint"
-  | Address -> "address"
+  | Address _-> "address"
   | Map (t_e1, t_e2)-> "mapping(" ^ t_exp_to_string t_e1 ^ " => " ^ t_exp_to_string t_e2 ^ ")"
   | TRevert -> "revert"
   | Fun (lt_e, t_e) -> "Fun (" ^ (List.fold_left (fun s t_e -> s ^ t_exp_to_string t_e) "" lt_e) ^ ")" ^ " -> " ^ t_exp_to_string t_e

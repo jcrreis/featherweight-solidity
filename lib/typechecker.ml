@@ -9,13 +9,15 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
   | Revert, _ -> ()
   | Val (VUnit), Unit -> ()
   | Val (VUnit), _ -> raise (TypeMismatch (Unit, t))
-  | Val (VAddress _), Address -> ()
-  | Val (VAddress _), _ -> raise (TypeMismatch (Address, t))
-  | Val (VContract _), C -1 -> ()
+  | Val (VAddress _), Address None -> ()
+  | Val (VAddress _), Address (Some _s) -> assert false
+  | Val (VAddress _), _ -> raise (TypeMismatch (Address None, t))
+  | Val (VContract _), CTop -> ()
   | Val (VContract n), C y -> if n <> y then raise (TypeMismatch (C (y), t)) else ()
   | Val (VContract n), _ -> raise (TypeMismatch (C (n), t))
-  | MsgSender, Address -> ()
-  | MsgSender, _ -> raise (TypeMismatch (Address, t))
+  | MsgSender, Address None -> ()
+  | MsgSender, Address (Some _s) -> assert false
+  | MsgSender, _ -> raise (TypeMismatch (Address None, t))
   | MsgValue, UInt -> ()
   | MsgValue, _ -> raise (TypeMismatch (UInt, t))
   | Var x, t -> 
@@ -122,11 +124,11 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Balance e1 -> 
     if t <> UInt then 
       raise (TypeMismatch (UInt, t));
-    typecheck gamma e1 Address ct blockchain;
+    typecheck gamma e1 (Address None) ct blockchain;
   | Address e1 -> 
-    if t <> Address then 
-      raise (TypeMismatch (Address, t));
-    typecheck gamma e1 (C(-1)) ct blockchain;
+    if t <> (Address None) then 
+      raise (TypeMismatch (Address None, t));
+    typecheck gamma e1 (CTop) ct blockchain;
   | Return e1 -> typecheck gamma e1 t ct blockchain 
   | Seq (_, e2) ->
     typecheck gamma e2 t ct blockchain
@@ -148,11 +150,11 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     if t <> Unit then 
       raise (TypeMismatch (Unit, t));
     typecheck gamma e2 UInt ct blockchain;
-    typecheck gamma e1 Address ct blockchain
+    typecheck gamma e1 (Address None) ct blockchain
   | New (s, e, le) ->
     (* type check contract blockchain ...*)
-    if t <> (C(-1)) then 
-      raise (TypeMismatch (C(-1), t));
+    if t <> (CTop) then 
+      raise (TypeMismatch (CTop, t));
     typecheck gamma e UInt ct blockchain;
     let c_def: contract_def = Hashtbl.find ct s in
     let (ts, _) = function_type c_def.name "constructor" ct in
@@ -168,7 +170,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Cons (_s, e1) -> 
     (* e1 is always an address, however it can be a Val (Address a) || MsgSender || Var x || this.sv *)
     (* we need to make sure that s == cname, thus we need to access the contract stored in the blockchain*)
-    typecheck gamma e1 Address ct blockchain;
+    typecheck gamma e1 (Address None) ct blockchain;
     (* get_contract_by_address blockchain a*)
     (* typecheck gamma e (C(-1)) ct blockchain *)
     (* | CallTopLevel (e1, s, e2, e3, le) -> 

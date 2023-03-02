@@ -203,7 +203,7 @@ let a_contract () : contract_def =
   let getDoctor = {
     name = "getDoctor";
     annotation = "Top";
-    rettype = Address;
+    rettype = Address None;
     args = [];
     body = Return(StateRead(This None, "doctor"));
   } in
