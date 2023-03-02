@@ -404,14 +404,49 @@ let test_let = Test.make ~name:"test let operator"
              (s3, e1'')
            | _ -> assert false 
          in 
-         s1 = s2 || s1 = s3 || s2 = s3 ||
-         (
-          (Hashtbl.find vars s1) = e1 
-          &&
-          (Hashtbl.find vars s2) = e1'
-          &&
-          (Hashtbl.find vars s3) = e1''
-         )
+        if s1 = s2 && s2 = s3 then 
+          (
+            (Hashtbl.find vars s1) = e1''
+            &&
+            (Hashtbl.find vars s2) = e1''
+            &&
+            (Hashtbl.find vars s3) = e1''
+          )
+        else 
+        if s1 = s2 then 
+          (
+            (Hashtbl.find vars s1) = e1' 
+            &&
+            (Hashtbl.find vars s2) = e1'
+            &&
+            (Hashtbl.find vars s3) = e1''
+          )
+        else 
+          if s1 = s3 then 
+            (
+              (Hashtbl.find vars s1) = e1''  
+              &&
+              (Hashtbl.find vars s2) = e1'
+              &&
+              (Hashtbl.find vars s3) = e1''
+            )
+          else
+            if s2 = s3 then 
+              (
+                (Hashtbl.find vars s1) = e1 
+                &&
+                (Hashtbl.find vars s2) = e1''
+                &&
+                (Hashtbl.find vars s3) = e1''
+              ) 
+          else 
+              (
+                (Hashtbl.find vars s1) = e1 
+                &&
+                (Hashtbl.find vars s2) = e1'
+                &&
+                (Hashtbl.find vars s3) = e1''
+              )
        end
     )  
 
