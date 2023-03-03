@@ -216,7 +216,7 @@ fun_def:
   | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
     RPAREN LBRACE; e = fun_body; RBRACE {
       Types.{ name = fname;
-          annotation = "TODO";
+          annotation = None;
           rettype = Unit;
           args = le;
           body = e;

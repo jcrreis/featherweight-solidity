@@ -191,20 +191,11 @@ let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_d
       let super_contract = Hashtbl.find ct super_name in
       super_name :: get_contract_hierarchy super_contract ct
 
-(* 
-      and fun_def = {
-        name : string;
-        rettype : t_exp;
-        annotation: string;  
-        args : (t_exp * string) list;
-        body : expr;
-      }
-       *)
 
-let fsender (contract_name: string) (function_name: string) (ct: contract_table) : string option = 
+let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
   let contract_def: contract_def = Hashtbl.find ct contract_name in  
   let functions_list: fun_def list = contract_def.functions in 
-  let rec find_function_def (f_list: fun_def list) (function_name: string) : string option =
+  let rec find_function_def (f_list: fun_def list) (function_name: string) : (string option) option =
     match f_list with 
       | [] -> None 
       | x :: xs -> 
@@ -222,7 +213,12 @@ let rec contract_with_super_contracts (contract: contract_def) (ct: (string, con
       match c_functions with 
         | [] -> true 
         | x :: xs -> 
-          if x.name = fdef.name && x.args = fdef.args then false else is_allowed_to_append xs fdef 
+          if x.name = fdef.name && x.args = fdef.args then 
+            false 
+          else if x.name = fdef.name then 
+            true 
+          else 
+            is_allowed_to_append xs fdef 
     in
     let can_append = is_allowed_to_append contract_functions f in  
     if can_append then contract_functions @ [f] else contract_functions

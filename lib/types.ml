@@ -77,7 +77,7 @@ and expr =
 and fun_def = {
   name : string;
   rettype : t_exp;
-  annotation: string;  
+  annotation: string option;  
   args : (t_exp * string) list;
   body : expr;
 }

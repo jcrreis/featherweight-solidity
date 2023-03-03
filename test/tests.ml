@@ -173,7 +173,7 @@ let test_contract =
   let fb = {
     name = "fb";
     rettype = Unit;
-    annotation = "TODO";
+    annotation = Some "TODO";
     args = [];
     body = Return(Val(VUnit));
   } in  
