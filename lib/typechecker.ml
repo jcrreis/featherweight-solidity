@@ -1,7 +1,7 @@
 open Types 
 open Utils
 
-let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with 
+let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
   | Val (VBool _), _ -> raise (TypeMismatch (Bool, t))
   | Val (VUInt n), UInt -> if n >= 0 then () else raise (TypeMismatch (UInt, t))
@@ -10,7 +10,15 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
   | Val (VUnit), Unit -> ()
   | Val (VUnit), _ -> raise (TypeMismatch (Unit, t))
   | Val (VAddress _), Address None -> ()
-  | Val (VAddress _), Address (Some _s) -> assert false
+  | Val (VAddress a), Address (Some s) ->
+    let c : values = get_contract_by_address blockchain (VAddress a) in     
+    let (cname, _, _) = Hashtbl.find blockchain (c,(VAddress a)) in  
+    let contract_def: contract_def = Hashtbl.find ct cname in 
+    let contract_hierarchy: string list = get_contract_hierarchy contract_def ct in 
+    if cname = s || List.mem s contract_hierarchy then 
+      () 
+    else 
+      raise (TypeMismatch (Address (Some cname), t)) 
   | Val (VAddress _), _ -> raise (TypeMismatch (Address None, t))
   | Val (VContract _), CTop -> ()
   | Val (VContract n), C y -> if n <> y then raise (TypeMismatch (C (y), t)) else ()
@@ -30,18 +38,18 @@ let compareType (t1: t_exp) (t2: t_exp) : bool =
   t1 = t2 || t1 = TRevert || t2 = TRevert 
 
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e with 
-  | Val (VBool _) -> axioms gamma e t
-  | Val (VUInt _) -> axioms gamma e t
-  | Val (VUnit) -> axioms gamma e t
-  | Val (VAddress _) -> axioms gamma e t
-  | Val (VContract _) -> axioms gamma e t
+  | Val (VBool _) -> axioms gamma e t ct blockchain
+  | Val (VUInt _) -> axioms gamma e t ct blockchain
+  | Val (VUnit) -> axioms gamma e t ct blockchain
+  | Val (VAddress _) -> axioms gamma e t ct blockchain
+  | Val (VContract _) -> axioms gamma e t ct blockchain
   | Val (VMapping (m, t_exp)) -> 
     let (t1, t2) = match t with 
       | Map (t1, t2) -> (t1, t2)
       | _ -> raise (TypeMismatch (Map (t_exp, t_exp), t)) (* first hand of tuple, how to know what value should we have? *)
     in 
     Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; typecheck gamma v t2 ct blockchain) m
-  | Var _ -> axioms gamma e t
+  | Var _ -> axioms gamma e t ct blockchain
   | AritOp a -> begin match a with 
       | Plus (e1, e2) -> 
         if t <> UInt then 
@@ -120,7 +128,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         typecheck gamma e1 UInt ct blockchain;
         typecheck gamma e2 UInt ct blockchain
     end
-  | Revert -> axioms gamma e t 
+  | Revert -> axioms gamma e t ct blockchain 
   | Balance e1 -> 
     if t <> UInt then 
       raise (TypeMismatch (UInt, t));
@@ -133,9 +141,9 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Seq (_, e2) ->
     typecheck gamma e2 t ct blockchain
   | MsgSender -> 
-    axioms gamma e t  
+    axioms gamma e t ct blockchain  
   | MsgValue ->
-    axioms gamma e t  
+    axioms gamma e t ct blockchain  
   | If (e1, e2, e3) -> 
     typecheck gamma e1 Bool ct blockchain;
     typecheck gamma e2 t ct blockchain;
