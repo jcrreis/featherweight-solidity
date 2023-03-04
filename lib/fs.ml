@@ -482,7 +482,7 @@ let rec eval_expr
           | (_, _, _, Val (VUInt n)) ->
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
             begin match res with
-              | Ok blockchain ->
+              | Ok blockchain ->                  
                 let sv = init_contract_state contract_def.state in
                 Hashtbl.add blockchain (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
                 Hashtbl.add vars "this" (Val(VContract c));

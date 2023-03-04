@@ -182,14 +182,21 @@ let eoa_contract () : contract_def =
     annotation = "Top";
     rettype = UInt;
     args = [];
-    body = Return(StateRead(This None, "blood"));
+    body = StateAssign(This None, "blood", Var("blood"));
+  } in
+  let getBalance = {
+    name = "getBalance";
+    annotation = "Top";
+    rettype = UInt;
+    args = [];
+    body = MapRead(StateRead(This None,"dsadsaasd"),MsgSender)
   } in
   {
     name = "EOAContract";
     super = Some "A";
-    state = [];
-    constructor = ([], Val(VUnit));
-    functions = [fb;getBlood];
+    state = [(UInt, "blood")];
+    constructor = ([], StateAssign(This None, "blood", Var("blood")));
+    functions = [fb;getBlood;getBalance];
   }
 
 let a_contract () : contract_def =
@@ -210,8 +217,8 @@ let a_contract () : contract_def =
   {
     name = "A";
     super = Some "B";
-    state = [];
-    constructor = ([], Val(VUnit));
+    state = [(UInt, "bloodA")];
+    constructor = ([(UInt, "bloodA")], Val(VUnit));
     functions = [fb;getDoctor];
   }
 
@@ -233,7 +240,7 @@ let b_contract () : contract_def =
   {
     name = "B";
     super = None;
-    state = [];
-    constructor = ([], Val(VUnit));
+    state = [(UInt, "bloodB")];
+    constructor = ([(UInt, "bloodB")], Val(VUnit));
     functions = [fb;getBalance];
   }
