@@ -191,20 +191,11 @@ let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_d
     let super_contract = Hashtbl.find ct super_name in
     super_name :: get_contract_hierarchy super_contract ct
 
-(* 
-      and fun_def = {
-        name : string;
-        rettype : t_exp;
-        annotation: string;  
-        args : (t_exp * string) list;
-        body : expr;
-      }
-       *)
 
-let fsender (contract_name: string) (function_name: string) (ct: contract_table) : string option = 
+let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
   let contract_def: contract_def = Hashtbl.find ct contract_name in  
   let functions_list: fun_def list = contract_def.functions in 
-  let rec find_function_def (f_list: fun_def list) (function_name: string) : string option =
+  let rec find_function_def (f_list: fun_def list) (function_name: string) : (string option) option =
     match f_list with 
     | [] -> None 
     | x :: xs -> 

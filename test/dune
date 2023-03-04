@@ -1,15 +1,4 @@
-; (library
-;  (names 
-;     tests)
-  
-;  ; (inline_tests)
-;  ; (preprocess (pps ppx_inline_test))
-;  (preprocess (pps ppxlib.metaquot ppx_deriving_qcheck))
-;  (libraries qcheck featherweightsolidity)
-; )
-
 (tests
- ; (package ppx_deriving_qcheck)
  (names
    tests)
  (libraries featherweightsolidity ppx_deriving_qcheck qcheck qcheck-alcotest)
