@@ -31,19 +31,30 @@ let () =
        Hashtbl.add ct "Donor" (donor_contract());
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
-
-    Hashtbl.add ct "EOAContract" (eoa_contract());
-    Hashtbl.add ct "A" (a_contract());
-    Hashtbl.add ct "B" (b_contract());
+    (* Hashtbl.add ct "B" (contract_with_super_contracts eoa_contract() ct);
+    Hashtbl.add ct "A" (contract_with_super_contracts a_contract() ct);
+    Hashtbl.add ct "EOAContract" (contract_with_super_contracts eoa_contract() ct); *)
    
-    let eoac_with_super = contract_with_super_contracts (eoa_contract()) ct in 
-    let a_with_super = contract_with_super_contracts (a_contract()) ct in 
     let b_with_super = contract_with_super_contracts (b_contract()) ct in 
-
-    Format.eprintf "%s\n\n" (contract_to_string (eoac_with_super));
-    Format.eprintf "%s\n\n" (contract_to_string (a_with_super));
-    Format.eprintf "%s\n" (contract_to_string (b_with_super));
-    
+    match b_with_super with
+      | Ok (c, contract_table) -> 
+         begin
+         Format.eprintf "%s\n\n" (contract_to_string c);
+         Hashtbl.add ct "B" c;
+         print_contract_table contract_table vars;
+         let a_with_super = contract_with_super_contracts (a_contract()) contract_table in 
+         match a_with_super with
+           | Ok (c, contract_table) -> 
+              begin 
+              Format.eprintf "%s\n\n" (contract_to_string c);
+              let eoac_with_super = contract_with_super_contracts (eoa_contract()) contract_table in 
+              match eoac_with_super with
+                | Ok (c, _ct) -> Format.eprintf "%s\n\n" (contract_to_string c);
+                | Error s -> Format.eprintf "%s\n\n" s;
+              end 
+           | Error s -> Format.eprintf "%s\n\n" s;
+         end
+      | Error s -> Format.eprintf "%s\n\n" s;
 
     let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
     Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1); 

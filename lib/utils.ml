@@ -1,5 +1,6 @@
 open Types
 open Cryptokit
+open Pprinters 
 
 module FV = Set.Make(String)
 module FN = Set.Make(String)
@@ -207,8 +208,27 @@ let fsender (contract_name: string) (function_name: string) (ct: contract_table)
   find_function_def functions_list function_name  
 
 
-let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : contract_def =
-  let append_function_to_list (contract_functions: fun_def list) (f: fun_def) : fun_def list = 
+let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : (contract_def * contract_table, string) result =
+  let append_identifier_to_state (state: (t_exp * string) list) (id: (t_exp * string)) : ((t_exp * string) list, string) result = 
+    let rec is_allowed_to_append (state: (t_exp * string) list) (id: (t_exp * string)) : bool =  
+      match state with 
+      | [] -> true 
+      | x :: xs -> 
+        if snd x = snd id then false else is_allowed_to_append xs id 
+    in
+    let can_append = is_allowed_to_append state id in  
+    if can_append then Ok(state @ [id]) else Error("Identifier " ^ snd id ^ " already exists in contract " ^ contract.name)
+  in 
+  let rec append_super_state_to_contract (contract_state: (t_exp * string) list) (super_contract_state: (t_exp * string) list) : ((t_exp * string) list, string) result = 
+    match super_contract_state with 
+    | [] -> Ok(contract_state) 
+    | x :: xs -> 
+      let res = append_identifier_to_state contract_state x in 
+      match res with 
+      | Ok(new_state) -> append_super_state_to_contract new_state xs 
+      | Error(e) -> Error(e)
+  in
+  let append_function_to_list (contract_functions: fun_def list) (f: fun_def) : (fun_def list, string) result = 
     let rec is_allowed_to_append (c_functions: fun_def list) (fdef: fun_def) : bool =  
       match c_functions with 
       | [] -> true 
@@ -216,12 +236,16 @@ let rec contract_with_super_contracts (contract: contract_def) (ct: (string, con
         if x.name = fdef.name && x.args = fdef.args then false else is_allowed_to_append xs fdef 
     in
     let can_append = is_allowed_to_append contract_functions f in  
-    if can_append then contract_functions @ [f] else contract_functions
+    if can_append then Ok(contract_functions @ [f]) else Error("Function " ^ f.name ^ " already exists in contract " ^ contract.name)
   in 
-  let rec append_super_functions_to_contract (contract_funs: fun_def list) (super_contract_funs: fun_def list) : fun_def list =
+  let rec append_super_functions_to_contract (contract_funs: fun_def list) (super_contract_funs: fun_def list) : (fun_def list, string) result  =
     match super_contract_funs with 
-    | [] -> contract_funs 
-    | x :: xs -> append_super_functions_to_contract (append_function_to_list contract_funs x) xs 
+    | [] -> Ok(contract_funs) 
+    | x :: xs -> 
+      let res = append_function_to_list contract_funs x in 
+      match res with 
+        | Error(e) -> Error(e)
+        | Ok(new_contract_funs) -> append_super_functions_to_contract new_contract_funs xs 
   in
 
   let join_two_contract_constructors (constructor1: (t_exp * string) list * expr) (constructor2: (t_exp * string) list * expr) : (t_exp * string) list * expr =
@@ -231,23 +255,47 @@ let rec contract_with_super_contracts (contract: contract_def) (ct: (string, con
     let body = Seq(body1, body2) in
     (args, body)
   in
-  let contract_hierarchy = List.rev (get_contract_hierarchy contract ct) in
+  let contract_hierarchy = get_contract_hierarchy contract ct in
   if List.length contract_hierarchy = 0 then 
-    contract 
+    Ok(contract, ct) 
   else
     let fst = List.hd contract_hierarchy in
     let contract_first: contract_def = Hashtbl.find ct fst in  
-    let hierarchy_concat = (List.fold_left (fun (ctr: contract_def) (contract_name: string) ->
+    Format.printf "Contract first: %s" fst;
+    (* let hierarchy_concat = (List.fold_left (fun (ctr: contract_def) (contract_name: string) ->
         let contract = Hashtbl.find ct contract_name in
-        let state = ctr.state @ contract.state in
+        let res = append_super_state_to_contract ctr.state contract.state in
+        let state = match res with 
+          | Error(e) -> raise (Failure e)
+          | Ok(s) -> s
+        in
         let constructor = join_two_contract_constructors ctr.constructor contract.constructor in
-        let functions = append_super_functions_to_contract ctr.functions contract.functions in
+        let res = append_super_functions_to_contract ctr.functions contract.functions in
+        let functions = match res with 
+          | Error(e) -> raise (Failure e)
+          | Ok(f) -> f
+        in 
         {name = ctr.name; state = state; super = ctr.super; constructor = constructor; functions = functions}
-      ) contract_first contract_hierarchy) in
-    {
+      ) contract_first contract_hierarchy) in *)
+    let res = append_super_state_to_contract contract.state contract_first.state in
+    let state = match res with 
+      | Error(e) -> raise (Failure e)
+      | Ok(s) -> s
+    in
+    let res = append_super_functions_to_contract contract.functions contract_first.functions in
+    let functions = match res with 
+      | Error(e) -> raise (Failure e)
+      | Ok(f) -> f
+    in 
+    let contract = {
       name = contract.name; 
-      state = contract.state @ hierarchy_concat.state; 
+      state = state; 
       super = contract.super; 
-      constructor = (join_two_contract_constructors hierarchy_concat.constructor contract.constructor); 
-      functions = append_super_functions_to_contract hierarchy_concat.functions contract.functions
+      constructor = (join_two_contract_constructors contract_first.constructor contract.constructor); 
+      functions = functions
     }
+    in 
+    Hashtbl.add ct contract.name contract;
+    print_contract_table ct (Hashtbl.create 64);
+    Ok(contract, ct)
+
