@@ -179,7 +179,8 @@ let test_contract =
   } in  
   {
     name = "Test";
-    super = None;
+    super_contracts = [];
+    super_constructors_args = [];
     state = [(Map(Address None, UInt), "test_map"); (Address None, "test_sv1"); (UInt, "test_sv2")];
     constructor = ([(Address None, "test_sv1"); (UInt, "test_sv2")], Seq(
         (StateAssign(This None, "test_sv1", Var("test_sv1"))),

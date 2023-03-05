@@ -1,7 +1,7 @@
 open Types
 open Cryptokit
-open Pprinters 
-
+(* open Pprinters  *)
+  
 module FV = Set.Make(String)
 module FN = Set.Make(String)
 
@@ -186,11 +186,16 @@ let get_address_by_contract (blockchain: blockchain ) (contract: values) : value
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit
 
 let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
-  match contract.super with
-  | None -> []
-  | Some (super_name) ->
-    let super_contract = Hashtbl.find ct super_name in
-    super_name :: get_contract_hierarchy super_contract ct
+  let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) : string list =
+    match cs with
+    | [] -> []
+    | x :: xs ->
+      let contract_def: contract_def = Hashtbl.find ct x in
+      let super_contract_hierarchy: string list = contract_def.super_contracts in
+      let xs = List.append xs super_contract_hierarchy in
+      x :: (get_all_super_contracts xs ct)
+    in
+    get_all_super_contracts contract.super_contracts ct 
 
 
 let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
@@ -208,7 +213,7 @@ let fsender (contract_name: string) (function_name: string) (ct: contract_table)
   find_function_def functions_list function_name  
 
 
-let rec contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : (contract_def * contract_table, string) result =
+let contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : (contract_def * contract_table, string) result =
   let append_identifier_to_state (state: (t_exp * string) list) (id: (t_exp * string)) : ((t_exp * string) list, string) result = 
     let rec is_allowed_to_append (state: (t_exp * string) list) (id: (t_exp * string)) : bool =  
       match state with 
@@ -255,47 +260,40 @@ let rec contract_with_super_contracts (contract: contract_def) (ct: (string, con
     let body = Seq(body1, body2) in
     (args, body)
   in
-  let contract_hierarchy = get_contract_hierarchy contract ct in
-  if List.length contract_hierarchy = 0 then 
-    Ok(contract, ct) 
+  if List.length contract.super_contracts = 0 then 
+    begin
+      Hashtbl.add ct contract.name contract;
+      Ok(contract, ct) 
+    end
   else
-    let fst = List.hd contract_hierarchy in
-    let contract_first: contract_def = Hashtbl.find ct fst in  
-    Format.printf "Contract first: %s" fst;
-    (* let hierarchy_concat = (List.fold_left (fun (ctr: contract_def) (contract_name: string) ->
-        let contract = Hashtbl.find ct contract_name in
-        let res = append_super_state_to_contract ctr.state contract.state in
+    let contract = List.fold_left (fun (contract: contract_def) (super_contract_name: string) -> 
+      let super_contract: contract_def = Hashtbl.find ct super_contract_name in
+        let res = append_super_state_to_contract contract.state super_contract.state in
         let state = match res with 
           | Error(e) -> raise (Failure e)
           | Ok(s) -> s
         in
-        let constructor = join_two_contract_constructors ctr.constructor contract.constructor in
-        let res = append_super_functions_to_contract ctr.functions contract.functions in
+        let res = append_super_functions_to_contract contract.functions super_contract.functions in
         let functions = match res with 
           | Error(e) -> raise (Failure e)
           | Ok(f) -> f
         in 
-        {name = ctr.name; state = state; super = ctr.super; constructor = constructor; functions = functions}
-      ) contract_first contract_hierarchy) in *)
-    let res = append_super_state_to_contract contract.state contract_first.state in
-    let state = match res with 
-      | Error(e) -> raise (Failure e)
-      | Ok(s) -> s
-    in
-    let res = append_super_functions_to_contract contract.functions contract_first.functions in
-    let functions = match res with 
-      | Error(e) -> raise (Failure e)
-      | Ok(f) -> f
-    in 
-    let contract = {
-      name = contract.name; 
-      state = state; 
-      super = contract.super; 
-      constructor = (join_two_contract_constructors contract_first.constructor contract.constructor); 
-      functions = functions
-    }
-    in 
-    Hashtbl.add ct contract.name contract;
-    print_contract_table ct (Hashtbl.create 64);
+        let contract = {
+          name = contract.name; 
+          state = state; 
+          super_contracts = contract.super_contracts;
+          super_constructors_args = contract.super_constructors_args; 
+          constructor = (join_two_contract_constructors super_contract.constructor contract.constructor); 
+          functions = functions
+        }
+        in 
+        Hashtbl.add ct contract.name contract;
+        contract
+    ) contract contract.super_contracts in  
     Ok(contract, ct)
 
+let read_whole_file filename =
+  let ch = open_in filename in
+  let s = really_input_string ch (in_channel_length ch) in
+  close_in ch;
+  s

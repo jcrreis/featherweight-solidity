@@ -83,16 +83,16 @@ let rec expr_to_string (e: expr) : string =
   | _ -> assert false
 
 
-let function_to_string (func: fun_def) : string = "function " ^ func.name ^ "(" ^ 
-                                                  (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" func.args) ^ "){" ^
+let function_to_string (func: fun_def) : string = "\nfunction " ^ func.name ^ "(" ^ 
+                                                  (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" func.args) ^ ")\n{\n" ^
                                                   (expr_to_string func.body)
-                                                  ^ "}"
+                                                  ^ "\n}\n"
 
 let contract_to_string (contract: contract_def) : string = 
   let (params, e) = contract.constructor in
-  "contract " ^ contract.name ^ "{" ^ 
+  "contract " ^ contract.name ^ "\n{" ^ 
   (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ";") "" contract.state) ^ 
-  " constructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){" ^
+  "\nconstructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){" ^
   (expr_to_string e) ^ "}" ^ (List.fold_left (fun s f -> s ^ (function_to_string f)) "" contract.functions)
 
 
@@ -112,7 +112,7 @@ let print_blockchain (blockchain: blockchain) _tbl : unit =
 
 let print_contract_table (ct: contract_table) _tbl : unit = 
   Hashtbl.iter (fun k v -> match k, v with 
-      | _s', {name = s1; super = _s5 ; state = s2; constructor = s3; functions = s4} -> 
+      | _s', {name = s1; super_contracts = _s5 ; super_constructors_args = _s6; state = s2; constructor = s3; functions = s4} -> 
         begin
           Format.eprintf "\nContract Name: %s" s1;
           Format.eprintf "\nState Variables: \n";

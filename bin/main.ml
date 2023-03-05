@@ -31,39 +31,47 @@ let () =
        Hashtbl.add ct "Donor" (donor_contract());
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
-    (* Hashtbl.add ct "B" (contract_with_super_contracts eoa_contract() ct);
-    Hashtbl.add ct "A" (contract_with_super_contracts a_contract() ct);
-    Hashtbl.add ct "EOAContract" (contract_with_super_contracts eoa_contract() ct); *)
-   
-    let b_with_super = contract_with_super_contracts (b_contract()) ct in 
-    match b_with_super with
+    let test_contract_hierarchy ct b = 
+      Hashtbl.add ct "B" (b_contract());
+      Hashtbl.add ct "A" (a_contract());
+      Hashtbl.add ct "EOAContract" (eoa_contract());
+      if b then 
+        Hashtbl.add ct "C" (c_contract())
+      else
+        Hashtbl.add ct "C" (eoa_contract());
+      try 
+        let lst = get_contract_hierarchy (eoa_contract()) ct in 
+        List.iter (fun x -> Format.eprintf "%s\n" x) lst;
+      with Stack_overflow -> Format.eprintf "Mutually recursive inheritance detected\n";
+    in  
+    test_contract_hierarchy ct true;
+    Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
+    Format.eprintf "%s\n\n" (contract_to_string (c_contract()));
+    let test_contract_builder ct = 
+      let a_with_super = contract_with_super_contracts (a_contract()) ct in 
+      match a_with_super with
       | Ok (c, contract_table) -> 
-         begin
-         Format.eprintf "%s\n\n" (contract_to_string c);
-         Hashtbl.add ct "B" c;
-         print_contract_table contract_table vars;
-         let a_with_super = contract_with_super_contracts (a_contract()) contract_table in 
-         match a_with_super with
-           | Ok (c, contract_table) -> 
-              begin 
-              Format.eprintf "%s\n\n" (contract_to_string c);
-              let eoac_with_super = contract_with_super_contracts (eoa_contract()) contract_table in 
-              match eoac_with_super with
-                | Ok (c, _ct) -> Format.eprintf "%s\n\n" (contract_to_string c);
-                | Error s -> Format.eprintf "%s\n\n" s;
-              end 
-           | Error s -> Format.eprintf "%s\n\n" s;
-         end
+        begin 
+          Format.eprintf "%s\n\n" (contract_to_string c);
+          let eoac_with_super = contract_with_super_contracts (eoa_contract()) contract_table in 
+          match eoac_with_super with
+          | Ok (c, _ct) -> Format.eprintf "%s\n\n" (contract_to_string c);
+          | Error s -> Format.eprintf "%s\n\n" s;
+        end 
       | Error s -> Format.eprintf "%s\n\n" s;
+    in
 
-    let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
-    Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1); 
+    test_contract_builder ct;
+    (* let s = read_whole_file "./contracts/bank.sol" in
+       Format.eprintf "%s\n" (encode_contract s); *)
+    (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
+       Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1);  *)
     (* Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract()))); *)
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     (* Format.eprintf "Contract Table: @.";
        print_contract_table ct vars; *)
-    Format.eprintf "Blockchain: @.";
-    print_blockchain blockchain vars;
+    (* Format.eprintf "Blockchain: @.";
+       print_blockchain blockchain vars; *)
     typecheck (Hashtbl.create 64) (MsgSender) (UInt) ct blockchain;
     match res with 
     | Revert -> Format.eprintf "Revert@."

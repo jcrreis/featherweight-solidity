@@ -32,6 +32,7 @@ let () =
       ("return", RETURN);
       ("bool", BOOL); 
       ("uint", UINT);  
+      ("msg", MSG);
     ]
 
 

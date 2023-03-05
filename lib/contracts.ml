@@ -170,7 +170,7 @@ let eoa_contract () : contract_def =
   } *)
 
 let eoa_contract () : contract_def =
-  let fb = {
+  let _fb = {
     name = "fb";
     rettype = Unit;
     annotation = None;
@@ -184,7 +184,7 @@ let eoa_contract () : contract_def =
     args = [];
     body = StateAssign(This None, "blood", Var("blood"));
   } in
-  let getBalance = {
+  let _getBalance = {
     name = "getBalance";
     annotation = None;
     rettype = UInt;
@@ -193,10 +193,11 @@ let eoa_contract () : contract_def =
   } in
   {
     name = "EOAContract";
-    super = Some "A";
-    state = [(UInt, "bloodB")];
+    super_contracts = ["A"];
+    super_constructors_args = [];
+    state = [(UInt, "bloodC")];
     constructor = ([], StateAssign(This None, "blood", Var("blood")));
-    functions = [fb;getBlood;getBalance];
+    functions = [getBlood];
   }
 
 let a_contract () : contract_def =
@@ -216,7 +217,8 @@ let a_contract () : contract_def =
   } in
   {
     name = "A";
-    super = Some "B";
+    super_contracts = ["B";"C"];
+    super_constructors_args = [];
     state = [(UInt, "bloodA")];
     constructor = ([(UInt, "bloodA")], Val(VUnit));
     functions = [getDoctor];
@@ -239,8 +241,33 @@ let b_contract () : contract_def =
   } in
   {
     name = "B";
-    super = None;
+    super_contracts = [];
+    super_constructors_args = [];
     state = [(UInt, "bloodB")];
     constructor = ([(UInt, "bloodB")], Val(VUnit));
     functions = [getBalance];
+  }
+
+let c_contract () : contract_def =
+  let fb = {
+    name = "fb";
+    rettype = Unit;
+    annotation = None;
+    args = [];
+    body = Return(Val(VUnit));
+  } in
+  let _getBalance = {
+    name = "getBalance";
+    annotation = None;
+    rettype = UInt;
+    args = [];
+    body = MapRead(StateRead(This None,"balances"),MsgSender)
+  } in
+  {
+    name = "C";
+    super_contracts = [];
+    super_constructors_args = [];
+    state = [(UInt, "bloodM")];
+    constructor = ([(UInt, "bloodB")], Val(VUnit));
+    functions = [fb];
   }

@@ -39,6 +39,7 @@
 // OPERATORS
 %token MSGSENDER
 %token MSGVALUE
+%token MSG
 %token BALANCE
 %token ADDRESS
 %token THIS
@@ -85,7 +86,8 @@ contract:
       le2 = list(fun_def) RBRACE {
                           Types.AddContract({
                                   name = contract_name;
-                                  super = Some ("TODO");
+                                  super_contracts = [];
+                                  super_constructors_args = [];
                                   state = state_variables;
                                   constructor = (le1, e1);
                                   functions = le2;
