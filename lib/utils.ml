@@ -1,7 +1,7 @@
 open Types
 open Cryptokit
 (* open Pprinters  *)
-  
+
 module FV = Set.Make(String)
 module FN = Set.Make(String)
 
@@ -253,13 +253,13 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
         | Ok(new_contract_funs) -> append_super_functions_to_contract new_contract_funs xs 
   in
 
-  let join_two_contract_constructors (constructor1: (t_exp * string) list * expr) (constructor2: (t_exp * string) list * expr) : (t_exp * string) list * expr =
+  (* let join_two_contract_constructors (constructor1: (t_exp * string) list * expr) (constructor2: (t_exp * string) list * expr) : (t_exp * string) list * expr =
     let (args1, body1) = constructor1 in
     let (args2, body2) = constructor2 in
     let args = args1 @ args2 in
     let body = Seq(body1, body2) in
     (args, body)
-  in
+  in *)
   if List.length contract.super_contracts = 0 then 
     begin
       Hashtbl.add ct contract.name contract;
@@ -283,7 +283,7 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
           state = state; 
           super_contracts = contract.super_contracts;
           super_constructors_args = contract.super_constructors_args; 
-          constructor = (join_two_contract_constructors super_contract.constructor contract.constructor); 
+          constructor = contract.constructor; 
           functions = functions
         }
         in 
