@@ -37,8 +37,8 @@
 %token NOT
 
 // OPERATORS
-%token MSGSENDER
-%token MSGVALUE
+// %token MSGSENDER
+// %token MSGVALUE
 %token MSG
 %token BALANCE
 %token ADDRESS
@@ -63,12 +63,13 @@
 %token EOF
 %token SEMICOLON
 
-
-%nonassoc SEMICOLON LBRACKET ASSIGN
+%nonassoc SEMICOLON  
+%right ASSIGN
 %left PLUS MINUS MOD  
 %left TIMES DIV EXP 
 %left EQ NEQ LT GT LEQ GEQ AND OR NOT
-%nonassoc DOT
+%nonassoc LBRACKET
+%left DOT
 
 %start <Types.expr> prog
 
@@ -133,8 +134,9 @@ values:
   | TRUE {  Val(VBool True) }
   | FALSE { Val(VBool False) }
   | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
-  | MSGSENDER { Types.MsgSender }
-  | MSGVALUE { Types.MsgValue }                          
+  // | MSGSENDER { Types.MsgSender }
+  // | MSGVALUE { Types.MsgValue }   
+  // | MSG DOT "value" { Types.MsgSender }                       
   ;
 
 if_statement:
