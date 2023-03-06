@@ -49,7 +49,7 @@ let () =
         Format.eprintf "]\n"; 
       with Stack_overflow -> Format.eprintf "Mutually recursive inheritance detected\n";
     in  
-    test_contract_hierarchy ct true;
+    test_contract_hierarchy ct false;
     Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
     Format.eprintf "%s\n\n" (contract_to_string (c_contract()));
     let test_contract_builder ct = 
