@@ -89,7 +89,7 @@ let () =
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
     Format.eprintf "@."
-
+    
 (* let () =  (* let x: int = 10 ; x + x ;*)
    (* let e1 = (AritOp(Plus(Num(1),Times(Num(2),Num(3))))) in
    Format.eprintf "%s\n" (arit_op_to_string e1); *)

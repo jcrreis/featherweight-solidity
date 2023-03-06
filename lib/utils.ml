@@ -284,11 +284,13 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
           | Error(e) -> raise (Failure e)
           | Ok(f) -> f
         in 
+        let super_contracts: string list = super_contract.super_contracts in  
+        let super_constructors_args: expr list list = super_contract.super_constructors_args in
         let contract = {
           name = contract.name; 
           state = state; 
-          super_contracts = contract.super_contracts;
-          super_constructors_args = contract.super_constructors_args; 
+          super_contracts = contract.super_contracts @ super_contracts;
+          super_constructors_args = contract.super_constructors_args @ super_constructors_args; 
           constructor = contract.constructor; 
           functions = functions
         }
