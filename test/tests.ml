@@ -387,6 +387,18 @@ let test_if = Test.make ~name:"test if operator"
            | _ -> assert false 
          in 
          (
+            eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool True), e2, e3)))
+            =
+            eval_expr ct vars (blockchain, blockchain, sigma, e2)
+          )
+         &&
+          (
+            eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool False), e2, e3)))
+            =
+            eval_expr ct vars (blockchain, blockchain, sigma, e3)
+          )
+          &&
+         (
            eval_expr ct vars (blockchain, blockchain, sigma, (If(e1, e2, e3)))
            =
            eval_expr ct vars (blockchain, blockchain, sigma, (If(BoolOp(Neg(e1)), e3, e2)))
