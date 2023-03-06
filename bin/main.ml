@@ -41,7 +41,12 @@ let () =
         Hashtbl.add ct "C" (eoa_contract());
       try 
         let lst = get_contract_hierarchy (eoa_contract()) ct in 
-        List.iter (fun x -> Format.eprintf "%s\n" x) lst;
+        Format.eprintf "["; 
+        List.iteri (fun i x -> 
+          if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
+          else Format.eprintf "%s" x
+          ) lst;
+        Format.eprintf "]\n"; 
       with Stack_overflow -> Format.eprintf "Mutually recursive inheritance detected\n";
     in  
     test_contract_hierarchy ct true;

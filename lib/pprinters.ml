@@ -90,10 +90,10 @@ let function_to_string (func: fun_def) : string = "\nfunction " ^ func.name ^ "(
 
 let contract_to_string (contract: contract_def) : string = 
   let (params, e) = contract.constructor in
-  "contract " ^ contract.name ^ "\n{" ^ 
-  (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ";") "" contract.state) ^ 
-  "\nconstructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){" ^
-  (expr_to_string e) ^ "}" ^ (List.fold_left (fun s f -> s ^ (function_to_string f)) "" contract.functions)
+  "contract " ^ contract.name ^ "\n{\n" ^ 
+  (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ";\n") "" contract.state) ^ 
+  "\nconstructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){\n" ^
+  (expr_to_string e) ^ "\n}" ^ (List.fold_left (fun s f -> s ^ (function_to_string f)) "" contract.functions)
 
 
 
