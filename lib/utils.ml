@@ -156,6 +156,12 @@ let rec substitute (e: expr) (e': expr) (x: string) : expr =
 
 (* Blockchain maps cases? *)
 
+let read_whole_file filename =
+  let ch = open_in filename in
+  let s = really_input_string ch (in_channel_length ch) in
+  close_in ch;
+  s
+
 let generate_new_ethereum_address () : string =
   (* https://ethereum.stackexchange.com/questions/3542/how-are-ethereum-addresses-generated*)
   let rsa_key = RSA.new_key 512 in
@@ -292,8 +298,3 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
     ) contract contract.super_contracts in  
     Ok(contract, ct)
 
-let read_whole_file filename =
-  let ch = open_in filename in
-  let s = really_input_string ch (in_channel_length ch) in
-  close_in ch;
-  s

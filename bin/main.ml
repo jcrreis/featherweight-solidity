@@ -22,7 +22,7 @@ let () =
     let ct: contract_table = Hashtbl.create 64 in
     let blockchain: blockchain = Hashtbl.create 64 in
     let sigma: values Stack.t = Stack.create() in
-    let conf: conf = (blockchain, blockchain, sigma, e) in
+    let _conf: conf = (blockchain, blockchain, sigma, e) in
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let _p: program = (ct, blockchain, e) in
     (* ADD CONTRACTS TO CONTRACT TABLE *)
@@ -62,20 +62,29 @@ let () =
     in
 
     test_contract_builder ct;
+    let e = New("EOAContract", Val(VUInt 10000), [Val(VUInt 8765321)]) in 
+    let conf = (blockchain, blockchain, sigma, e) in 
+    let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
+    match res with 
+      | Revert -> Format.eprintf "Revert@.";
+      | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+    Format.eprintf "Blockchain: @.";
+    print_blockchain blockchain vars;
+    
+
+
     (* let s = read_whole_file "./contracts/bank.sol" in
        Format.eprintf "%s\n" (encode_contract s); *)
     (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
        Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1);  *)
     (* Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract()))); *)
-    let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
+    (* let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in *)
     (* Format.eprintf "Contract Table: @.";
        print_contract_table ct vars; *)
     (* Format.eprintf "Blockchain: @.";
        print_blockchain blockchain vars; *)
     typecheck (Hashtbl.create 64) (MsgSender) (UInt) ct blockchain;
-    match res with 
-    | Revert -> Format.eprintf "Revert@."
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res)
+    
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

@@ -5,7 +5,6 @@ type t_exp =
   | Bool
   | Unit
   | UInt
-  (* | Address *)
   | Address of string option
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
