@@ -67,7 +67,16 @@ let rec expr_to_string (e: expr) : string =
   | Address (e1) -> "Address(" ^ expr_to_string e1 ^ ")"
   | StateRead (e1, s1) -> expr_to_string e1 ^ "." ^ s1
   | Transfer (e1, e2) -> expr_to_string e1 ^ ".transfer(" ^ expr_to_string e2 ^ ")"
-  | New (s1, e1, _el1) -> "new " ^ s1 ^ "(" ^ expr_to_string e1 ^ ")" 
+  | New (s1, e1, le) -> 
+     let (_, print_args) = List.fold_left (fun (i, s) e  -> 
+      (
+        if i <> ((List.length le) - 1) then
+          (i+1, s ^ (expr_to_string e) ^ ",")
+        else
+          (i+1, s ^ (expr_to_string e))
+      )
+      ) (0, "") le in 
+    "new " ^ s1 ^ "(" ^ expr_to_string e1 ^ ")(" ^  print_args ^ ")"
   | Cons (s1, e1) -> s1 ^ "(" ^ expr_to_string e1 ^ ")"
   | Seq (e1, e2) -> "\n" ^ expr_to_string e1 ^ ";\n" ^ expr_to_string e2 ^ ";\n"
   | Let (t1, s1, e1, e2) -> t_exp_to_string t1 ^ " " ^ s1 ^ " = " ^ expr_to_string e1 ^ ";" ^ expr_to_string e2 

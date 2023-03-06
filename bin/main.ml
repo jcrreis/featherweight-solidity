@@ -68,6 +68,7 @@ let () =
 
     test_contract_builder ct;
     let e = New("EOAContract", Val(VUInt 10000), [Val(VUInt 8765321)]) in 
+    Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     match res with 

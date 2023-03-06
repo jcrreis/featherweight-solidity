@@ -175,10 +175,10 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
        () 
     *)
     (* Bank(address) *)
-  | Cons (_s, e1) -> 
+  | Cons (s, e1) -> 
     (* e1 is always an address, however it can be a Val (Address a) || MsgSender || Var x || this.sv *)
     (* we need to make sure that s == cname, thus we need to access the contract stored in the blockchain*)
-    typecheck gamma e1 (Address None) ct blockchain;
+    typecheck gamma e1 (Address (Some s)) ct blockchain;
     (* get_contract_by_address blockchain a*)
     (* typecheck gamma e (C(-1)) ct blockchain *)
     (* | CallTopLevel (e1, s, e2, e3, le) -> 
