@@ -4,13 +4,14 @@ open Cryptokit
 
 module FV = Set.Make(String)
 module FN = Set.Make(String)
+module SuperContracts = Set.Make(String)
 
 let rec free_variables (e: expr) : FV.t =
   let rec union_list_set (lst: FV.t list) (set: FV.t): FV.t = match lst with
     | [] -> set
     | x :: xs -> union_list_set xs (FV.union set x)
   in
-  match e with
+  match e with 
   | AritOp a1 -> begin match a1 with
       | Plus (e1, e2) -> FV.union (free_variables e1) (free_variables e2)
       | Div (e1, e2) -> FV.union (free_variables e1) (free_variables e2)
@@ -191,17 +192,24 @@ let get_contract_by_address (blockchain: blockchain ) (address: values) : values
 let get_address_by_contract (blockchain: blockchain ) (contract: values) : values =
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit
 
-let rec get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
-  let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) : string list =
+
+let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
+  let set = SuperContracts.empty in 
+  let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) (set: SuperContracts.t) : string list =
     match cs with
     | [] -> []
     | x :: xs ->
+      (* catch duplicates *)  
       let contract_def: contract_def = Hashtbl.find ct x in
       let super_contract_hierarchy: string list = contract_def.super_contracts in
       let xs = List.append xs super_contract_hierarchy in
-      x :: (get_all_super_contracts xs ct)
-    in
-    get_all_super_contracts contract.super_contracts ct 
+      if SuperContracts.mem x set then
+        raise (Failure "Mutually recursive inheritance detected\n")
+      else
+        x :: (get_all_super_contracts xs ct (SuperContracts.union (SuperContracts.singleton x) (set)))
+
+  in
+  get_all_super_contracts contract.super_contracts ct set 
 
 
 let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
@@ -255,8 +263,8 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
     | x :: xs -> 
       let res = append_function_to_list contract_funs x in 
       match res with 
-        | Error(e) -> Error(e)
-        | Ok(new_contract_funs) -> append_super_functions_to_contract new_contract_funs xs 
+      | Error(e) -> Error(e)
+      | Ok(new_contract_funs) -> append_super_functions_to_contract new_contract_funs xs 
   in
 
   if List.length contract.super_contracts = 0 then 
@@ -266,7 +274,7 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
     end
   else
     let contract = List.fold_left (fun (contract: contract_def) (super_contract_name: string) -> 
-      let super_contract: contract_def = Hashtbl.find ct super_contract_name in
+        let super_contract: contract_def = Hashtbl.find ct super_contract_name in
         let res = append_super_state_to_contract contract.state super_contract.state in
         let state = match res with 
           | Error(e) -> raise (Failure e)
@@ -290,6 +298,6 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
         in 
         Hashtbl.add ct contract.name contract;
         contract
-    ) contract contract.super_contracts in  
+      ) contract contract.super_contracts in  
     Ok(contract, ct)
 

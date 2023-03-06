@@ -83,8 +83,8 @@ and fun_def = {
 and contract_def = {
   name : string;
   super_contracts: string list;
-  super_constructors_args: (expr list) list; (* should be (string * expr list) list --> string name of the contract*)
-  state : (t_exp * string) list;
+  super_constructors_args: (expr list) list;  
+  state : (t_exp * string) list; 
   constructor : (t_exp * string) list * expr;
   functions : fun_def list;
 }
