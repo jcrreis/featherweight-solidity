@@ -39,15 +39,13 @@ let () =
         Hashtbl.add ct "C" (c_contract())
       else
         Hashtbl.add ct "C" (eoa_contract());
-      try 
-        let lst = get_contract_hierarchy (eoa_contract()) ct in 
-        Format.eprintf "["; 
-        List.iteri (fun i x -> 
-          if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
-          else Format.eprintf "%s" x
-          ) lst;
-        Format.eprintf "]\n"; 
-      with Stack_overflow -> Format.eprintf "Mutually recursive inheritance detected\n";
+      let lst = get_contract_hierarchy (eoa_contract()) ct in 
+      Format.eprintf "["; 
+      List.iteri (fun i x -> 
+        if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
+        else Format.eprintf "%s" x
+        ) lst;
+      Format.eprintf "]\n"; 
     in  
     test_contract_hierarchy ct true;
     Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
@@ -58,10 +56,16 @@ let () =
       | Ok (c, contract_table) -> 
         begin 
           Format.eprintf "%s\n\n" (contract_to_string c);
-          let eoac_with_super = contract_with_super_contracts (eoa_contract()) contract_table in 
-          match eoac_with_super with
-          | Ok (c, _ct) -> Format.eprintf "%s\n\n" (contract_to_string c);
-          | Error s -> Format.eprintf "%s\n\n" s;
+          let b_with_super = contract_with_super_contracts (b_contract()) contract_table in 
+          match b_with_super with 
+            | Ok (_c, contract_table) -> 
+              begin 
+                let eoac_with_super = contract_with_super_contracts (eoa_contract()) contract_table in 
+                match eoac_with_super with
+                  | Ok (c, _ct) -> Format.eprintf "%s\n\n" (contract_to_string c);
+                  | Error s -> Format.eprintf "%s\n\n" s;
+              end
+            | Error s -> Format.eprintf "%s\n\n" s;
         end 
       | Error s -> Format.eprintf "%s\n\n" s;
     in
