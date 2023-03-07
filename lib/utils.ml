@@ -4,7 +4,7 @@ open Cryptokit
 
 module FV = Set.Make(String)
 module FN = Set.Make(String)
-module SuperContracts = Set.Make(String)
+module SS = Set.Make(String)
 
 let rec free_variables (e: expr) : FV.t =
   let rec union_list_set (lst: FV.t list) (set: FV.t): FV.t = match lst with
@@ -194,22 +194,27 @@ let get_address_by_contract (blockchain: blockchain ) (contract: values) : value
 
 
 let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
-  let set = SuperContracts.empty in 
-  let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) (set: SuperContracts.t) : string list =
+  let visited = SS.singleton (contract.name) in 
+  let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) (visited: SS.t) : string list =
     match cs with
     | [] -> []
     | x :: xs ->
-      (* catch duplicates *)  
       let contract_def: contract_def = Hashtbl.find ct x in
       let super_contract_hierarchy: string list = contract_def.super_contracts in
+      let visited = SS.union visited (SS.singleton x) in 
+      let super_contract_hierarchy: string list = 
+        (List.fold_left (fun lst ctr -> 
+            if List.mem ctr cs then 
+              if SS.mem ctr visited then 
+                raise (Failure "Mutually recursive inheritance detected")
+              else 
+                lst 
+            else (List.append lst [ctr])
+          ) [] super_contract_hierarchy)  in 
       let xs = List.append xs super_contract_hierarchy in
-      if SuperContracts.mem x set then
-        raise (Failure "Mutually recursive inheritance detected\n")
-      else
-        x :: (get_all_super_contracts xs ct (SuperContracts.union (SuperContracts.singleton x) (set)))
-
+      x :: (get_all_super_contracts xs ct visited)
   in
-  get_all_super_contracts contract.super_contracts ct set 
+  get_all_super_contracts contract.super_contracts ct visited
 
 
 let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 

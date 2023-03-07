@@ -193,8 +193,8 @@ let eoa_contract () : contract_def =
   } in
   {
     name = "EOAContract";
-    super_contracts = ["A"];
-    super_constructors_args = [[Val(VUInt 10)]];
+    super_contracts = ["A"; "B"];
+    super_constructors_args = [[Val(VUInt 10)];[Val(VUInt 2000)]];
     state = [(UInt, "blood")];
     constructor = ([(UInt, "blood")], StateAssign(This None, "blood", Var("blood")));
     functions = [getBlood];
@@ -217,8 +217,8 @@ let a_contract () : contract_def =
   } in
   {
     name = "A";
-    super_contracts = ["B";"C"];
-    super_constructors_args = [[Val(VUInt 100)];[Val(VUInt 1000)]];
+    super_contracts = ["C"];
+    super_constructors_args = [[Val(VUInt 100)]];
     state = [(UInt, "bloodA")];
     constructor = ([(UInt, "bloodC")], StateAssign(This None, "bloodA", Var("bloodC")));
     functions = [getDoctor];
@@ -241,8 +241,8 @@ let b_contract () : contract_def =
   } in
   {
     name = "B";
-    super_contracts = [];
-    super_constructors_args = [];
+    super_contracts = ["C"];
+    super_constructors_args = [[Val(VUInt 1000)]];
     state = [(UInt, "bloodB")];
     constructor = ([(UInt, "bloodB")], StateAssign(This None, "bloodB", Var("bloodB")));
     functions = [getBalance];
