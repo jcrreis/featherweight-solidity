@@ -5,6 +5,7 @@ open Pprinters
 open Contracts
 open Typechecker 
 open Utils
+open C3 
 
 let fname = Sys.argv.(1)
 
@@ -31,6 +32,29 @@ let () =
        Hashtbl.add ct "Donor" (donor_contract());
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
+  (* let rec show_hierarchy = function
+    | Class (n, _) -> n
+      and show_hierarchy_list lat =
+      "[" ^ String.concat ", " (List.map show_hierarchy lat) ^ "]"
+      and c = Class ("C", [])
+      and a = Class ("A", [c])
+      and b = Class ("B", [c])
+      and eoac = Class ("EOAContract", [b;a])
+      (* and a = Class ("A", [o])
+      and b = Class ("B", [o])
+      and c = Class ("C", [o])
+      and d = Class ("D", [o])
+      and e = Class ("E", [o])
+      and k1 = Class ("K1", [a; b; c])
+      and k2 = Class ("K2", [d; b; e])
+      and k3 = Class ("K3", [d; a])
+      and z = Class ("Z", [k1; k2; k3])
+      and o = Class ("O", []) *)
+   in
+   print_endline @@ show_hierarchy eoac;
+   match c3 eoac with
+    | Some v -> print_endline @@ show_hierarchy_list v
+    | None -> print_endline "No linearization"; *)
     let test_contract_hierarchy ct b = 
       Hashtbl.add ct "B" (b_contract());
       Hashtbl.add ct "A" (a_contract());
@@ -48,6 +72,14 @@ let () =
       Format.eprintf "]\n"; 
     in  
     test_contract_hierarchy ct true;
+    let lst = c3_linearization "EOAContract" ct in 
+    Format.eprintf "[";
+    List.iteri (fun i x -> 
+      if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
+      else Format.eprintf "%s" x
+      ) lst;
+      Format.eprintf "]\n"; 
+
     Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
     Format.eprintf "%s\n\n" (contract_to_string (c_contract()));
     let test_contract_builder ct = 

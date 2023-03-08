@@ -193,7 +193,7 @@ let eoa_contract () : contract_def =
   } in
   {
     name = "EOAContract";
-    super_contracts = ["A"; "B"];
+    super_contracts = ["B"; "A"];
     super_constructors_args = [[Val(VUInt 10)];[Val(VUInt 2000)]];
     state = [(UInt, "blood")];
     constructor = ([(UInt, "blood")], StateAssign(This None, "blood", Var("blood")));
