@@ -14,6 +14,21 @@ let print_position lexbuf =
   Format.eprintf "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
+let test_linearization_succ ct = 
+  Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "C" {name="C"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "B" {name="B"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "E" {name="E"; super_contracts=["D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  c3_linearization "E" ct
+
+let test_linearization_fail ct = 
+  Hashtbl.add ct "A" {name="A"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "B" {name="B"; super_contracts=["D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "C" {name="C"; super_contracts=["D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "E" {name="E"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  c3_linearization "A" ct
 
 let () =
   let cin = open_in fname in
@@ -55,7 +70,7 @@ let () =
    match c3 eoac with
     | Some v -> print_endline @@ show_hierarchy_list v
     | None -> print_endline "No linearization"; *)
-    let test_contract_hierarchy ct b = 
+    (* let test_contract_hierarchy ct b = 
       Hashtbl.add ct "B" (b_contract());
       Hashtbl.add ct "A" (a_contract());
       Hashtbl.add ct "EOAContract" (eoa_contract());
@@ -70,16 +85,23 @@ let () =
         else Format.eprintf "%s" x
         ) lst;
       Format.eprintf "]\n"; 
-    in  
-    test_contract_hierarchy ct true;
-    let lst = c3_linearization "EOAContract" ct in 
+    in   *)
+    (* test_contract_hierarchy ct true; *)
+    
+    let lst = test_linearization_succ ct in 
     Format.eprintf "[";
     List.iteri (fun i x -> 
       if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
       else Format.eprintf "%s" x
       ) lst;
       Format.eprintf "]\n"; 
-
+      let lst = test_linearization_fail ct in 
+    Format.eprintf "[";
+    List.iteri (fun i x -> 
+      if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
+      else Format.eprintf "%s" x
+      ) lst;
+      Format.eprintf "]\n"; 
     Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
     Format.eprintf "%s\n\n" (contract_to_string (c_contract()));
     let test_contract_builder ct = 

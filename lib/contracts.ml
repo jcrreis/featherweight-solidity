@@ -265,9 +265,10 @@ let c_contract () : contract_def =
   } in
   {
     name = "C";
-    super_contracts = [];
+    super_contracts = ["A"];
     super_constructors_args = [];
     state = [(UInt, "bloodC")];
     constructor = ([(UInt, "bloodC")], StateAssign(This None, "bloodC", Var("bloodC")));
     functions = [fb];
   }
+

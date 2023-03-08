@@ -194,7 +194,7 @@ let get_address_by_contract (blockchain: blockchain ) (contract: values) : value
 
 
 let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
-  let visited = SS.singleton (contract.name) in 
+  let visited = SS.singleton (contract.name) in
   let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) (visited: SS.t) : string list =
     match cs with
     | [] -> []
