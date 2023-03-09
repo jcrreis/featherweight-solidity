@@ -1,5 +1,5 @@
-# A -> B -> C -> D -> E -> F -> G
-#  ^__________________________|
+# A <- B <- C <- D <- E <- F <- G
+#  ^__________________|________|
 
 class A:
     pass
@@ -7,17 +7,5 @@ class A:
 class B(A):
     pass
 
-class C(B):
-    pass
-
-class D(C):
-    pass
-
-class E(D, A):
-    pass
-
-class F(E):
-    pass
-
-class G(A, F):
+class C(A, B):
     pass

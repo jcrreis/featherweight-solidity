@@ -39,13 +39,9 @@ let test_linearization_succ ct =
 let test_linearization_fail ct = 
   Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
   Hashtbl.add ct "B" {name="B"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "C" {name="C"; super_contracts=["B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "D" {name="D"; super_contracts=["C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "E" {name="E"; super_contracts=["D";"A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "F" {name="E"; super_contracts=["E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "G" {name="E"; super_contracts=["A";"F"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "C" {name="C"; super_contracts=["A";"B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
 
-  c3_linearization "G" ct
+  c3_linearization "C" ct
 
 let () =
   let cin = open_in fname in
