@@ -14,6 +14,20 @@ let print_position lexbuf =
   Format.eprintf "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
+let test_linearization_py ct b = 
+  if b then 
+    (Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "C" {name="C"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "B" {name="B"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    c3_linearization "D" ct)
+  else 
+    (Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "C" {name="C"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "B" {name="B"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    c3_linearization "D" ct)
+
 let test_linearization_succ ct = 
   Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
   Hashtbl.add ct "C" {name="C"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
@@ -23,12 +37,15 @@ let test_linearization_succ ct =
   c3_linearization "E" ct
 
 let test_linearization_fail ct = 
-  Hashtbl.add ct "A" {name="A"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "B" {name="B"; super_contracts=["D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "C" {name="C"; super_contracts=["D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "E" {name="E"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  c3_linearization "A" ct
+  Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "B" {name="B"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "C" {name="C"; super_contracts=["B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "D" {name="D"; super_contracts=["C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "E" {name="E"; super_contracts=["D";"A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "F" {name="E"; super_contracts=["E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "G" {name="E"; super_contracts=["A";"F"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+
+  c3_linearization "G" ct
 
 let () =
   let cin = open_in fname in
@@ -88,22 +105,29 @@ let () =
     in   *)
     (* test_contract_hierarchy ct true; *)
     
-    let lst = test_linearization_succ ct in 
+    let lst = test_linearization_py ct false in 
     Format.eprintf "[";
     List.iteri (fun i x -> 
       if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
       else Format.eprintf "%s" x
       ) lst;
       Format.eprintf "]\n"; 
-    try 
-      let lst = test_linearization_fail ct in 
+    let lst = test_linearization_succ ct in 
       Format.eprintf "[";
       List.iteri (fun i x -> 
         if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
         else Format.eprintf "%s" x
         ) lst;
-        Format.eprintf "]\n"; 
-    with Failure e -> Format.eprintf "%s\n" e;
+      Format.eprintf "]\n"; 
+      try 
+        let lst = test_linearization_fail ct in 
+        Format.eprintf "[";
+        List.iteri (fun i x -> 
+          if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
+          else Format.eprintf "%s" x
+          ) lst;
+          Format.eprintf "]\n";
+      with No_linearization -> Format.eprintf "Cannot create a consistent method resolution order\n";
     Format.eprintf "%s" "===================================\n";
     Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
     Format.eprintf "%s\n\n" (contract_to_string (c_contract()));

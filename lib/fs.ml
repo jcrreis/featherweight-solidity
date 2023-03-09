@@ -4,6 +4,7 @@
 
 open Types
 open Utils
+open C3 
 
 let eval_arit_expr (e: arit_ops) : expr = match e with
   | Plus (e1, e2) -> begin match e1, e2 with
@@ -566,8 +567,7 @@ let rec eval_expr
       | (_, _, _, Val(VAddress a)) ->
         let c = get_contract_by_address blockchain (VAddress a) in
         let (cname, _, _) = Hashtbl.find blockchain (c, VAddress a) in
-        let contract_def: contract_def = Hashtbl.find ct cname in  
-        let contract_hierarchy: string list = get_contract_hierarchy contract_def ct in 
+        let contract_hierarchy: string list = c3_linearization cname ct in 
         let rec is_contract_or_supercontract (hierarchy: string list) (c_name: string) : bool =
           match hierarchy with 
           | [] -> false 

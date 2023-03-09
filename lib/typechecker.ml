@@ -1,5 +1,6 @@
 open Types 
 open Utils
+open C3 
 
 let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
@@ -13,9 +14,8 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain:
   | Val (VAddress a), Address (Some s) ->
     let c : values = get_contract_by_address blockchain (VAddress a) in     
     let (cname, _, _) = Hashtbl.find blockchain (c,(VAddress a)) in  
-    let contract_def: contract_def = Hashtbl.find ct cname in 
-    let contract_hierarchy: string list = get_contract_hierarchy contract_def ct in 
-    if cname = s || List.mem s contract_hierarchy then 
+    let contract_hierarchy: string list = c3_linearization cname ct in 
+    if List.mem s contract_hierarchy then 
       () 
     else 
       raise (TypeMismatch (Address (Some cname), t)) 
