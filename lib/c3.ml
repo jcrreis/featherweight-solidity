@@ -1,5 +1,6 @@
 (*https://github.com/Leonidas-from-XIV/sandbox/blob/master/c3.ml*)
 (*https://medium.com/coinmonks/inheritance-in-solidity-debunked-3d8dd32d3a99*)
+(*https://docs.soliditylang.org/en/v0.8.15/contracts.html#multiple-inheritance-and-linearization*)
 (*
 The head_not_in_tails function returns the first element of each list and checks if 
   it is not present in the tail of any of the lists. 
@@ -60,7 +61,6 @@ let c3_linearization (contract: string) (ct: contract_table) : string list =
     match contract_def.super_contracts with 
       | [] -> [contract]
       | parents -> 
-        Format.eprintf "%s" contract;
         let parent_lists = (List.map (fun parent -> 
           if SS.mem parent visited then 
             raise (Failure "Mutually recursive inheritance detected")

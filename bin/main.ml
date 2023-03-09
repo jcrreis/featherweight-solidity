@@ -95,13 +95,16 @@ let () =
       else Format.eprintf "%s" x
       ) lst;
       Format.eprintf "]\n"; 
+    try 
       let lst = test_linearization_fail ct in 
-    Format.eprintf "[";
-    List.iteri (fun i x -> 
-      if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
-      else Format.eprintf "%s" x
-      ) lst;
-      Format.eprintf "]\n"; 
+      Format.eprintf "[";
+      List.iteri (fun i x -> 
+        if i <> ((List.length lst) - 1) then Format.eprintf "%s;" x
+        else Format.eprintf "%s" x
+        ) lst;
+        Format.eprintf "]\n"; 
+    with Failure e -> Format.eprintf "%s\n" e;
+    Format.eprintf "%s" "===================================\n";
     Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
     Format.eprintf "%s\n\n" (contract_to_string (c_contract()));
     let test_contract_builder ct = 
