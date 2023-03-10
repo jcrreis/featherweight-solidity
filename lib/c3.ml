@@ -19,6 +19,7 @@ Finally, the c3 function returns the C3 linearization of a class if it exists, a
 python semantics
 
 https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=055708e7d53226e1da480f76796ac58f15f8abdc
+https://www.python.org/download/releases/2.3/mro/
 *)
 open Types
 module SS = Set.Make(String)
