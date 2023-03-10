@@ -14,6 +14,12 @@ merging the C3 linearizations of its parents and adding the class itself.
 
 Finally, the c3 function returns the C3 linearization of a class if it exists, and None otherwise.   
 *)
+
+(*
+python semantics
+
+https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=055708e7d53226e1da480f76796ac58f15f8abdc
+*)
 open Types
 module SS = Set.Make(String)
 
@@ -42,8 +48,8 @@ List.fold_left find_a_head_that_is_not_in_tails None heads
 
 
 let remove to_remove l =
-let rem to_remove = List.filter (fun e -> e != to_remove) in
-rem [] @@ List.map (rem to_remove) l
+  let rem to_remove = List.filter (fun e -> e != to_remove) in
+  rem [] @@ List.map (rem to_remove) l
 
 exception No_linearization
 
@@ -88,3 +94,47 @@ To resolve function name conflicts, the derived contract can use explicit functi
 Similarly, to resolve variable name conflicts, the derived contract can use explicit variable access notation to 
 specify which variable to access. For example, if both A and B define a variable x, and C inherits from both A and B, it 
   can access A.x *)
+
+
+(* 
+Let's define C3 as a function that takes a list of parent classes and returns a linearized list of these classes:
+
+C3(parents) = linearized_list
+
+To find the linearization of a list of classes, we first need to define a merge function, which takes two linearized lists and merges them into a single list:
+
+merge(list1, list2) = merged_list
+
+Now we can define the C3 function using the following recursive algorithm:
+
+If parents is empty, return an empty list.
+
+Otherwise, let H be the first element of parents, and let T be the rest of the list.
+
+Recursively call C3 on T, and let L be the result.
+
+Merge the linearized list of H and L using the merge function:
+
+merged_list = merge(linearized_list(H), L)
+
+Return the merged list.
+
+The merge function can be defined as follows:
+
+If list1 is empty, return list2.
+
+If list2 is empty, return list1.
+
+Let h1 be the head of list1, and t1 be the tail.
+
+Let h2 be the head of list2, and t2 be the tail.
+
+If h1 is not in list2 and h2 is not in list1, add h1 to the beginning of the merged list, and merge t1 and list2.
+
+Otherwise, if h1 is not in list2, add h1 to the beginning of the merged list, and merge t1 and list2.
+
+Otherwise, if h2 is not in list1, add h2 to the beginning of the merged list, and merge list1 and t2.
+
+Otherwise, raise a NoLinearization exception.
+
+This definition follows the same recursive algorithm used in the code implementation we've been discussing, but it is presented mathematically instead. *)

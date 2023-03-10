@@ -30,11 +30,11 @@ let test_linearization_py ct b =
 
 let test_linearization_succ ct = 
   Hashtbl.add ct "D" {name="D"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  Hashtbl.add ct "C" {name="C"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "C" {name="C"; super_contracts=["B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
   Hashtbl.add ct "B" {name="B"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
   Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
   Hashtbl.add ct "E" {name="E"; super_contracts=["D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-  c3_linearization "E" ct
+  c3_linearization "C" ct
 
 let test_linearization_fail ct = 
   Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
