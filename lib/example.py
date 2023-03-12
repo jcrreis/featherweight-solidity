@@ -1,11 +1,25 @@
 class A:
-    pass
+        
+    def a_method(self):
+        return "CALLED FROM A"
+
 
 class B(A):
-    pass
+    def a_method(self):
+        return "CALLED FROM B" 
+    
 
 class C(A):
+    def a_method(self):
+        return "CALLED FROM C" 
+    
+
+class D(C,B):
     pass
 
-class D(B, C):
-    pass
+# print(C.__mro__)
+c = D()
+
+v = c.a_method()
+
+print(v)
