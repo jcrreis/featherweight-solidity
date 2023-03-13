@@ -33,10 +33,17 @@ let () =
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
     (*https://github.com/federicobond/c3-linearization*)
-    Hashtbl.add ct "C" {name="C"; super_contracts=["B"; "A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "B" {name="B"; super_contracts=["A"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "C" {name="C"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "B" {name="B"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
     Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    let l = c3_linearization "C" ct in
+    Hashtbl.add ct "D" {name="D"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "E" {name="E"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "K1" {name="K1"; super_contracts=["C";"A";"B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "K3" {name="K3"; super_contracts=["A";"D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "K2" {name="K2"; super_contracts=["B";"D";"E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    Hashtbl.add ct "Z" {name="Z"; super_contracts=["K1";"K3";"K2"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+
+    let l = c3_linearization "Z" ct in
     Format.eprintf "[";
     List.iter (fun x -> Format.eprintf "%s," x) l;
     Format.eprintf "]\n";
