@@ -2,7 +2,7 @@ open Featherweightsolidity
 open Fs 
 open Types
 open Pprinters
-(* open Contracts *)
+open Contracts
 open Typechecker 
 (* open Utils *)
 open C3 
@@ -65,7 +65,10 @@ let () =
     (*https://github.com/federicobond/c3-linearization*)
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
-
+    Hashtbl.add ct "EOAContract" (eoa_contract());
+    Hashtbl.add ct "A" (a_contract());
+    Hashtbl.add ct "B" (b_contract());
+    Hashtbl.add ct "C" (c_contract());
     let e = New("EOAContract", Val(VUInt 10000), [Val(VUInt 8765321)]) in 
     Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 
