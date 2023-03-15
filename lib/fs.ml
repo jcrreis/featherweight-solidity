@@ -197,9 +197,6 @@ let rec eval_expr
     let contract : contract_def = Hashtbl.find ct contract_name in
     let constructor: (t_exp * string) list * expr = contract.constructor in
     let (t_es, body) = constructor in
-    (* let (t_es, body) = constructor in
-    List.iter2 (fun (_, s) e -> let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
-                 Hashtbl.add vars s e') t_es le; *)
     let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
     List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es;
     if e = Revert then
@@ -564,10 +561,6 @@ let rec eval_expr
                 end
               ) conf (List.rev c3_linearization_hierarchy)  (*maybe List.rev on both lists?*)
             in
-            (* List.iter2 (fun (_, s) e -> let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
-                         Hashtbl.add vars s e') t_es le;
-               let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
-               List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es; *)
             (blockchain, blockchain', sigma, Val(VContract c))
           | _ -> (blockchain, blockchain', sigma, Revert)
         end
