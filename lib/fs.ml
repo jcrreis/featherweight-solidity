@@ -156,42 +156,45 @@ let rec eval_expr
   (vars: (string, expr) Hashtbl.t)
   (constructor_args: expr list)
   : 
-  ((t_exp * string) list  *  (string, expr) Hashtbl.t) =
-    let (sv, vars, _) = List.fold_left (fun (sv, vars, i) cname -> 
+  ((t_exp * string) list  *  (string, (string * expr) list) Hashtbl.t) =
+    let lvars = Hashtbl.create 64 in 
+    let (sv, lvars, _) = List.fold_left (fun (sv, lvars, i) cname -> 
       let contract: contract_def = Hashtbl.find ct cname in  
       let sv = sv @ contract.state in 
       let (constructor_params, _) = contract.constructor in
-      let vars = if i = 0 then 
-        List.fold_left2 (fun (vars: (string, expr) Hashtbl.t) (param: (t_exp * string)) (arg: expr) ->
-        let (_, s) = param in 
-        let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
-        Hashtbl.add vars s e';
-        vars
-      ) vars constructor_params constructor_args 
-      else vars
-      in
-      let super_contracts_params:  ((t_exp * string) list) list = List.map (fun (cname: string) -> 
-        let contract: contract_def = Hashtbl.find ct cname in 
-        let (contract_params, _) = contract.constructor in 
-        contract_params
-        ) contract.super_contracts in 
-      let vars = List.fold_left2 (fun (vars: (string, expr) Hashtbl.t) (params: (t_exp * string) list) (args: expr list) ->  
-        (* params ^ cname so each identifier is unique in the table!*)
-        let vars = List.fold_left2 (fun (vars: (string, expr) Hashtbl.t) (param: (t_exp * string)) (arg: expr) ->
+      (* let lvars = if i = 0 then  *)
+      if i = 0 then
+        begin 
+          let lst = List.fold_left2 (fun (lst: ((string * expr) list)) (param: (t_exp * string)) (arg: expr) ->
           let (_, s) = param in 
           let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
-          Hashtbl.add vars s e';
-          vars
-        ) vars params args
+          lst @ [(s, e')]
+          ) [] constructor_params constructor_args 
+          in
+          Hashtbl.add lvars cname lst;
+        end
+      (* let super_contracts_params:  ((t_exp * string) list * string) list = List.map (fun (cname: string) -> 
+        let contract: contract_def = Hashtbl.find ct cname in 
+        let (contract_params, _) = contract.constructor in 
+        (contract_params, cname)
+        ) contract.super_contracts in  *)
+      (* List.fold_left2 (fun (lvars: (string, (string * expr) list) Hashtbl.t) (params: ((t_exp * string) list) list * string) (args: expr list) ->  
+        let (params, cname) = params in
+        let lst = List.fold_left2 (fun (lvars: (string, (string * expr) list) Hashtbl.t) (param: (t_exp * string)) (arg: expr) ->
+          let (_, s) = param in 
+          let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
+          Hashtbl.add lvars s e';
+          lst @ [(s, e')]
+        ) [] params args
         in
-        vars
-      )  vars super_contracts_params contract.super_constructors_args
-      in 
-      (sv, vars, i + 1)
-    ) ([], vars, 0) contract_hierarchy 
+        Hashtbl.add lvars cname lst;
+      ) lvars super_contracts_params contract.super_constructors_args 
+      (sv, lvars, i + 1)*)
+    ) ([], lvars, 0) contract_hierarchy 
     in 
-    (sv, vars)
+    (sv, lvars)
     in 
+
   let exec_contract_constructor (contract_name: string) (vars: (string, expr) Hashtbl.t) (conf: conf) : (conf, string) result = 
     let (blockchain, blockchain', sigma, _) = conf in
     let contract : contract_def = Hashtbl.find ct contract_name in
