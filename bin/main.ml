@@ -2,9 +2,9 @@ open Featherweightsolidity
 open Fs 
 open Types
 open Pprinters
-open Contracts
+(* open Contracts *)
 open Typechecker 
-open Utils
+(* open Utils *)
 open C3 
 
 let fname = Sys.argv.(1)
@@ -14,6 +14,36 @@ let print_position lexbuf =
   Format.eprintf "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
+let wikipedia_example_c3_linearization ct = 
+  (*https://en.wikipedia.org/wiki/C3_linearization*)
+  Hashtbl.add ct "C" {name="C"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "B" {name="B"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "D" {name="D"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "E" {name="E"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "K1" {name="K1"; super_contracts=["C";"A";"B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "K3" {name="K3"; super_contracts=["A";"D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "K2" {name="K2"; super_contracts=["B";"D";"E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "Z" {name="Z"; super_contracts=["K1";"K3";"K2"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+
+  let l = c3_linearization "Z" ct in
+  Format.eprintf "[";
+  List.iter (fun x -> Format.eprintf "%s," x) l;
+  Format.eprintf "]\n"
+
+let test_python_mro_example ct = 
+  (*https://www.python.org/download/releases/2.3/mro/*)
+  Hashtbl.add ct "C" {name="C"; super_contracts=["D"; "F"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "B" {name="B"; super_contracts=["E"; "D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "A" {name="A"; super_contracts=["B"; "C"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "D" {name="D"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "E" {name="E"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+  Hashtbl.add ct "F" {name="F"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+
+  let l = c3_linearization "A" ct in
+  Format.eprintf "[";
+  List.iter (fun x -> Format.eprintf "%s," x) l;
+  Format.eprintf "]\n"
 
 let () =
   let cin = open_in fname in
@@ -33,44 +63,9 @@ let () =
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
     (*https://github.com/federicobond/c3-linearization*)
-    Hashtbl.add ct "C" {name="C"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "B" {name="B"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "A" {name="A"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "D" {name="D"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "E" {name="E"; super_contracts=[]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "K1" {name="K1"; super_contracts=["C";"A";"B"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "K3" {name="K3"; super_contracts=["A";"D"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "K2" {name="K2"; super_contracts=["B";"D";"E"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
-    Hashtbl.add ct "Z" {name="Z"; super_contracts=["K1";"K3";"K2"]; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]};
+    wikipedia_example_c3_linearization ct; 
+    test_python_mro_example ct;
 
-    let l = c3_linearization "Z" ct in
-    Format.eprintf "[";
-    List.iter (fun x -> Format.eprintf "%s," x) l;
-    Format.eprintf "]\n";
-    Format.eprintf "%s" "===================================\n";
-    Format.eprintf "%s\n\n" (contract_to_string (b_contract()));
-    Format.eprintf "%s\n\n" (contract_to_string (c_contract()));
-    let test_contract_builder ct = 
-      let a_with_super = contract_with_super_contracts (a_contract()) ct in 
-      match a_with_super with
-      | Ok (c, contract_table) -> 
-        begin 
-          Format.eprintf "%s\n\n" (contract_to_string c);
-          let b_with_super = contract_with_super_contracts (b_contract()) contract_table in 
-          match b_with_super with 
-          | Ok (_c, contract_table) -> 
-            begin 
-              let eoac_with_super = contract_with_super_contracts (eoa_contract()) contract_table in 
-              match eoac_with_super with
-              | Ok (c, _ct) -> Format.eprintf "%s\n\n" (contract_to_string c);
-              | Error s -> Format.eprintf "%s\n\n" s;
-            end
-          | Error s -> Format.eprintf "%s\n\n" s;
-        end 
-      | Error s -> Format.eprintf "%s\n\n" s;
-    in
-
-    test_contract_builder ct;
     let e = New("EOAContract", Val(VUInt 10000), [Val(VUInt 8765321)]) in 
     Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 

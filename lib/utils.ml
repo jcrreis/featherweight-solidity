@@ -215,8 +215,6 @@ let function_body
   find_function hierarchy function_name values ct 
 
 
-
-
 let encode_contract (content: string) : string =
   let keccak_key = hash_string (Hash.keccak 256) content in
   let encoded_contract = transform_string (Hexa.encode()) keccak_key in

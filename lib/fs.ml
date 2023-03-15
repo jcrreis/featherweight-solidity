@@ -90,7 +90,6 @@ let state_vars_contract (contract_name: string) (ct: (string, contract_def) Hash
   let contract : contract_def = Hashtbl.find ct contract_name in contract.state
 
 
-
 let top
     (conf: conf) : values =
   let (_, _, sigma, _) = conf in
@@ -151,6 +150,47 @@ let rec eval_expr
         | CTop -> assert false
       ) StateVars.empty state
   in
+  let _make_local_variables_and_state_variables 
+  (contract_hierarchy: string list) 
+  (ct: contract_table) 
+  (vars: (string, expr) Hashtbl.t)
+  (constructor_args: expr list)
+  : 
+  ((t_exp * string) list  *  (string, expr) Hashtbl.t) =
+    let (sv, vars, _) = List.fold_left (fun (sv, vars, i) cname -> 
+      let contract: contract_def = Hashtbl.find ct cname in  
+      let sv = sv @ contract.state in 
+      if i = 0 then 
+          let (constructor_params, _) = contract.constructor in
+          let vars = List.fold_left2 (fun (vars: (string, expr) Hashtbl.t) (param: (t_exp * string)) (arg: expr) ->
+            let (_, s) = param in 
+            let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
+            Hashtbl.add vars s e';
+            vars
+          ) vars constructor_params constructor_args 
+          in
+      let super_contracts_params:  ((t_exp * string) list) list = List.map (fun (cname: string) -> 
+        let contract: contract_def = Hashtbl.find ct cname in 
+        let (contract_params, _) = contract.constructor in 
+        contract_params
+        ) contract.super_contracts in 
+      let vars = List.fold_left2 (fun (vars: (string, expr) Hashtbl.t) (params: (t_exp * string) list) (args: expr list) ->  
+        (* params ^ cname so each identifier is unique in the table!*)
+        let vars = List.fold_left2 (fun (vars: (string, expr) Hashtbl.t) (param: (t_exp * string)) (arg: expr) ->
+          let (_, s) = param in 
+          let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
+          Hashtbl.add vars s e';
+          vars
+        ) vars params args
+        in
+        vars
+      )  vars super_contracts_params contract.super_constructors_args
+      in 
+      (sv, vars, i + 1)
+    ) ([], vars, 0) contract_hierarchy 
+    in 
+    (sv, vars)
+    in 
   let exec_contract_constructor (contract_name: string) (le: expr list) (vars: (string, expr) Hashtbl.t) (conf: conf) : (conf, string) result = 
     let (blockchain, blockchain', sigma, _) = conf in
     let super_contract : contract_def = Hashtbl.find ct contract_name in
@@ -479,6 +519,7 @@ let rec eval_expr
       let c = Hashtbl.length blockchain in
       let a = generate_new_ethereum_address() in
       let contract_def: contract_def = Hashtbl.find ct s in
+      let c3_linearization_hierarchy: string list = c3_linearization contract_def.name ct in 
       let (t_es, _) = contract_def.constructor in
       if (List.length t_es = List.length le) && ((top conf) != VUnit) then
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
@@ -497,20 +538,8 @@ let rec eval_expr
                       | Ok (blockchain, blockchain', sigma, _) -> (blockchain, blockchain', sigma, Val(VContract c))
                       | Error s -> raise (Failure s)
                     end
-                  ) conf contract_def.super_contracts contract_def.super_constructors_args (*maybe List.rev on both lists?*)
+                  ) conf (List.rev c3_linearization_hierarchy) contract_def.super_constructors_args (*maybe List.rev on both lists?*)
                 in
-                let res = exec_contract_constructor contract_def.name le vars (blockchain, blockchain', sigma, Val(VContract c)) in 
-                let (blockchain, blockchain', sigma, _) = begin match res with
-                  | Ok (blockchain, blockchain', sigma, _) -> (blockchain, blockchain', sigma, Val(VContract c))
-                  | Error s -> raise (Failure s)
-                end
-                in 
-
-                (* previous version !*)
-                (* List.iter2 (fun (_, s) e -> let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
-                             Hashtbl.add vars s e') t_es le;
-                   let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
-                   List.iter (fun (_, s) -> Hashtbl.remove vars s) t_es; *)
                 (blockchain, blockchain', sigma, Val(VContract c))
               | Error () -> (blockchain, blockchain', sigma, Revert)
             end
@@ -531,14 +560,8 @@ let rec eval_expr
                   | Ok (blockchain, blockchain', sigma, _) -> (blockchain, blockchain', sigma, Val(VContract c))
                   | Error s -> raise (Failure s)
                 end
-              ) conf contract_def.super_contracts contract_def.super_constructors_args (*maybe List.rev on both lists?*)
+              ) conf (List.rev c3_linearization_hierarchy) contract_def.super_constructors_args (*maybe List.rev on both lists?*)
             in
-            let res = exec_contract_constructor contract_def.name le vars (blockchain, blockchain', sigma, Val(VContract c)) in 
-            let (blockchain, blockchain', sigma, _) = begin match res with
-              | Ok (blockchain, blockchain', sigma, _) -> (blockchain, blockchain', sigma, Val(VContract c))
-              | Error s -> raise (Failure s)
-            end
-            in 
             (* List.iter2 (fun (_, s) e -> let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
                          Hashtbl.add vars s e') t_es le;
                let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
