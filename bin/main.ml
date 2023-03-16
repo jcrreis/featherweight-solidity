@@ -73,25 +73,24 @@ let () =
     Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
-    let _a = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
+    let a = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
       | (_, _, _, Val (VAddress a)) -> VAddress a
       | _ -> assert false
     in 
-    (* Stack.push a sigma; *)
+    Stack.push a sigma;
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
-      (* | Call of expr * string * expr * expr list *)
-    (* let e = Call(res, "getBlood", Val(VUInt 0), []) in 
+    let e = Call(res, "getDoctor", Val(VUInt 0), []) in 
     let conf = (blockchain, blockchain', sigma, e) in 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       Format.eprintf "Blockchain: @.";
-      print_blockchain blockchain vars; *)
+      print_blockchain blockchain vars;
     
 
 

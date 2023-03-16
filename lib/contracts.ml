@@ -213,7 +213,7 @@ let a_contract () : contract_def =
     annotation = None;
     rettype = Address None;
     args = [];
-    body = Return(StateRead(This None, "doctor"));
+    body = Return(StateRead(This None, "bloodA"));
   } in
   {
     name = "A";

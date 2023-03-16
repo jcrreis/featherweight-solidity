@@ -21,6 +21,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain:
       raise (TypeMismatch (Address (Some cname), t)) 
   | Val (VAddress _), _ -> raise (TypeMismatch (Address None, t))
   | Val (VContract _), CTop -> ()
+  | _, CTop -> raise (TypeMismatch (CTop, t))
   | Val (VContract n), C y -> if n <> y then raise (TypeMismatch (C (y), t)) else ()
   | Val (VContract n), _ -> raise (TypeMismatch (C (n), t))
   | MsgSender, Address None -> ()
