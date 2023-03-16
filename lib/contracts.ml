@@ -182,7 +182,7 @@ let eoa_contract () : contract_def =
     annotation = None;
     rettype = UInt;
     args = [];
-    body = StateAssign(This None, "blood", Var("blood"));
+    body = StateRead(This None, "blood");
   } in
   let _getBalance = {
     name = "getBalance";
