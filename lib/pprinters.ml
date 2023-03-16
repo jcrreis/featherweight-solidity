@@ -98,8 +98,16 @@ let function_to_string (func: fun_def) : string = "\nfunction " ^ func.name ^ "(
                                                   ^ "\n}\n"
 
 let contract_to_string (contract: contract_def) : string = 
+  let (super_contracts, _) = (List.fold_left (fun (s, i) cname -> 
+    if i <> ((List.length contract.super_contracts) - 1) then 
+      (s ^ cname ^ ", ", i + 1)
+    else
+      (s ^ cname, i + 1))
+    ("", 0) contract.super_contracts
+  )
+  in 
   let (params, e) = contract.constructor in
-  "contract " ^ contract.name ^ "\n{\n" ^ 
+  "contract " ^ contract.name ^ " is " ^ super_contracts ^ "\n{\n" ^ 
   (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ";\n") "" contract.state) ^ 
   "\nconstructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){\n" ^
   (expr_to_string e) ^ "\n}" ^ (List.fold_left (fun s f -> s ^ (function_to_string f)) "" contract.functions)

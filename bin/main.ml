@@ -91,7 +91,7 @@ let () =
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
-    
+    Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "EOAContract")));
 
 
 
