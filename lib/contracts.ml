@@ -196,7 +196,7 @@ let eoa_contract () : contract_def =
     super_contracts = ["B"; "A"];
     super_constructors_args = [[Val(VUInt 10)];[Val(VUInt 2000)]];
     state = [(UInt, "blood")];
-    constructor = ([(UInt, "blood")], StateAssign(This None, "blood", Var("blood")));
+    constructor = ([(UInt, "bloodC")], StateAssign(This None, "blood", Var("bloodC")));
     functions = [getBlood];
   }
 
@@ -244,7 +244,7 @@ let b_contract () : contract_def =
     super_contracts = ["C"];
     super_constructors_args = [[Val(VUInt 1000)]];
     state = [(UInt, "bloodB")];
-    constructor = ([(UInt, "bloodB")], StateAssign(This None, "bloodB", Var("bloodB")));
+    constructor = ([(UInt, "bloodC")], StateAssign(This None, "bloodB", Var("bloodC")));
     functions = [getBalance];
   }
 
