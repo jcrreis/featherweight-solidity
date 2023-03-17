@@ -66,34 +66,41 @@ let () =
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
     Hashtbl.add ct "EOAContract" (eoa_contract());
-    Hashtbl.add ct "A" (a_contract());
-    Hashtbl.add ct "B" (b_contract());
-    Hashtbl.add ct "C" (c_contract());
-    let e = New("EOAContract", Val(VUInt 10000), [Val(VUInt 8765321)]) in 
+    Hashtbl.add ct "Bank" (simple_bank_contract());
+    let e = New("EOAContract", Val(VUInt 10000), []) in 
     Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
-    let a = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
+    let a1 = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
       | (_, _, _, Val (VAddress a)) -> VAddress a
       | _ -> assert false
     in 
-    Stack.push a sigma;
+    let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
+    let _a2 = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
+      | (_, _, _, Val (VAddress a)) -> VAddress a
+      | _ -> assert false
+    in 
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
-    let e = Call(res, "getDoctor", Val(VUInt 0), []) in 
+    let e = New("Bank", Val(VUInt 0), []) in 
+    let conf = (blockchain, blockchain', sigma, e) in 
+    let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
+    match res with 
+    | Revert -> Format.eprintf "Revert@.";
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+      Format.eprintf "Blockchain: @.";
+      print_blockchain blockchain vars;
+    Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
+    let e = CallTopLevel(res, "deposit", Val(VUInt 564), Val(a1), []) in 
     let conf = (blockchain, blockchain', sigma, e) in 
     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-      Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
-    Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "EOAContract")));
-
-
 
       (* let s = read_whole_file "./contracts/bank.sol" in
          Format.eprintf "%s\n" (encode_contract s); *)
@@ -105,7 +112,7 @@ let () =
          print_contract_table ct vars; *)
       (* Format.eprintf "Blockchain: @.";
          print_blockchain blockchain vars; *)
-      typecheck (Hashtbl.create 64) (MsgSender) (UInt) ct blockchain;
+      typecheck (Hashtbl.create 64) (MsgSender) (Address None) ct blockchain;
 
   with Parser.Error ->
     Format.eprintf "Syntax error@.";

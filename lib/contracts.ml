@@ -170,82 +170,85 @@ let eoa_contract () : contract_def =
   } *)
 
 let eoa_contract () : contract_def =
-  let _fb = {
+  let fb = {
     name = "fb";
     rettype = Unit;
     annotation = None;
     args = [];
-    body = Return(Val(VUnit));
+    body = (Val(VUnit));
   } in
-  let getBlood = {
-    name = "getBlood";
-    annotation = None;
-    rettype = UInt;
-    args = [];
-    body = StateRead(This None, "blood");
-  } in
-  let _getBalance = {
-    name = "getBalance";
-    annotation = None;
-    rettype = UInt;
-    args = [];
-    body = MapRead(StateRead(This None,"dsadsaasd"),MsgSender)
-  } in
+  
   {
     name = "EOAContract";
-    super_contracts = ["B"; "A"];
-    super_constructors_args = [[Val(VUInt 10)];[Val(VUInt 2000)]];
-    state = [(UInt, "blood")];
-    constructor = ([(UInt, "bloodC")], StateAssign(This None, "blood", Var("bloodC")));
-    functions = [getBlood];
+    super_contracts = [];
+    super_constructors_args = [];
+    state = [];
+    constructor = ([],Val VUnit);
+    functions = [fb];
   }
 
-let a_contract () : contract_def =
-  let _fb = {
+let simple_bank_contract () : contract_def =
+  let fb = {
     name = "fb";
     rettype = Unit;
     annotation = None;
     args = [];
-    body = Return(Val(VUnit));
+    body = (Val(VUnit));
   } in
-  let getDoctor = {
-    name = "getDoctor";
+ (* add transfer function ? *)
+  let deposit = {
+    name = "deposit";
     annotation = None;
-    rettype = Address None;
-    args = [];
-    body = Return(StateRead(This None, "bloodA"));
-  } in
-  {
-    name = "A";
-    super_contracts = ["C"];
-    super_constructors_args = [[Val(VUInt 100)]];
-    state = [(UInt, "bloodA")];
-    constructor = ([(UInt, "bloodC")], StateAssign(This None, "bloodA", Var("bloodC")));
-    functions = [getDoctor];
-  }
-
-let b_contract () : contract_def =
-  let _fb = {
-    name = "fb";
     rettype = Unit;
-    annotation = None;
     args = [];
-    body = Return(Val(VUnit));
+    body = Return(
+        (StateAssign(
+            This None,
+            "balances",
+            MapWrite(
+              StateRead(This None,"balances"), MsgSender, AritOp((Plus(MapRead(StateRead(This None,"balances"),MsgSender), MsgValue)))))))
   } in
   let getBalance = {
     name = "getBalance";
-    annotation = None;
     rettype = UInt;
+    annotation = None;
     args = [];
     body = MapRead(StateRead(This None,"balances"),MsgSender)
   } in
+  let transfer = {
+    name = "transfer";
+    rettype = Unit;
+    annotation = None;
+    args = [(Address None, "to"); (UInt, "amount")];
+    body = If(BoolOp(GreaterOrEquals(MapRead(StateRead(This None,"balances"),MsgSender),Var("amount"))),
+              Seq(StateAssign(This None, "balances", MapWrite(
+                  StateRead(This None,"balances"), MsgSender, AritOp(Minus(MapRead(StateRead(This None,"balances"),MsgSender), Var("amount"))))),
+                  StateAssign(This None, "balances", MapWrite(
+                      StateRead(This None,"balances"), Var("to"), AritOp(Minus(MapRead(StateRead(This None,"balances"),Var("to")), Var("amount")))))
+                ),
+              Val(VUnit))
+  } in
+  let withdraw = {
+    name = "withdraw";
+    rettype = Unit;
+    annotation = None;
+    args = [(UInt, "amount")];
+    body = If(BoolOp(GreaterOrEquals(MapRead(StateRead(This None,"balances"),MsgSender),Var("amount"))),
+              Seq(
+                StateAssign(This None, "balances", MapWrite(
+                    StateRead(This None,"balances"), MsgSender, AritOp(Minus(MapRead(StateRead(This None,"balances"),MsgSender), Var("amount"))))),
+                Transfer(MsgSender, Var("x"))
+              ),
+              Val(VUnit)
+             )
+  } in
   {
-    name = "B";
-    super_contracts = ["C"];
-    super_constructors_args = [[Val(VUInt 1000)]];
-    state = [(UInt, "bloodB")];
-    constructor = ([(UInt, "bloodC")], StateAssign(This None, "bloodB", Var("bloodC")));
-    functions = [getBalance];
+    name = "Bank";
+    super_contracts = [];
+    super_constructors_args = [];
+    state = [(Map(Address None, UInt),"balances")];
+    constructor = ([], (Val VUnit));
+    functions = [fb;deposit; getBalance; transfer; withdraw];
   }
 
 let c_contract () : contract_def =
