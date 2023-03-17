@@ -45,6 +45,15 @@ let test_python_mro_example ct =
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
 
+let deposit ct vars b b' s n sender contract = 
+  let conf = (b, b', s,  CallTopLevel(contract, "deposit", Val(VUInt n), Val(sender), [])) in 
+  eval_expr ct vars conf 
+
+let _transfer ct vars b b' s amount sender receiver contract = 
+  let conf = (b, b', s,  CallTopLevel(contract, "transfer", Val(VUInt 0), Val(sender), [Val(receiver);Val(VUInt amount)])) in 
+  eval_expr ct vars conf 
+
+
 let () =
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
@@ -94,9 +103,9 @@ let () =
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
     Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
-    let e = CallTopLevel(res, "deposit", Val(VUInt 564), Val(a1), []) in 
-    let conf = (blockchain, blockchain', sigma, e) in 
-    let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
+    (* let e = CallTopLevel(res, "deposit", Val(VUInt 564), Val(a1), []) in 
+    let conf = (blockchain, blockchain', sigma, e) in  *)
+    let (blockchain, _blockchain', _sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 res in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
