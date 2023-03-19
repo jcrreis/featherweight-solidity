@@ -29,7 +29,8 @@ let rec values_to_string (v: values) : string =
     end
   | VAddress (e1) -> e1
   | VContract (e1) -> "Contract " ^ (string_of_int e1)
-  | VMapping (e1, _t_e) -> Hashtbl.fold (fun k v _s -> match k, v with
+  | VMapping (e1, _t_e) -> 
+    Hashtbl.fold (fun k v _s -> match k, v with
       | Val(v1), Val(v2) -> values_to_string v1 ^ " -> " ^ values_to_string v2
       | _ -> assert false) e1 ""
   | VUnit -> ""

@@ -57,6 +57,10 @@ let withdraw ct vars b b' s n sender contract =
   let conf = (b, b', s, CallTopLevel(contract, "withdraw", Val(VUInt 0), Val(sender), [Val(VUInt n)])) in  
   eval_expr ct vars conf 
 
+let get_balance ct vars b b' s sender contract =
+  let conf = (b, b', s, CallTopLevel(contract, "getBalance", Val (VUInt 0), Val (sender), [])) in 
+  eval_expr ct vars conf 
+
 
 let () =
   let cin = open_in fname in
@@ -107,8 +111,6 @@ let () =
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
     Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
-    (* let e = CallTopLevel(res, "deposit", Val(VUInt 564), Val(a1), []) in 
-    let conf = (blockchain, blockchain', sigma, e) in  *)
     let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
@@ -124,6 +126,14 @@ let () =
       | Revert -> Format.eprintf "Revert@.";
       | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
         print_blockchain blockchain vars;
+    let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
+    match res with 
+    | Revert -> Format.eprintf "Revert@.";
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+    let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
+    match res with 
+    | Revert -> Format.eprintf "Revert@.";
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       (* let s = read_whole_file "./contracts/bank.sol" in
          Format.eprintf "%s\n" (encode_contract s); *)
       (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
