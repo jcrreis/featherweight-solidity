@@ -134,6 +134,12 @@ let () =
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+    let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a2 contract in
+    match res with 
+    | Revert -> Format.eprintf "Revert@.";
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+    print_blockchain blockchain vars;
+
       (* let s = read_whole_file "./contracts/bank.sol" in
          Format.eprintf "%s\n" (encode_contract s); *)
       (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
