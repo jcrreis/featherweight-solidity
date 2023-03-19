@@ -201,12 +201,12 @@ let simple_bank_contract () : contract_def =
     annotation = None;
     rettype = Unit;
     args = [];
-    body = Return(
+    body = 
         (StateAssign(
             This None,
             "balances",
             MapWrite(
-              StateRead(This None,"balances"), MsgSender, AritOp((Plus(MapRead(StateRead(This None,"balances"),MsgSender), MsgValue)))))))
+              StateRead(This None,"balances"), MsgSender, AritOp((Plus(MapRead(StateRead(This None,"balances"),MsgSender), MsgValue))))))
   } in
   let getBalance = {
     name = "getBalance";
@@ -224,7 +224,7 @@ let simple_bank_contract () : contract_def =
               Seq(StateAssign(This None, "balances", MapWrite(
                   StateRead(This None,"balances"), MsgSender, AritOp(Minus(MapRead(StateRead(This None,"balances"),MsgSender), Var("amount"))))),
                   StateAssign(This None, "balances", MapWrite(
-                      StateRead(This None,"balances"), Var("to"), AritOp(Minus(MapRead(StateRead(This None,"balances"),Var("to")), Var("amount")))))
+                      StateRead(This None,"balances"), Var("to"), AritOp(Plus(MapRead(StateRead(This None,"balances"),Var("to")), Var("amount")))))
                 ),
               Val(VUnit))
   } in
@@ -233,14 +233,14 @@ let simple_bank_contract () : contract_def =
     rettype = Unit;
     annotation = None;
     args = [(UInt, "amount")];
-    body = If(BoolOp(GreaterOrEquals(MapRead(StateRead(This None,"balances"),MsgSender),Var("amount"))),
+    body = Return(If(BoolOp(GreaterOrEquals(MapRead(StateRead(This None,"balances"),MsgSender),Var("amount"))),
               Seq(
                 StateAssign(This None, "balances", MapWrite(
                     StateRead(This None,"balances"), MsgSender, AritOp(Minus(MapRead(StateRead(This None,"balances"),MsgSender), Var("amount"))))),
-                Transfer(MsgSender, Var("x"))
+                Transfer(MsgSender, Var("amount"))
               ),
               Val(VUnit)
-             )
+             ))
   } in
   {
     name = "Bank";

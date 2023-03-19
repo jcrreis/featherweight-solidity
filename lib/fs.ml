@@ -5,6 +5,8 @@
 open Types
 open Utils
 open C3 
+open Pprinters
+
 
 let eval_arit_expr (e: arit_ops) : expr = match e with
   | Plus (e1, e2) -> begin match e1, e2 with
@@ -507,10 +509,10 @@ let rec eval_expr
       begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
         | (_, _, _, Val(VAddress a)) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
             | (_, _, _, Val(VUInt v)) ->
-              let res = update_balance ct (VAddress a) (VUInt (-v)) vars conf in
+              let res = update_balance ct (top conf) (VUInt (-v)) vars conf in
               begin match res with
                 | Ok blockchain ->
-                  let res = update_balance ct (VAddress a) (VUInt (-v)) vars conf in
+                  let res = update_balance ct (VAddress a) (VUInt v) vars conf in
                   begin match res with 
                     | Ok blockchain -> 
                       let ctr: values = get_contract_by_address blockchain (VAddress a) in 
@@ -525,7 +527,7 @@ let rec eval_expr
                   end
                 | Error () -> (blockchain, blockchain', sigma, Revert)
               end
-            | _ -> assert false
+            | (_, _, _, _e) -> Format.eprintf "%s" (expr_to_string e2); assert false 
           end
         | _ -> assert false
       end
@@ -659,7 +661,14 @@ let rec eval_expr
                         Hashtbl.remove vars "this";
                         Hashtbl.remove vars "msg.sender";
                         Hashtbl.remove vars "msg.value";
-                        eval_expr ct vars (blockchain, blockchain', sigma, es)
+                        let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, es) in 
+                        if e <> Revert then 
+                          begin
+                            let _ = update_balance ct (a) (VUInt (n)) vars conf in
+                            (blockchain, blockchain', sigma, e)
+                          end
+                        else 
+                          (blockchain, blockchain', sigma, e)
                       with Invalid_argument _ -> (blockchain, blockchain', sigma, Revert)
                     end
                   end
@@ -700,7 +709,14 @@ let rec eval_expr
                         Hashtbl.remove vars "this";
                         Hashtbl.remove vars "msg.sender";
                         Hashtbl.remove vars "msg.value";
-                        eval_expr ct vars (blockchain, blockchain', sigma, es)
+                        let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, es) in 
+                        if e <> Revert then 
+                          begin
+                            let _ = update_balance ct (a) (VUInt (n)) vars conf in 
+                            (blockchain, blockchain', sigma, e)
+                          end
+                        else 
+                          (blockchain, blockchain', sigma, e)
                       with Invalid_argument _ -> (blockchain, blockchain', sigma, Revert)
                     end
                   end
@@ -722,6 +738,7 @@ let rec eval_expr
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (c_name, map, n) = Hashtbl.find blockchain (VContract c, a) in
+        Format.eprintf "\n =========  %s =======\n" (expr_to_string e2');
         let map' = StateVars.add s e2' map in
         Hashtbl.replace blockchain (VContract(c),a) (c_name, map', n);
         (blockchain, blockchain', sigma, e2')
@@ -739,9 +756,23 @@ let rec eval_expr
     end
   | MapWrite (e1, e2, e3) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VMapping (m, t_e))) ->
+        begin
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-        let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain', sigma, e3) in
-        Hashtbl.add m e2' e3' ; (blockchain, blockchain', sigma, Val(VMapping (m, t_e)))
+        let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain', sigma, e3) in     
+        (* if e3' = (get_default_for_type t_e) then 
+          Hashtbl.remove m e2';
+          Hashtbl.iter (fun k v -> Format.eprintf "\n %s -----> %s" (expr_to_string k) (expr_to_string v)) m;
+          (blockchain, blockchain', sigma, Val(VMapping (m, t_e)))
+        else   *)
+        if e3' = (get_default_for_type t_e) then 
+          (Hashtbl.remove m e2'; 
+          Hashtbl.iter (fun k v -> Format.eprintf "\n %s -----> %s" (expr_to_string k) (expr_to_string v)) m;
+          (blockchain, blockchain', sigma, Val(VMapping (m, t_e))))
+        else 
+        (Hashtbl.replace m e2' e3'; 
+          Hashtbl.iter (fun k v -> Format.eprintf "\n %s -----> %s" (expr_to_string k) (expr_to_string v)) m;
+          (blockchain, blockchain', sigma, Val(VMapping (m, t_e))))
+        end
       | _ -> assert false
     end
   | Return e1 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in

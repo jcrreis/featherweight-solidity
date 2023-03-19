@@ -49,8 +49,12 @@ let deposit ct vars b b' s n sender contract =
   let conf = (b, b', s,  CallTopLevel(contract, "deposit", Val(VUInt n), Val(sender), [])) in 
   eval_expr ct vars conf 
 
-let _transfer ct vars b b' s amount sender receiver contract = 
-  let conf = (b, b', s,  CallTopLevel(contract, "transfer", Val(VUInt 0), Val(sender), [Val(receiver);Val(VUInt amount)])) in 
+let transfer ct vars b b' s n sender receiver contract = 
+  let conf = (b, b', s,  CallTopLevel(contract, "transfer", Val(VUInt 0), Val(sender), [Val(receiver);Val(VUInt n)])) in 
+  eval_expr ct vars conf 
+
+let withdraw ct vars b b' s n sender contract = 
+  let conf = (b, b', s, CallTopLevel(contract, "withdraw", Val(VUInt 0), Val(sender), [Val(VUInt n)])) in  
   eval_expr ct vars conf 
 
 
@@ -85,7 +89,7 @@ let () =
       | _ -> assert false
     in 
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
-    let _a2 = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
+    let a2 = match eval_expr ct vars (blockchain, blockchain', sigma, Address(res)) with 
       | (_, _, _, Val (VAddress a)) -> VAddress a
       | _ -> assert false
     in 
@@ -96,21 +100,30 @@ let () =
       print_blockchain blockchain vars;
     let e = New("Bank", Val(VUInt 0), []) in 
     let conf = (blockchain, blockchain', sigma, e) in 
-    let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
-    match res with 
+    let (blockchain, blockchain', sigma, contract) = eval_expr ct vars conf in
+    match contract with 
     | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string contract);
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
     Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
     (* let e = CallTopLevel(res, "deposit", Val(VUInt 564), Val(a1), []) in 
     let conf = (blockchain, blockchain', sigma, e) in  *)
-    let (blockchain, _blockchain', _sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 res in
+    let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       print_blockchain blockchain vars;
-
+    let (blockchain, _blockchain', _sigma, res) = withdraw ct vars blockchain blockchain' sigma 200 a1 contract in 
+    match res with 
+    | Revert -> Format.eprintf "Revert@.";
+    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+      print_blockchain blockchain vars;
+    let (blockchain, _blockchain', _sigma, res) = transfer ct vars blockchain blockchain' sigma 364 a1 a2 contract in 
+      match res with 
+      | Revert -> Format.eprintf "Revert@.";
+      | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+        print_blockchain blockchain vars;
       (* let s = read_whole_file "./contracts/bank.sol" in
          Format.eprintf "%s\n" (encode_contract s); *)
       (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
