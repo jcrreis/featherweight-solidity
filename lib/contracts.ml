@@ -267,7 +267,7 @@ let simple_bank_contract() =
       rettype = Unit;
       annotation = None;
       args = [];
-      body = ((StateAssign(
+      body =  ((StateAssign(
         This None,
         "tracker",AritOp(Plus(StateRead(This None, "tracker"), Val(VUInt 1))))));
     } in

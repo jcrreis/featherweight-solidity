@@ -5,7 +5,7 @@
 open Types
 open Utils
 open C3 
-
+(* open Pprinters *)
 
 let eval_arit_expr (e: arit_ops) : expr = match e with
   | Plus (e1, e2) -> begin match e1, e2 with
@@ -514,14 +514,14 @@ let rec eval_expr
                   let res = update_balance ct (VAddress a) (VUInt v) vars conf in
                   begin match res with 
                     | Ok blockchain -> 
-                      let ctr: values = get_contract_by_address blockchain (VAddress a) in 
-                      let (cname, _, _) = Hashtbl.find blockchain (ctr, VAddress a) in 
+                      let ctr: values = get_contract_by_address blockchain (top conf) in 
+                      let (cname, _, _) = Hashtbl.find blockchain (ctr, top conf) in 
                       Hashtbl.add vars "msg.sender" (Val(top conf));
                       Hashtbl.add vars "msg.value" (Val(VUInt v));
                       Hashtbl.add vars "this" (Val ctr);
                       Stack.push (VAddress a) sigma;
                       let (_, e) = function_body cname "fb" [] ct in 
-                      (blockchain, blockchain', sigma, e)
+                      eval_expr ct vars (blockchain, blockchain', sigma, e)
                     | Error () -> (blockchain, blockchain', sigma, Revert)
                   end
                 | Error () -> (blockchain, blockchain', sigma, Revert)
