@@ -5,7 +5,6 @@
 open Types
 open Utils
 open C3 
-open Pprinters
 
 
 let eval_arit_expr (e: arit_ops) : expr = match e with
@@ -527,7 +526,7 @@ let rec eval_expr
                   end
                 | Error () -> (blockchain, blockchain', sigma, Revert)
               end
-            | (_, _, _, _e) -> Format.eprintf "%s" (expr_to_string e2); assert false 
+            | _ -> assert false 
           end
         | _ -> assert false
       end
@@ -738,7 +737,6 @@ let rec eval_expr
         let a = get_address_by_contract blockchain (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (c_name, map, n) = Hashtbl.find blockchain (VContract c, a) in
-        Format.eprintf "\n =========  %s =======\n" (expr_to_string e2');
         let map' = StateVars.add s e2' map in
         Hashtbl.replace blockchain (VContract(c),a) (c_name, map', n);
         (blockchain, blockchain', sigma, e2')
@@ -766,11 +764,9 @@ let rec eval_expr
         else   *)
         if e3' = (get_default_for_type t_e) then 
           (Hashtbl.remove m e2'; 
-          Hashtbl.iter (fun k v -> Format.eprintf "\n %s -----> %s" (expr_to_string k) (expr_to_string v)) m;
           (blockchain, blockchain', sigma, Val(VMapping (m, t_e))))
         else 
         (Hashtbl.replace m e2' e3'; 
-          Hashtbl.iter (fun k v -> Format.eprintf "\n %s -----> %s" (expr_to_string k) (expr_to_string v)) m;
           (blockchain, blockchain', sigma, Val(VMapping (m, t_e))))
         end
       | _ -> assert false

@@ -187,15 +187,7 @@ let eoa_contract () : contract_def =
     functions = [fb];
   }
 
-let simple_bank_contract () : contract_def =
-  let fb = {
-    name = "fb";
-    rettype = Unit;
-    annotation = None;
-    args = [];
-    body = (Val(VUnit));
-  } in
- (* add transfer function ? *)
+let bank_contract () : contract_def =
   let deposit = {
     name = "deposit";
     annotation = None;
@@ -248,8 +240,45 @@ let simple_bank_contract () : contract_def =
     super_constructors_args = [];
     state = [(Map(Address None, UInt),"balances")];
     constructor = ([], (Val VUnit));
-    functions = [fb;deposit; getBalance; transfer; withdraw];
+    functions = [deposit; getBalance; transfer; withdraw];
   }
+
+let simple_bank_contract() = 
+  let fb = {
+      name = "fb";
+      rettype = Unit;
+      annotation = None;
+      args = [];
+      body = (Val(VUnit));
+    } in
+  {
+    name = "SimpleBank";
+    super_contracts = ["Bank"];
+    super_constructors_args = [[]];
+    state = []; (*(Map(Address None, UInt),"balances")*)
+    constructor = ([], (Val VUnit));
+    functions = [fb];
+  }
+
+
+  let bank_with_deposit_tracker_contract() = 
+  let fb = {
+      name = "fb";
+      rettype = Unit;
+      annotation = None;
+      args = [];
+      body = ((StateAssign(
+        This None,
+        "tracker",AritOp(Plus(StateRead(This None, "tracker"), Val(VUInt 1))))));
+    } in
+    {
+      name = "BankWithDepositTracker";
+      super_contracts = ["Bank"];
+      super_constructors_args = [[]];
+      state = [(UInt, "tracker")]; (*(Map(Address None, UInt),"balances")*)
+      constructor = ([], StateAssign(This None, "tracker",Val(VUInt 0)));
+      functions = [fb];
+    }
 
 let c_contract () : contract_def =
   let fb = {

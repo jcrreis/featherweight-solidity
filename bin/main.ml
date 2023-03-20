@@ -83,7 +83,9 @@ let () =
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
     Hashtbl.add ct "EOAContract" (eoa_contract());
-    Hashtbl.add ct "Bank" (simple_bank_contract());
+    Hashtbl.add ct "Bank" (bank_contract());
+    Hashtbl.add ct "SimpleBank" (simple_bank_contract());
+    Hashtbl.add ct "BankWithDepositTracker" (bank_with_deposit_tracker_contract());
     let e = New("EOAContract", Val(VUInt 10000), []) in 
     Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 
@@ -102,7 +104,7 @@ let () =
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
-    let e = New("Bank", Val(VUInt 0), []) in 
+    let e = New("SimpleBank", Val(VUInt 0), []) in 
     let conf = (blockchain, blockchain', sigma, e) in 
     let (blockchain, blockchain', sigma, contract) = eval_expr ct vars conf in
     match contract with 
@@ -134,7 +136,7 @@ let () =
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-    let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a2 contract in
+    let (blockchain, _blockchain', _sigma, res) = get_balance ct vars blockchain blockchain' sigma a2 contract in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
