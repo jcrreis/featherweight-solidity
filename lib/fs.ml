@@ -514,8 +514,8 @@ let rec eval_expr
                   let res = update_balance ct (VAddress a) (VUInt v) vars conf in
                   begin match res with 
                     | Ok blockchain -> 
-                      let ctr: values = get_contract_by_address blockchain (top conf) in 
-                      let (cname, _, _) = Hashtbl.find blockchain (ctr, top conf) in 
+                      let ctr: values = get_contract_by_address blockchain (VAddress a) in 
+                      let (cname, _, _) = Hashtbl.find blockchain (ctr, VAddress a) in 
                       Hashtbl.add vars "msg.sender" (Val(top conf));
                       Hashtbl.add vars "msg.value" (Val(VUInt v));
                       Hashtbl.add vars "this" (Val ctr);
