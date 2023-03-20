@@ -664,6 +664,13 @@ let rec eval_expr
                         if e <> Revert then 
                           begin
                             let _ = update_balance ct (a) (VUInt (n)) vars conf in
+                            let (blockchain, blockchain', sigma, _) = if n > 0 then 
+                              let (_, efb) = function_body contract_name "fb" [] ct in 
+                              let efb = eval_expr ct vars (blockchain, blockchain', sigma, efb) in 
+                              efb 
+                            else 
+                              (blockchain, blockchain', sigma, Val(VUnit))
+                            in 
                             (blockchain, blockchain', sigma, e)
                           end
                         else 
@@ -712,6 +719,13 @@ let rec eval_expr
                         if e <> Revert then 
                           begin
                             let _ = update_balance ct (a) (VUInt (n)) vars conf in 
+                            let (blockchain, blockchain', sigma, _) = if n > 0 then 
+                              let (_, efb) = function_body contract_name "fb" [] ct in 
+                              let efb = eval_expr ct vars (blockchain, blockchain', sigma, efb) in 
+                              efb 
+                            else 
+                              (blockchain, blockchain', sigma, Val(VUnit))
+                            in 
                             (blockchain, blockchain', sigma, e)
                           end
                         else 
