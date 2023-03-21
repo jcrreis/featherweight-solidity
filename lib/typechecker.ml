@@ -10,7 +10,12 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain:
   | Revert, _ -> ()
   | Val (VUnit), Unit -> ()
   | Val (VUnit), _ -> raise (TypeMismatch (Unit, t))
-  | Val (VAddress _), Address None -> ()
+  | Val (VAddress a), _ -> 
+    try 
+      let a = Hashtbl.find gamma (VAddress a) in 
+      if a <> t then raise (TypeMismatch (a, t)) else ()
+    with Not_found -> raise (UnboundVariable a)
+  (* | Val (VAddress _), Address None -> ()
   | Val (VAddress a), Address (Some s) ->
     let c : values = get_contract_by_address blockchain (VAddress a) in     
     let (cname, _, _) = Hashtbl.find blockchain (c,(VAddress a)) in  
@@ -19,7 +24,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain:
       () 
     else 
       raise (TypeMismatch (Address (Some cname), t)) 
-  | Val (VAddress _), _ -> raise (TypeMismatch (Address None, t))
+  | Val (VAddress _), _ -> raise (TypeMismatch (Address None, t)) *)
   | Val (VContract _), CTop -> ()
   | _, CTop -> raise (TypeMismatch (CTop, t))
   | Val (VContract n), C y -> if n <> y then raise (TypeMismatch (C (y), t)) else ()
@@ -135,9 +140,14 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       raise (TypeMismatch (UInt, t));
     typecheck gamma e1 (Address None) ct blockchain;
   | Address e1 -> 
-    if t <> (Address None) then 
-      raise (TypeMismatch (Address None, t));
-    typecheck gamma e1 (CTop) ct blockchain;
+    (* if t <> (Address None) then 
+      raise (TypeMismatch (Address None, t)); *)
+    begin match t with 
+      | Address None -> typecheck gamma e1 CTop ct blockchain
+      | Address (Some s) -> 
+        
+      | _ -> raise (TypeMismatch (Address None, t))
+    end 
   | Return e1 -> typecheck gamma e1 t ct blockchain 
   | Seq (_, e2) ->
     typecheck gamma e2 t ct blockchain

@@ -5,7 +5,7 @@ type t_exp =
   | Bool
   | Unit
   | UInt
-  | Address of string option
+  | Address of t_exp 
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
   | TRevert
@@ -101,3 +101,5 @@ type program = (contract_table * blockchain * expr)
 type gamma = (string, t_exp) Hashtbl.t
 
 exception TypeMismatch of t_exp * t_exp 
+
+exception UnboundVariable of string 

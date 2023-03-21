@@ -771,17 +771,11 @@ let rec eval_expr
         begin
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain', sigma, e3) in     
-        (* if e3' = (get_default_for_type t_e) then 
-          Hashtbl.remove m e2';
-          Hashtbl.iter (fun k v -> Format.eprintf "\n %s -----> %s" (expr_to_string k) (expr_to_string v)) m;
-          (blockchain, blockchain', sigma, Val(VMapping (m, t_e)))
-        else   *)
         if e3' = (get_default_for_type t_e) then 
-          (Hashtbl.remove m e2'; 
-          (blockchain, blockchain', sigma, Val(VMapping (m, t_e))))
+          Hashtbl.remove m e2'
         else 
-        (Hashtbl.replace m e2' e3'; 
-          (blockchain, blockchain', sigma, Val(VMapping (m, t_e))))
+          Hashtbl.replace m e2' e3';
+        (blockchain, blockchain', sigma, Val(VMapping (m, t_e)))
         end
       | _ -> assert false
     end
