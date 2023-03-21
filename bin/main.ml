@@ -61,6 +61,9 @@ let get_balance ct vars b b' s sender contract =
   let conf = (b, b', s, CallTopLevel(contract, "getBalance", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf 
 
+let get_liquidity ct vars b b' s sender contract = 
+  let conf = (b, b', s, CallTopLevel(contract, "getLiquidity", Val (VUInt 0), Val (sender), [])) in 
+  eval_expr ct vars conf
 
 let () =
   let cin = open_in fname in
@@ -135,12 +138,11 @@ let () =
     let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-    let (blockchain, _blockchain', _sigma, res) = get_balance ct vars blockchain blockchain' sigma a2 contract in
+    | _ -> Format.eprintf "Result get balance A1: %s@." (expr_to_string res);
+    let (blockchain, _blockchain', _sigma, res) = get_liquidity ct vars blockchain blockchain' sigma a2 contract in
     match res with 
     | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-    print_blockchain blockchain vars;
+    | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
 
     (* Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
     Format.eprintf "%s" (contract_to_string (donor_contract())); *)

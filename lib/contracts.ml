@@ -205,8 +205,17 @@ let bank_contract () : contract_def =
     rettype = UInt;
     annotation = None;
     args = [];
-    body = MapRead(StateRead(This None,"balances"),MsgSender)
+    body = Return(MapRead(StateRead(This None,"balances"),MsgSender))
   } in
+
+  let getLiquidity = {
+    name = "getLiquidity";
+    rettype = UInt;
+    annotation = None;
+    args = [];
+    body = Return(Balance(Address(This None)))
+  }
+  in
   let transfer = {
     name = "transfer";
     rettype = Unit;
@@ -240,7 +249,7 @@ let bank_contract () : contract_def =
     super_constructors_args = [];
     state = [(Map(Address None, UInt),"balances")];
     constructor = ([], (Val VUnit));
-    functions = [deposit; getBalance; transfer; withdraw];
+    functions = [deposit; getBalance; transfer; withdraw; getLiquidity];
   }
 
 let simple_bank_contract() = 

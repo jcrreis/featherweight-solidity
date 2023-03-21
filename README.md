@@ -16,8 +16,8 @@ Pontos feitos:
     - Executar fallback function quando se recebe ether > 0 em CallTopLevel e Call 
     - Nos mapas quando o valor é alterado para o default value remover da tabela
     - Por default todas as funções/ variáveis de estado são passíveis de ser overrided pelo contrato pai 
-    - Funcionalidades testadas: NEW, SEQ, StateAssign, StateRead, CallTopLevel, Transfer, MsgSender, MsgValue
-    - Por testar: Let, Assign, Call, Cons, this.f, Balance(a), Address(c), Revert  
+    - Funcionalidades testadas: NEW, SEQ, StateAssign, StateRead, CallTopLevel, Transfer, MsgSender, MsgValue, Balance(a)
+    - Por testar: Let, Assign, Call, Cons, this.f, Address(c), Revert  
 
 
 TODO: PLANO DISSERTAÇÃO ATÉ JULHO
