@@ -85,7 +85,8 @@ let rec expr_to_string (e: expr) : string =
   | StateAssign (e1, s1, e2) -> expr_to_string e1 ^ "." ^ s1 ^ " = " ^ expr_to_string e2 ^ ";"
   | MapRead (e1, e2) -> expr_to_string e1 ^ "[" ^ expr_to_string e2 ^ "]"
   | MapWrite (e1, e2, e3) -> expr_to_string e1 ^ "[" ^ expr_to_string e2 ^ "]" ^ " = " ^ expr_to_string e3 
-  | Call (_e1, _s1, _e2, _le) -> "Call"
+  | Call (e1, s1, e2, le) -> expr_to_string e1 ^ "." ^ s1 ^ ".value" ^ "(" ^ expr_to_string e2 ^ ")" 
+      ^ "." ^ List.fold_left (fun s e -> s ^ (expr_to_string e ) ^ ", ") "(" le ^ ")"
   | CallTopLevel (_e1, _s1, _e2, _e3, _le) -> "CallTopLevel"
   | Revert -> "revert()"
   | If (e1, e2, e3) -> "if(" ^ expr_to_string e1 ^ ")" ^ " then " ^ expr_to_string e2 ^ " else " ^ expr_to_string e3 

@@ -17,7 +17,7 @@ Pontos feitos:
     - Nos mapas quando o valor é alterado para o default value remover da tabela
     - Por default todas as funções/ variáveis de estado são passíveis de ser overrided pelo contrato pai 
     - Funcionalidades testadas: NEW, SEQ, StateAssign, StateRead, CallTopLevel, Transfer, MsgSender, MsgValue
-    - Por testar: Let, Assign, Call, Cons, this.f, Balance(a), Address(c), Revert and Return 
+    - Por testar: Let, Assign, Call, Cons, this.f, Balance(a), Address(c), Revert  
 
 
 TODO: PLANO DISSERTAÇÃO ATÉ JULHO

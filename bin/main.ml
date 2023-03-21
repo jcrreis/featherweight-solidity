@@ -142,6 +142,8 @@ let () =
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
     print_blockchain blockchain vars;
 
+    (* Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
+    Format.eprintf "%s" (contract_to_string (donor_contract())); *)
       (* let s = read_whole_file "./contracts/bank.sol" in
          Format.eprintf "%s\n" (encode_contract s); *)
       (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
