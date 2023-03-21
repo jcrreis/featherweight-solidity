@@ -143,6 +143,7 @@ let () =
     match res with 
     | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
+    print_blockchain blockchain vars;
 
     (* Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
     Format.eprintf "%s" (contract_to_string (donor_contract())); *)
