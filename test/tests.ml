@@ -16,7 +16,7 @@ let gen_string =
   let ch = Gen.oneofl ['a'; 'b'; 'c'; 'd'] in
   Gen.string_of ch
 
-let leafgen_type = Gen.oneofl[Bool; UInt; Address None; Map (Address None, UInt); Map (UInt, Address None)]
+let leafgen_type = Gen.oneofl[Bool; UInt; Address CTop; Map (Address CTop, UInt); Map (UInt, Address CTop)]
 
 let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
 
@@ -181,8 +181,8 @@ let test_contract =
     name = "Test";
     super_contracts = [];
     super_constructors_args = [];
-    state = [(Map(Address None, UInt), "test_map"); (Address None, "test_sv1"); (UInt, "test_sv2")];
-    constructor = ([(Address None, "test_sv1"); (UInt, "test_sv2")], Seq(
+    state = [(Map(Address CTop, UInt), "test_map"); (Address CTop, "test_sv1"); (UInt, "test_sv2")];
+    constructor = ([(Address CTop, "test_sv1"); (UInt, "test_sv2")], Seq(
         (StateAssign(This None, "test_sv1", Var("test_sv1"))),
         (StateAssign(This None, "test_sv2", Var("test_sv2"))) 
       ));

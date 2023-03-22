@@ -238,7 +238,7 @@ fun_body:
 
 typ:
   | UINT { Types.UInt }
-  | ADDRESS { Types.Address None}
+  | ADDRESS { Types.Address CTop}
   | BOOL { Types.Bool }
   | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
     { Types.Map (key, value) }

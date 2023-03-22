@@ -157,7 +157,7 @@ let () =
          print_contract_table ct vars; *)
       (* Format.eprintf "Blockchain: @.";
          print_blockchain blockchain vars; *)
-      typecheck (Hashtbl.create 64) (MsgSender) (Address None) ct blockchain;
+      typecheck (Hashtbl.create 64) (MsgSender) (Address CTop) ct blockchain;
 
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
