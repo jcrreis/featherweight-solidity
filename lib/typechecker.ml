@@ -147,8 +147,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       raise (TypeMismatch (UInt, t));
     typecheck gamma e1 (Address CTop) ct blockchain;
   | Address e1 -> 
-    (* if t <> (Address CTop) then 
-      raise (TypeMismatch (Address CTop, t)); *)
     begin match t with 
       | Address CTop -> typecheck gamma e1 CTop ct blockchain
       | Address (C i) -> typecheck gamma e1 (C i) ct blockchain 
@@ -166,11 +164,53 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma e2 t ct blockchain;
     typecheck gamma e3 t ct blockchain;
   | Assign (s, e1) -> 
-    let t_x = Hashtbl.find gamma (Var s) in
-    typecheck gamma e1 t_x ct blockchain 
+    begin 
+      try 
+        let t_x = Hashtbl.find gamma (Var s) in
+        typecheck gamma e1 t_x ct blockchain
+      with Not_found -> raise (UnboundVariable s) 
+    end 
   (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
   (* | MapRead (e1, e2) ->  
      | MapWrite (e1, e2, e3) -> *)
+  | StateRead (e1, s) -> 
+    begin 
+      try 
+        let t_x = Hashtbl.find gamma (StateRead(e1, s)) in 
+        typecheck gamma e1 t_x ct blockchain
+      with Not_found -> raise (UnboundVariable ("State Var " ^ s)) 
+    end 
+  | StateAssign (e1, s, e2) -> 
+    begin 
+      try 
+        let t_x = Hashtbl.find gamma (StateRead(e1, s)) in 
+        begin match t_x with 
+          | CTop -> begin match t with 
+            | CTop -> ()
+            | C _ -> () 
+            | _ -> raise (TypeMismatch (t_x, t))
+          end 
+          | C i  -> begin match t with 
+            | CTop -> () 
+            | C i' -> if i = i' then () else raise (TypeMismatch (t_x, t))
+            | _ -> raise (TypeMismatch (t_x, t))
+          end 
+          | Address CTop -> begin match t with 
+            | Address CTop -> () 
+            | Address (C _) -> ()
+            | _ -> raise (TypeMismatch (t_x, t))
+          end 
+          | Address (C i) -> begin match t with 
+            | Address CTop -> () 
+            | Address (C i') -> if i = i' then () else raise (TypeMismatch (t_x, t))
+            | _ -> raise (TypeMismatch (t_x, t))
+          end 
+          | _ -> if t_x = t then () else raise (TypeMismatch (t_x, t))
+        end
+        ;
+        typecheck gamma e2 t_x ct blockchain
+      with Not_found -> raise (UnboundVariable ("State Var " ^ s)) 
+    end 
   | Transfer (e1, e2) ->
     if t <> Unit then 
       raise (TypeMismatch (Unit, t));
