@@ -1,5 +1,5 @@
 open Types 
-open Utils
+(* open Utils *)
 (* open C3  *)
 
 let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with 
@@ -216,7 +216,8 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       raise (TypeMismatch (CTop, t));
     typecheck gamma e UInt ct blockchain;
     let c_def: contract_def = Hashtbl.find ct s in
-    let (ts, _) = function_type c_def.name "constructor" ct in
+    let (args, _) = c_def.constructor in 
+    let ts = List.map (fun (t_e, _) -> t_e) args in
     List.iter2 (fun t_cx e_cx -> typecheck gamma e_cx t_cx ct blockchain ) ts le;
     (* Verify all parameters have same type to the ones defined in the contract blockchain construct blockchainor*)
     (* | Call (e1, s, e2, le) -> 

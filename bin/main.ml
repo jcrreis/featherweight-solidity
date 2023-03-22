@@ -4,7 +4,7 @@ open Types
 open Pprinters
 open Contracts
 open Typechecker 
-(* open Utils *)
+open Utils
 open C3 
 
 let fname = Sys.argv.(1)
@@ -157,8 +157,23 @@ let () =
          print_contract_table ct vars; *)
       (* Format.eprintf "Blockchain: @.";
          print_blockchain blockchain vars; *)
-      typecheck (Hashtbl.create 64) (MsgSender) (Address CTop) ct blockchain;
-
+      let gamma = (Hashtbl.create 64) in 
+      let c1 = match get_contract_by_address blockchain a1  with 
+        | VContract i -> C i 
+        | _ -> assert false 
+      in 
+      let t_a: t_exp = Address c1 in 
+      let c2 = match get_contract_by_address blockchain a2  with 
+        | VContract i -> C i 
+        | _ -> assert false 
+      in 
+      let t_a': t_exp = Address c2 in 
+      Hashtbl.add gamma (Val a1) t_a;
+      Hashtbl.add gamma (Val a2) t_a';
+      (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
+      typecheck gamma (MsgSender) (Address CTop) ct blockchain;
+      typecheck gamma (Val a1) (t_a) ct blockchain;
+      typecheck gamma (Val a2) (t_a') ct blockchain;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
