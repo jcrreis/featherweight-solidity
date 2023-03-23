@@ -172,6 +172,9 @@ let () =
       typecheck gamma (MsgSender) (Address CTop) ct blockchain;
       typecheck gamma (Val a1) (Address (C "EOAContract")) ct blockchain;
       typecheck gamma (Val a2) (Address (C "EOAContract")) ct blockchain;
+      typecheck gamma (Val a1) (t_a') ct blockchain;
+      typecheck gamma (Val a2) (t_a) ct blockchain;
+
       typecheck gamma (This None) (CTop) ct blockchain;
       
   with Parser.Error ->

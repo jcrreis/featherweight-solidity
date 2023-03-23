@@ -1,8 +1,22 @@
 open Types 
 (* open Utils *)
-(* open C3  *)
+open C3 
 
-let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with 
+let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
+  match t1, t2 with 
+    | Address _, Address CTop -> true
+    | Address CTop, Address _ -> false
+    | Address (C name1), Address (C name2) -> 
+      compareType (C name1) (C name2) ct
+    | CTop, CTop -> true
+    | CTop, C _ -> false 
+    | C _, CTop -> true
+    | C name1, C name2 -> 
+      if List.mem name1 (c3_linearization name2 ct) then true else false
+    | _ -> t1 = t2
+
+
+let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
   | Val (VBool _), _ -> raise (TypeMismatch (Bool, t))
   | Val (VUInt n), UInt -> if n >= 0 then () else raise (TypeMismatch (UInt, t))
@@ -14,25 +28,14 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
     begin 
       try 
         let a = Hashtbl.find gamma (Val (VAddress a)) in 
-        begin match t,a with 
-          | Address CTop, Address _ -> ()
-          | Address (C i), Address CTop -> raise (TypeMismatch (C i, CTop))
-          | Address (C i), Address (C i') -> if i = i' then () else raise (TypeMismatch (C i, C i'))
-          | _ -> raise (TypeMismatch (a, t))
-        end 
+        if compareType a t ct then () else raise (TypeMismatch (a, t))
       with Not_found -> raise (UnboundVariable a)
     end
   | Val (VContract i), _ ->
     begin 
       try 
         let c = Hashtbl.find gamma (Val (VContract i)) in 
-        begin match t, c with 
-          | CTop, CTop -> ()
-          | CTop, C _ -> () 
-          | C _, CTop -> raise (TypeMismatch (c, t)) 
-          | C i, C i' -> if i <> i' then raise (TypeMismatch (c, t)) else ()
-          | _ -> raise (TypeMismatch (c, t)) 
-        end 
+        if compareType c t ct then () else raise (TypeMismatch (c, t))
       with Not_found -> raise (UnboundVariable "")
     end 
   | MsgSender, Address CTop -> ()
@@ -40,8 +43,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
     begin 
       try 
         let t_x = Hashtbl.find gamma (MsgSender) in
-        if t_x <> t then raise (TypeMismatch (t_x, t))
-        else ()
+        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "msg.sender")
     end 
   (*
@@ -53,40 +55,29 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = match e,t with
     begin 
       try 
         let t_x = Hashtbl.find gamma (Var x) in
-        if t_x <> t then raise (TypeMismatch (t_x, t))
-        else ()
+        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable x)
     end 
   | _ -> assert false
 
-let compareType (t1: t_exp) (t2: t_exp) : bool = 
-  match t1, t2 with 
-    | Address CTop, Address _ -> true
-    | Address (C _), Address CTop -> false
-    | Address (C i), Address (C i') -> if i = i' then true else false
-    | CTop, CTop -> true
-    | CTop, C _ -> true 
-    | C _, CTop -> false
-    | C i, C i' -> if i <> i' then false else true
-    | _ -> t1 = t2
 
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e with 
-  | Val (VBool _) -> axioms gamma e t
-  | Val (VUInt _) -> axioms gamma e t
-  | Val (VUnit) -> axioms gamma e t
-  | Val (VAddress _) -> axioms gamma e t
-  | Val (VContract _) -> axioms gamma e t
+  | Val (VBool _) -> axioms gamma e t ct
+  | Val (VUInt _) -> axioms gamma e t ct
+  | Val (VUnit) -> axioms gamma e t ct
+  | Val (VAddress _) -> axioms gamma e t ct
+  | Val (VContract _) -> axioms gamma e t ct
   | Val (VMapping (m, t_exp)) -> 
     let map_t = Hashtbl.find gamma (Val(VMapping(m, t_exp))) in  
-    begin match t, map_t with
+    begin match map_t, t with
       | Map (t1, t2), Map (t3, t4) -> 
-          if compareType t1 t3 && compareType t2 t4 then 
+          if compareType t1 t3 ct && compareType t2 t4 ct then 
             Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; typecheck gamma v t2 ct blockchain) m
           else
             raise (TypeMismatch (map_t, t))
       | _ -> raise (TypeMismatch (map_t, t))
     end
-  | Var _ -> axioms gamma e t
+  | Var _ -> axioms gamma e t ct
   | AritOp a -> begin match a with 
       | Plus (e1, e2) -> 
         if t <> UInt then 
@@ -165,7 +156,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         typecheck gamma e1 UInt ct blockchain;
         typecheck gamma e2 UInt ct blockchain
     end
-  | Revert -> axioms gamma e t 
+  | Revert -> axioms gamma e t ct 
   | Balance e1 -> 
     if t <> UInt then 
       raise (TypeMismatch (UInt, t));
@@ -180,9 +171,9 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Seq (_, e2) ->
     typecheck gamma e2 t ct blockchain
   | MsgSender -> 
-    axioms gamma e t  
+    axioms gamma e t ct  
   | MsgValue ->
-    axioms gamma e t  
+    axioms gamma e t ct  
   | If (e1, e2, e3) -> 
     typecheck gamma e1 Bool ct blockchain;
     typecheck gamma e2 t ct blockchain;
@@ -195,7 +186,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     begin 
       try 
         let t_x = Hashtbl.find gamma (This None) in
-        if compareType t t_x then () 
+        if compareType t_x t ct then () 
         else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "this")
     end 
