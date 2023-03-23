@@ -62,7 +62,7 @@ let get_balance ct vars b b' s sender contract =
   eval_expr ct vars conf 
 
 let get_liquidity ct vars b b' s sender contract = 
-  let conf = (b, b', s, CallTopLevel(contract, "getLiquidity", Val (VUInt 0), Val (sender), [])) in 
+  let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
 
 let () =
@@ -158,22 +158,18 @@ let () =
       (* Format.eprintf "Blockchain: @.";
          print_blockchain blockchain vars; *)
       let gamma = (Hashtbl.create 64) in 
-      let c1 = match get_contract_by_address blockchain a1  with 
-        | VContract i -> C i 
-        | _ -> assert false 
-      in 
-      let t_a: t_exp = Address c1 in 
-      let c2 = match get_contract_by_address blockchain a2  with 
-        | VContract i -> C i 
-        | _ -> assert false 
-      in 
-      let t_a': t_exp = Address c2 in 
-      Hashtbl.add gamma (Val a1) t_a;
-      Hashtbl.add gamma (Val a2) t_a';
+      let c1 = get_contract_by_address blockchain a1 in 
+      let c2 = get_contract_by_address blockchain a2 in  
+      let (c1name, _, _) = Hashtbl.find blockchain (c1, a1) in 
+      let (c2name, _, _ ) = Hashtbl.find blockchain (c2, a2) in 
+      let t_a: t_exp = Address (C c1name) in 
+      let t_a': t_exp = Address (C c2name) in 
+      Hashtbl.add gamma (Val a1) (t_a);
+      Hashtbl.add gamma (Val a2) (t_a');
       (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
       typecheck gamma (MsgSender) (Address CTop) ct blockchain;
-      typecheck gamma (Val a1) (t_a) ct blockchain;
-      typecheck gamma (Val a2) (t_a') ct blockchain;
+      typecheck gamma (Val a1) (Address (C "EOAContract")) ct blockchain;
+      typecheck gamma (Val a2) (Address (C "EOAContract")) ct blockchain;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

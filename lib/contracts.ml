@@ -280,13 +280,22 @@ let simple_bank_contract() =
         This None,
         "tracker",AritOp(Plus(StateRead(This None, "tracker"), Val(VUInt 1))))));
     } in
+  
+    let executeLiquidity = {
+      name = "executeLiquidity";
+      rettype = UInt;
+      annotation = None;
+      args = [];
+      body = Return(This (Some("getLiquidity",[])))
+    }
+    in
     {
       name = "BankWithDepositTracker";
       super_contracts = ["Bank"];
       super_constructors_args = [[]];
       state = [(UInt, "tracker")]; (*(Map(Address CTop, UInt),"balances")*)
       constructor = ([], StateAssign(This None, "tracker",Val(VUInt 0)));
-      functions = [fb];
+      functions = [fb; executeLiquidity];
     }
 
 
@@ -374,7 +383,7 @@ let simple_bank_contract() =
     } in
     let getBank = {
       name = "getBank";
-      rettype = C(1);
+      rettype = C("BloodBank");
       annotation = None;
       args = [];
       body = Return(StateRead(This None, "bank"));

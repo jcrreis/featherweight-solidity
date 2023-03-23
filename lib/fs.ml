@@ -466,12 +466,19 @@ let rec eval_expr
     end
   | Val e1 -> (blockchain, blockchain', sigma, Val e1)
   | This None -> (blockchain, blockchain', sigma, Hashtbl.find vars "this")
-  | This (Some s) -> let (_, _, _, this) = eval_expr ct vars (blockchain, blockchain', sigma, This None) in
+  | This (Some (s, le)) -> let (_, _, _, this) = eval_expr ct vars (blockchain, blockchain', sigma, This None) in
     begin match this with
       | Val(VContract c) -> let a = get_address_by_contract blockchain (VContract c) in
-        let (cname, _, _) = Hashtbl.find blockchain (VContract c, a) in
-        let (_t_es, body) = function_body cname s [] ct in  (* [] -> function args, what to pass?*)
-        (blockchain, blockchain', sigma, body)
+        begin 
+          let (cname, _, _) = Hashtbl.find blockchain (VContract c, a) in
+          let (args, body) = function_body cname s le ct in
+          try 
+            List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
+            let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+            List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
+            (blockchain, blockchain', sigma, es)
+          with Invalid_argument _ -> (blockchain, blockchain', sigma, Revert)
+        end
       | _ -> (blockchain, blockchain', sigma, Revert)
     end
   | MsgSender -> (blockchain, blockchain', sigma, Hashtbl.find vars "msg.sender")
