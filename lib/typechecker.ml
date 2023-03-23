@@ -190,6 +190,16 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Assign (s, e1) -> 
       typecheck gamma (Var s) t ct blockchain;
       typecheck gamma e1 t ct blockchain
+  | This None -> 
+    (* Verify if This references a contract *)
+    begin 
+      try 
+        let t_x = Hashtbl.find gamma (This None) in
+        if compareType t t_x then () 
+        else raise (TypeMismatch (t_x, t))
+      with Not_found -> raise (UnboundVariable "this")
+    end 
+  | This Some (_s, _le) -> assert false
   (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
   | MapRead (_e1, _e2) ->  
     (* typecheck gamma e1 (Map ()) ct blockchain; *)

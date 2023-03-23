@@ -65,6 +65,7 @@ let get_liquidity ct vars b b' s sender contract =
   let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
 
+
 let () =
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
@@ -166,10 +167,13 @@ let () =
       let t_a': t_exp = Address (C c2name) in 
       Hashtbl.add gamma (Val a1) (t_a);
       Hashtbl.add gamma (Val a2) (t_a');
+      Hashtbl.add gamma (This None) (C "EOAContract");
       (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
       typecheck gamma (MsgSender) (Address CTop) ct blockchain;
       typecheck gamma (Val a1) (Address (C "EOAContract")) ct blockchain;
       typecheck gamma (Val a2) (Address (C "EOAContract")) ct blockchain;
+      typecheck gamma (This None) (CTop) ct blockchain;
+      
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
