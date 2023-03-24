@@ -1,7 +1,7 @@
 module StateVars = Map.Make(String)
 
 type t_exp =
-  | C of string (*name of contract*)  (* * hash_contract_code? *)
+  | C of string (*name of contract*)  (*string * string *)(* * hash_contract_code? *)
   | Bool
   | Unit
   | UInt
@@ -90,7 +90,7 @@ and contract_def = {
 }
 
 
-type contract_table = (string, contract_def) Hashtbl.t
+type contract_table = (string, contract_def) Hashtbl.t (* string, string? , contract_def*)
 
 type blockchain = ((values * values), (string * (expr) StateVars.t * values)) Hashtbl.t
 

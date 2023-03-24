@@ -168,15 +168,16 @@ let () =
       Hashtbl.add gamma (Val a1) (t_a);
       Hashtbl.add gamma (Val a2) (t_a');
       Hashtbl.add gamma (This None) (C "EOAContract");
+      Hashtbl.add gamma (Val (VContract 1)) (C "Bank");
+
       (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
       typecheck gamma (MsgSender) (Address CTop) ct blockchain;
       typecheck gamma (Val a1) (Address (C "EOAContract")) ct blockchain;
       typecheck gamma (Val a2) (Address (C "EOAContract")) ct blockchain;
       typecheck gamma (Val a1) (t_a') ct blockchain;
       typecheck gamma (Val a2) (t_a) ct blockchain;
-
       typecheck gamma (This None) (CTop) ct blockchain;
-      
+      typecheck gamma (Val (VUInt 1)) (UInt) ct blockchain;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
