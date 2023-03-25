@@ -87,7 +87,8 @@ and contract_def = {
   state : (t_exp * string) list; 
   constructor : (t_exp * string) list * expr;
   functions : fun_def list;
-  function_lookup_table: (string, fun_def) Hashtbl.t
+  function_lookup_table: (string, fun_def) Hashtbl.t (* When should we populate this function? maybe add a boolean variable?*)
+  (*lookup_table_populated: boolean *)
 }
 
 

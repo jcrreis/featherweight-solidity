@@ -32,3 +32,10 @@ TODO: PLANO DISSERTAÇÃO ATÉ JULHO
 - Setembro -> preparar entrega 
 
 Bidirectional typechecking -- ver até sexta
+
+
+notas:
+
+- blockchain = (contracts, accounts) duas hashtables
+- When should we populate this function? maybe add a boolean variable?
+- c3 linerization algorithm is an algorithm that works on lists ..
