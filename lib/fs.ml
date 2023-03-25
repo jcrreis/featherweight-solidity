@@ -463,13 +463,24 @@ let rec eval_expr
       with Not_found -> Printf.printf  "Couldnt find Var: %s\n" x; (blockchain, blockchain', sigma, Revert)
     end
   | Val e1 -> (blockchain, blockchain', sigma, Val e1)
-  | This None -> (blockchain, blockchain', sigma, Hashtbl.find vars "this")
-  | This (Some s) -> let (_, _, _, this) = eval_expr ct vars (blockchain, blockchain', sigma, This None) in
+  | This None -> 
+    begin try
+      (blockchain, blockchain', sigma, Hashtbl.find vars "this")
+    with Not_found -> Printf.printf  "Couldnt find Var: this"; (blockchain, blockchain', sigma, Revert)
+    end
+  | This (Some (s, le)) -> let (_, _, _, this) = eval_expr ct vars (blockchain, blockchain', sigma, This None) in
     begin match this with
       | Val(VContract c) -> let a = get_address_by_contract blockchain (VContract c) in
-        let (cname, _, _) = Hashtbl.find blockchain (VContract c, a) in
-        let (_t_es, body) = function_body cname s [] ct in  (* [] -> function args, what to pass?*)
-        (blockchain, blockchain', sigma, body)
+        begin 
+          let (cname, _, _) = Hashtbl.find blockchain (VContract c, a) in
+          let (args, body) = function_body cname s le ct in
+          try 
+            List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
+            let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+            List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
+            (blockchain, blockchain', sigma, es)
+          with Invalid_argument _ -> (blockchain, blockchain', sigma, Revert)
+        end
       | _ -> (blockchain, blockchain', sigma, Revert)
     end
   | MsgSender -> (blockchain, blockchain', sigma, Hashtbl.find vars "msg.sender")
@@ -498,7 +509,6 @@ let rec eval_expr
         end
       | _ -> assert false
     end
-  (*VER*)
   | Transfer (e1, e2) -> 
     if (top conf) = VUnit 
     then (blockchain, blockchain', sigma, Revert)
@@ -528,7 +538,6 @@ let rec eval_expr
           end
         | _ -> assert false
       end
-  (*VER*)
   | New (s, e1, le) ->
     begin
       let c = Hashtbl.length blockchain in
@@ -760,7 +769,7 @@ let rec eval_expr
         begin try
             let res = Hashtbl.find m e2' in 
             (blockchain, blockchain', sigma, res)
-          with Not_found -> (blockchain, blockchain', sigma, (get_default_for_type t_e))
+        with Not_found -> (blockchain, blockchain', sigma, (get_default_for_type t_e))
         end
       | _ -> assert false
     end
@@ -770,7 +779,7 @@ let rec eval_expr
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (_, _, _, e3') = eval_expr ct vars (blockchain, blockchain', sigma, e3) in     
         if e3' = (get_default_for_type t_e) then 
-          Hashtbl.remove m e2'
+          Hashtbl.remove m e2' (* we remove if we try to assign a value which is the default value *)
         else 
           Hashtbl.replace m e2' e3';
         (blockchain, blockchain', sigma, Val(VMapping (m, t_e)))

@@ -267,7 +267,7 @@ let fsender (contract_name: string) (function_name: string) (ct: contract_table)
   find_function_def functions_list function_name  
 
 
-let contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : (contract_def * contract_table, string) result =
+(* let contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : (contract_def * contract_table, string) result =
   let append_identifier_to_state (state: (t_exp * string) list) (id: (t_exp * string)) : ((t_exp * string) list, string) result = 
     let rec is_allowed_to_append (state: (t_exp * string) list) (id: (t_exp * string)) : bool =  
       match state with 
@@ -340,4 +340,4 @@ let contract_with_super_contracts (contract: contract_def) (ct: (string, contrac
         contract
       ) contract contract.super_contracts in  
     Ok(contract, ct)
-
+ *)

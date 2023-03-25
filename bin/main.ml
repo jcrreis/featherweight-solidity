@@ -62,8 +62,9 @@ let get_balance ct vars b b' s sender contract =
   eval_expr ct vars conf 
 
 let get_liquidity ct vars b b' s sender contract = 
-  let conf = (b, b', s, CallTopLevel(contract, "getLiquidity", Val (VUInt 0), Val (sender), [])) in 
+  let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
+
 
 let () =
   let cin = open_in fname in

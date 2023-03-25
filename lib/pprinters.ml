@@ -1,7 +1,7 @@
 open Types
 
 let rec t_exp_to_string (t_e: t_exp) : string = match t_e with
-  | C (n) -> "contract" ^ "(" ^ (Stdlib.string_of_int n) ^ ")"
+  | C (n) -> "contract" ^ "(" ^ n ^ ")"
   | Bool -> "boolean"
   | Unit -> "unit"
   | UInt -> "uint"
@@ -60,7 +60,7 @@ let rec expr_to_string (e: expr) : string =
   | Val (v1) -> values_to_string v1
   | This (s1) -> begin match s1 with 
       | None -> "this"
-      | Some s -> "this." ^ s
+      | Some (s, _le) -> "this." ^ s
     end
   | MsgSender -> "msg.sender"
   | MsgValue -> "msg.value"

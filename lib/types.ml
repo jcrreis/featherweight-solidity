@@ -1,7 +1,7 @@
 module StateVars = Map.Make(String)
 
 type t_exp =
-  | C of int  (* * hash_contract_code? *)
+  | C of string (*name of contract*)  (*string * string *)(* * hash_contract_code? *)
   | Bool
   | Unit
   | UInt
@@ -50,7 +50,7 @@ and expr =
   | BoolOp of bool_ops
   | Var of string
   | Val of values
-  | This of string option
+  | This of (string * expr list) option
   | MsgSender
   | MsgValue
   | Balance of expr
@@ -91,7 +91,7 @@ and contract_def = {
 }
 
 
-type contract_table = (string, contract_def) Hashtbl.t
+type contract_table = (string, contract_def) Hashtbl.t (* string, string? , contract_def*)
 
 type contracts = ((values * values), (string * (expr) StateVars.t * values)) Hashtbl.t (* proposal, this stores only contracts *)
 
