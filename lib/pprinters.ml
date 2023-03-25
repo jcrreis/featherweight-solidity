@@ -117,6 +117,7 @@ let contract_to_string (contract: contract_def) : string =
 
 
 let print_blockchain (blockchain: blockchain) _tbl : unit = 
+  let (contracts, _accounts) = blockchain in
   Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
       | VContract(_), VAddress(_), s', sv', VUInt(_) -> 
         begin
@@ -125,7 +126,7 @@ let print_blockchain (blockchain: blockchain) _tbl : unit =
           Format.eprintf "Balance: %s\n" (values_to_string n);
         end
       | _ -> assert false
-    ) blockchain
+    ) contracts
 
 
 

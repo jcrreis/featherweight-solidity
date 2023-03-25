@@ -113,15 +113,13 @@ let rec eval_expr
       (vars: (string, expr) Hashtbl.t)
       (conf: conf) : (blockchain, unit) result =
     let (blockchain, blockchain', sigma, _) = conf in
-    let get_contract_by_address (blockchain: ((values * values), (string * (expr) StateVars.t * values)) Hashtbl.t ) (address: values) =
-      Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k2 = address then k1 else acc) blockchain VUnit
-    in
-    let contract = get_contract_by_address blockchain address in
-    let (c, sv, old_balance) = Hashtbl.find blockchain (contract, address) in
+    let (contracts, accounts) = blockchain in 
+    let contract = get_contract_by_address contracts address in
+    let (c, sv, old_balance) = Hashtbl.find contracts (contract, address) in
     match eval_expr ct vars (blockchain, blockchain', sigma, (AritOp (Plus (Val old_balance, Val value)))) with
     | (_, _, _, Val new_balance) ->
       begin match new_balance with
-        | VUInt i -> if i < 0 then Error () else (Hashtbl.replace blockchain (contract, address) (c, sv, new_balance) ; Ok blockchain)
+        | VUInt i -> if i < 0 then Error () else (Hashtbl.replace contracts (contract, address) (c, sv, new_balance) ; Ok (contracts, accounts))
         | _ -> assert false
       end
     | _ -> assert false

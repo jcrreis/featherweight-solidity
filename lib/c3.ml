@@ -24,6 +24,10 @@ https://www.python.org/download/releases/2.3/mro/
 open Types
 (* module SS = Set.Make(String) *)
 
+(* 
+   C++
+
+https://stackoverflow.com/questions/3310910/method-resolution-order-in-c *)
 
 let head = function
   | [] -> []
@@ -67,6 +71,10 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
       let super_linearizations: string list list = List.map (fun c -> c3_linearization c ct) super_contracts in
       let linearization: string list = merge (super_linearizations @ [super_contracts]) in
       [contract_def.name] @ linearization
+
+
+(* (a, b) (a, c) (b, c)  *) (* A is b,c, B is*) 
+(* let rec c3_algorithm ((string * string) list) : string list =  *)
 
 (* In Solidity, multiple inheritance is implemented using a linearization algorithm called the "C3 Linearization". 
    This algorithm is used to determine the order in which the base contracts should be searched 

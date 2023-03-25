@@ -89,7 +89,7 @@ let () =
     Hashtbl.add ct "Bank" (bank_contract());
     Hashtbl.add ct "SimpleBank" (simple_bank_contract());
     Hashtbl.add ct "BankWithDepositTracker" (bank_with_deposit_tracker_contract());
-    let e = New("EOAContract", Val(VUInt 10000), []) in 
+    (* let e = New("EOAContract", Val(VUInt 10000), []) in 
     Format.eprintf "\n%s\n" (expr_to_string e);
     let conf = (blockchain, blockchain, sigma, e) in 
     let (blockchain, blockchain', sigma, res) = eval_expr ct vars conf in
@@ -107,73 +107,73 @@ let () =
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       Format.eprintf "Blockchain: @.";
       print_blockchain blockchain vars;
-    let e = New("BankWithDepositTracker", Val(VUInt 0), []) in 
-    let conf = (blockchain, blockchain', sigma, e) in 
-    let (blockchain, blockchain', sigma, contract) = eval_expr ct vars conf in
-    match contract with 
-    | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string contract);
-      Format.eprintf "Blockchain: @.";
-      print_blockchain blockchain vars;
-    Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
-    let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
-    match res with 
-    | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-      print_blockchain blockchain vars;
-    let (blockchain, _blockchain', _sigma, res) = withdraw ct vars blockchain blockchain' sigma 200 a1 contract in 
-    match res with 
-    | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-      print_blockchain blockchain vars;
-    let (blockchain, _blockchain', _sigma, res) = transfer ct vars blockchain blockchain' sigma 364 a1 a2 contract in 
-      match res with 
+      let e = New("BankWithDepositTracker", Val(VUInt 0), []) in 
+      let conf = (blockchain, blockchain', sigma, e) in 
+      let (blockchain, blockchain', sigma, contract) = eval_expr ct vars conf in
+      match contract with 
       | Revert -> Format.eprintf "Revert@.";
-      | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+      | _ -> Format.eprintf "Result: %s@." (expr_to_string contract);
+        Format.eprintf "Blockchain: @.";
         print_blockchain blockchain vars;
-    let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
-    match res with 
-    | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
-    let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
-    match res with 
-    | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result get balance A1: %s@." (expr_to_string res);
-    let (blockchain, _blockchain', _sigma, res) = get_liquidity ct vars blockchain blockchain' sigma a2 contract in
-    match res with 
-    | Revert -> Format.eprintf "Revert@.";
-    | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
-    print_blockchain blockchain vars;
+        Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
+        let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
+        match res with 
+        | Revert -> Format.eprintf "Revert@.";
+        | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+          print_blockchain blockchain vars;
+          let (blockchain, _blockchain', _sigma, res) = withdraw ct vars blockchain blockchain' sigma 200 a1 contract in 
+          match res with 
+          | Revert -> Format.eprintf "Revert@.";
+          | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+            print_blockchain blockchain vars;
+            let (blockchain, _blockchain', _sigma, res) = transfer ct vars blockchain blockchain' sigma 364 a1 a2 contract in 
+            match res with 
+            | Revert -> Format.eprintf "Revert@.";
+            | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+              print_blockchain blockchain vars;
+              let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
+              match res with 
+              | Revert -> Format.eprintf "Revert@.";
+              | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
+                let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
+                match res with 
+                | Revert -> Format.eprintf "Revert@.";
+                | _ -> Format.eprintf "Result get balance A1: %s@." (expr_to_string res);
+                  let (blockchain, _blockchain', _sigma, res) = get_liquidity ct vars blockchain blockchain' sigma a2 contract in
+                  match res with 
+                  | Revert -> Format.eprintf "Revert@.";
+                  | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
+                    print_blockchain blockchain vars;
 
-    Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
-    Format.eprintf "%s" (contract_to_string (donor_contract()));
-      (* let s = read_whole_file "./contracts/bank.sol" in
-         Format.eprintf "%s\n" (encode_contract s); *)
-      (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
-         Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1);  *)
-      (* Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract()))); *)
-      (* let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in *)
-      (* Format.eprintf "Contract Table: @.";
-         print_contract_table ct vars; *)
-      (* Format.eprintf "Blockchain: @.";
-         print_blockchain blockchain vars; *)
-      let gamma = (Hashtbl.create 64) in 
-      let c1 = match get_contract_by_address blockchain a1  with 
-        | VContract i -> C i 
-        | _ -> assert false 
-      in 
-      let t_a: t_exp = Address c1 in 
-      let c2 = match get_contract_by_address blockchain a2  with 
-        | VContract i -> C i 
-        | _ -> assert false 
-      in 
-      let t_a': t_exp = Address c2 in 
-      Hashtbl.add gamma (Val a1) t_a;
-      Hashtbl.add gamma (Val a2) t_a';
-      (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
-      typecheck gamma (MsgSender) (Address CTop) ct blockchain;
-      typecheck gamma (Val a1) (t_a) ct blockchain;
-      typecheck gamma (Val a2) (t_a') ct blockchain;
+                    Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
+                    Format.eprintf "%s" (contract_to_string (donor_contract())); *)
+                    (* let s = read_whole_file "./contracts/bank.sol" in
+                       Format.eprintf "%s\n" (encode_contract s); *)
+                    (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
+                       Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1);  *)
+                    (* Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract()))); *)
+                    (* let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in *)
+                    (* Format.eprintf "Contract Table: @.";
+                       print_contract_table ct vars; *)
+                    (* Format.eprintf "Blockchain: @.";
+                       print_blockchain blockchain vars; *)
+                    (* let gamma = (Hashtbl.create 64) in 
+                    let c1 = match get_contract_by_address blockchain a1  with 
+                      | VContract i -> C i 
+                      | _ -> assert false 
+                    in 
+                    let t_a: t_exp = Address c1 in 
+                    let c2 = match get_contract_by_address blockchain a2  with 
+                      | VContract i -> C i 
+                      | _ -> assert false 
+                    in 
+                    let t_a': t_exp = Address c2 in 
+                    Hashtbl.add gamma (Val a1) t_a;
+                    Hashtbl.add gamma (Val a2) t_a';
+                    (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
+                    typecheck gamma (MsgSender) (Address CTop) ct blockchain;
+                    typecheck gamma (Val a1) (t_a) ct blockchain;
+                    typecheck gamma (Val a2) (t_a') ct blockchain; *)
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

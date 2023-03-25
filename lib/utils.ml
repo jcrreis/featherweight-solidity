@@ -221,11 +221,11 @@ let encode_contract (content: string) : string =
   encoded_contract
 
 
-let get_contract_by_address (blockchain: blockchain ) (address: values) : values =
-  Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k2 = address then k1 else acc) blockchain VUnit
+let get_contract_by_address (contracts: contracts ) (address: values) : values =
+  Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k2 = address then k1 else acc) contracts VUnit
 
-let get_address_by_contract (blockchain: blockchain ) (contract: values) : values =
-  Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) blockchain VUnit
+let get_address_by_contract (contracts: contracts ) (contract: values) : values =
+  Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) contracts VUnit
 
 
 let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
