@@ -92,6 +92,7 @@ contract:
                                   state = state_variables;
                                   constructor = (le1, e1);
                                   functions = le2;
+                                  function_lookup_table = Hashtbl.create 64;
                           })
                           }
   | c1 = contract; c2 = contract; { Seq (c1, c2) }

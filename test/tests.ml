@@ -187,6 +187,7 @@ let test_contract =
         (StateAssign(This None, "test_sv2", Var("test_sv2"))) 
       ));
     functions = [fb];
+    function_lookup_table = Hashtbl.create 64;
   }
 
 

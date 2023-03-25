@@ -1,7 +1,7 @@
 open Types
 open Cryptokit
 (* open Pprinters  *)
-open C3
+(* open C3 *)
 
 
 module FV = Set.Make(String)
@@ -174,7 +174,7 @@ let generate_new_ethereum_address () : string =
   "0x" ^ (String.sub address 24 40)
 
 let function_type (contract_name: string) (function_name: string) (ct: contract_table) : (t_exp list * t_exp) =
-  let hierarchy : string list = c3_linearization contract_name ct in 
+  (* let hierarchy : string list = c3_linearization contract_name ct in 
   let rec find_function (contract_hierarchy : string list) (function_name: string) (ct: contract_table) : (t_exp list * t_exp) = 
     match contract_hierarchy with 
       | [] -> ([], TRevert)
@@ -187,7 +187,15 @@ let function_type (contract_name: string) (function_name: string) (ct: contract_
           (t_es, f.rettype)
         with Not_found -> find_function xs function_name ct 
   in
-  find_function hierarchy function_name ct  
+  find_function hierarchy function_name ct   *)
+  let contract_def: contract_def = Hashtbl.find ct contract_name in 
+  let lookup_table = contract_def.function_lookup_table in 
+  try
+    let f : fun_def = Hashtbl.find lookup_table function_name in 
+    let t_es = List.map (fun (t_e, _) -> t_e) f.args in
+    (t_es, f.rettype)
+  with Not_found -> ([], TRevert)
+
 
 let function_body
 (contract_name: string)
@@ -195,7 +203,7 @@ let function_body
 (values: expr list)
 (ct: contract_table) :
 ((t_exp * string) list) * expr =
-  let hierarchy : string list = c3_linearization contract_name ct in
+  (* let hierarchy : string list = c3_linearization contract_name ct in
   let rec find_function 
   (contract_hierarchy : string list) 
   (function_name : string) 
@@ -212,7 +220,16 @@ let function_body
           if List.length values = List.length f.args then (f.args, f.body) else ([], Return Revert)
         with Not_found -> find_function xs function_name values ct
   in
-  find_function hierarchy function_name values ct 
+  find_function hierarchy function_name values ct  *)
+  let contract_def: contract_def = Hashtbl.find ct contract_name in 
+  let lookup_table = contract_def.function_lookup_table in 
+  try
+    let f : fun_def = Hashtbl.find lookup_table function_name in 
+    if List.length values = List.length f.args 
+      then (f.args, f.body) 
+    else 
+      ([], Return Revert)
+  with Not_found -> ([], Return Revert)
 
 
 let encode_contract (content: string) : string =

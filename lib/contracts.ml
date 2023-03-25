@@ -16,6 +16,7 @@ let eoa_contract () : contract_def =
     state = [];
     constructor = ([],Val VUnit);
     functions = [fb];
+    function_lookup_table = Hashtbl.create 64;
   }
 
 let bank_contract () : contract_def =
@@ -81,6 +82,7 @@ let bank_contract () : contract_def =
     state = [(Map(Address CTop, UInt),"balances")];
     constructor = ([], (Val VUnit));
     functions = [deposit; getBalance; transfer; withdraw; getLiquidity];
+    function_lookup_table = Hashtbl.create 64;
   }
 
 let simple_bank_contract() = 
@@ -98,6 +100,7 @@ let simple_bank_contract() =
     state = []; (*(Map(Address CTop, UInt),"balances")*)
     constructor = ([], (Val VUnit));
     functions = [fb];
+    function_lookup_table = Hashtbl.create 64;
   }
 
 
@@ -127,6 +130,7 @@ let simple_bank_contract() =
       state = [(UInt, "tracker")]; (*(Map(Address CTop, UInt),"balances")*)
       constructor = ([], StateAssign(This None, "tracker",Val(VUInt 0)));
       functions = [fb; executeLiquidity];
+      function_lookup_table = Hashtbl.create 64;
     }
 
 
@@ -201,6 +205,7 @@ let simple_bank_contract() =
   
       (* constructor = ([], Val(VUnit));           *)
       functions = [setHealth; isHealty; donate; getDoctor; getBlood];
+      function_lookup_table = Hashtbl.create 64;
     }
   
   let donor_contract () : contract_def =
@@ -237,5 +242,6 @@ let simple_bank_contract() =
           StateAssign(This None, "bank", Var("bank"))
         )));
       functions = [donate; getBank; getBlood];
+      function_lookup_table = Hashtbl.create 64;
     }
 

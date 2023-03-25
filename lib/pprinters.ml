@@ -132,7 +132,7 @@ let print_blockchain (blockchain: blockchain) _tbl : unit =
 
 let print_contract_table (ct: contract_table) _tbl : unit = 
   Hashtbl.iter (fun k v -> match k, v with 
-      | _s', {name = s1; super_contracts = _s5 ; super_constructors_args = _s6; state = s2; constructor = s3; functions = s4} -> 
+      | _s', {name = s1; super_contracts = _s5 ; super_constructors_args = _s6; state = s2; constructor = s3; functions = s4; function_lookup_table = _s7} -> 
         begin
           Format.eprintf "\nContract Name: %s" s1;
           Format.eprintf "\nState Variables: \n";
