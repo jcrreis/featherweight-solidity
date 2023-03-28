@@ -75,7 +75,7 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
 
 exception No_linearization
 
-let rec c3 (input: graph list) : string list = 
+let rec c3 (input: graph list) (target: string): string list = 
   let head = function
     | [] -> []
     | x -> [List.hd x]
