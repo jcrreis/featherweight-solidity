@@ -39,3 +39,7 @@ notas:
 - blockchain = (contracts, accounts) duas hashtables
 - When should we populate this function? maybe add a boolean variable?
 - c3 linerization algorithm is an algorithm that works on lists ..
+- c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
+
+- verificar que a assinatura da função é esta 
+- verficar que valor se deve retornar 

@@ -88,7 +88,6 @@ and contract_def = {
   constructor : (t_exp * string) list * expr;
   functions : fun_def list;
   function_lookup_table: (string, fun_def) Hashtbl.t (* When should we populate this function? maybe add a boolean variable?*)
-  (*lookup_table_populated: boolean *)
 }
 
 
@@ -104,7 +103,13 @@ type conf = (blockchain * blockchain * values Stack.t * expr)
 
 type program = (contract_table * blockchain * expr)
 
-type gamma = (expr, t_exp) Hashtbl.t
+type gamma_vars = (string, t_exp) Hashtbl.t
+
+type gamma_addresses = (values, t_exp) Hashtbl.t
+
+type gamma_contracts = (values, t_exp) Hashtbl.t
+
+type gamma = (gamma_vars, gamma_addresses, gamma_contracts)
 
 exception TypeMismatch of t_exp * t_exp 
 

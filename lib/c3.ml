@@ -21,14 +21,15 @@ python semantics
 https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=055708e7d53226e1da480f76796ac58f15f8abdc
 https://www.python.org/download/releases/2.3/mro/
 *)
-open Types
-(* module SS = Set.Make(String) *)
-
+(* open Types *)
+module ST = Set.Make(String)
+(* type graph = (string * ST.t) *)
+type graph = (string * string list)
 (* 
    C++
 
 https://stackoverflow.com/questions/3310910/method-resolution-order-in-c *)
-
+(* 
 let head = function
   | [] -> []
   | x -> [List.hd x]
@@ -60,7 +61,7 @@ let rec merge (l : string list list) =
     | [] -> [c]
     | n -> c :: merge n)
   | None -> raise No_linearization
-
+(* (string * string list) list*)
 
 let rec c3_linearization (cname: string) (ct: contract_table) : string list = 
   let contract_def: contract_def = Hashtbl.find ct cname in 
@@ -70,9 +71,48 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
     | _ -> 
       let super_linearizations: string list list = List.map (fun c -> c3_linearization c ct) super_contracts in
       let linearization: string list = merge (super_linearizations @ [super_contracts]) in
-      [contract_def.name] @ linearization
+      [contract_def.name] @ linearization *)
 
+exception No_linearization
 
+let rec c3 (input: graph list) : (string list ) list = 
+  let head = function
+    | [] -> []
+    | x -> [List.hd x]
+  in
+  let tail = function
+    | [] -> []
+    | x -> [List.tl x]
+  in
+  let concat_map f l = List.concat @@ List.map f l
+  in
+  let head_not_in_tails (l : string list list) =
+    let heads = concat_map head l in
+    let tails = concat_map tail l in
+    let find_a_head_that_is_not_in_tails acc v = match acc with
+      | Some x -> Some x
+      | None -> if List.exists (List.mem v) tails then None else Some v
+    in
+    List.fold_left find_a_head_that_is_not_in_tails None heads
+  in
+  let remove to_remove l =
+    let rem to_remove = List.filter (fun e -> e != to_remove) in
+    rem [] @@ List.map (rem to_remove) l
+
+  in
+  let rec merge (l : string list list) =
+    match head_not_in_tails l with
+    | Some c -> (match remove c l with
+      | [] -> [c]
+      | n -> c :: merge n)
+    | None -> raise No_linearization
+  in
+  match input with 
+    | [] -> [[]]
+    | e :: es -> let (cls, deps) = e in 
+      [[cls] @ List.fold_right (fun s i -> i @ [s] ) deps []]  
+
+(* (class, set<classes>) set*)(* A ---> B1 ---> B ---> C ---> D*)
 (* (a, b) (a, c) (b, c)  *) (* A is b,c, B is*) 
 (* let rec c3_algorithm ((string * string) list) : string list =  *)
 
