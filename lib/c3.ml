@@ -24,7 +24,6 @@ https://www.python.org/download/releases/2.3/mro/
 (* open Types *)
 module ST = Set.Make(String)
 (* type graph = (string * ST.t) *)
-type graph = (string * string list)
 (* 
    C++
 
@@ -75,7 +74,7 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
 
 exception No_linearization
 
-let rec c3 (input: graph list) (target: string): string list = 
+let rec c3 (input: (string, string list) Hashtbl.t) (target: string): string list = 
   let head = function
     | [] -> []
     | x -> [List.hd x]
@@ -107,20 +106,18 @@ let rec c3 (input: graph list) (target: string): string list =
       | n -> c :: merge n)
     | None -> raise No_linearization
   in
-  match input with 
-    | [] -> []
-    | e :: es -> 
-      begin match e with 
-        | (cls, []) -> [cls]
-        | (cls, parents) -> 
-          [cls] @ (merge @@ (List.map c3 parents) @ [parents])
-      end
+  let el = Hashtbl.find input target in 
+  match el with 
+    | [] -> [target]
+    | parents -> 
+      let parents_linearizations = List.map (fun c -> c3 input c) parents in 
+      [target] @ (merge @@ parents_linearizations @ [parents])
 let () = 
   let input = [
     ("Z", ["K1";"K3";"K2"]);
     ("K2", ["B"; "D"; "E"]);
     ("K3", ["A"; "D"]);
-    ("K1", ["C"; "B"; "A"]);
+    ("K1", ["C"; "A"; "B"]);
     ("E", ["O"]);
     ("D", ["O"]);
     ("C", ["O"]);
@@ -129,7 +126,17 @@ let () =
     ("O", [])
   ]
   in
-  let res = c3 input in 
+  let rec add_to_table tbl input = 
+    match input with 
+      | [] -> tbl 
+      | x :: xs -> 
+        let (x, lst) = x in 
+        Hashtbl.add tbl x lst;
+        add_to_table tbl xs
+  in
+  let tbl = add_to_table (Hashtbl.create 64) input in 
+  let res = c3 tbl "B" in 
+  List.iter (fun x -> Format.eprintf "%s," x) res;
   ()
 (* (string * string list) *)
 
