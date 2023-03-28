@@ -75,7 +75,7 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
 
 exception No_linearization
 
-let rec c3 (input: graph list) : (string list ) list = 
+let rec c3 (input: graph list) : string list = 
   let head = function
     | [] -> []
     | x -> [List.hd x]
@@ -108,9 +108,30 @@ let rec c3 (input: graph list) : (string list ) list =
     | None -> raise No_linearization
   in
   match input with 
-    | [] -> [[]]
-    | e :: es -> let (cls, deps) = e in 
-      [[cls] @ List.fold_right (fun s i -> i @ [s] ) deps []]  
+    | [] -> []
+    | e :: es -> 
+      begin match e with 
+        | (cls, []) -> [cls]
+        | (cls, parents) -> 
+          [cls] @ (merge @@ (List.map c3 parents) @ [parents])
+      end
+let () = 
+  let input = [
+    ("Z", ["K1";"K3";"K2"]);
+    ("K2", ["B"; "D"; "E"]);
+    ("K3", ["A"; "D"]);
+    ("K1", ["C"; "B"; "A"]);
+    ("E", ["O"]);
+    ("D", ["O"]);
+    ("C", ["O"]);
+    ("B", ["O"]);
+    ("A", ["O"]);
+    ("O", [])
+  ]
+  in
+  let res = c3 input in 
+  ()
+(* (string * string list) *)
 
 (* (class, set<classes>) set*)(* A ---> B1 ---> B ---> C ---> D*)
 (* (a, b) (a, c) (b, c)  *) (* A is b,c, B is*) 
