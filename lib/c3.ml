@@ -110,8 +110,13 @@ let rec c3 (input: (string, string list) Hashtbl.t) (target: string): string lis
   match el with 
     | [] -> [target]
     | parents -> 
-      let parents_linearizations = List.map (fun c -> c3 input c) parents in 
-      [target] @ (merge @@ parents_linearizations @ [parents])
+      Format.eprintf "PARENTS\n";
+      List.iter (fun s -> Format.eprintf "%s," s) parents;
+      let parents_linearizations: string list list = List.map (fun c -> Format.eprintf "calling for %s" c; c3 input c) parents in
+      List.iter (fun l -> 
+        Format.eprintf "\n ---->";
+        List.iter (fun s -> Format.eprintf "%s, " s) l) parents_linearizations;
+      [target] @ (merge (parents_linearizations @ [parents]))
 let () = 
   let input = [
     ("Z", ["K1";"K3";"K2"]);
@@ -135,8 +140,8 @@ let () =
         add_to_table tbl xs
   in
   let tbl = add_to_table (Hashtbl.create 64) input in 
-  let res = c3 tbl "B" in 
-  List.iter (fun x -> Format.eprintf "%s," x) res;
+  let res = c3 tbl "K1" in 
+  (* List.iter (fun x -> Format.eprintf "%s," x) res; *)
   ()
 (* (string * string list) *)
 
