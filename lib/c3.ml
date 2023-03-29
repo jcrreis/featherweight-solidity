@@ -1,4 +1,4 @@
-(*https://github.com/Leonidas-from-XIV/sandbox/blob/master/c3.ml*)
+(*https://xivilization.net/~marek/blog/2014/12/08/implementing-c3-linearization/*)
 (*https://medium.com/coinmonks/inheritance-in-solidity-debunked-3d8dd32d3a99*)
 (*https://docs.soliditylang.org/en/v0.8.15/contracts.html#multiple-inheritance-and-linearization*)
 (*
@@ -102,21 +102,17 @@ let rec c3 (input: (string, string list) Hashtbl.t) (target: string): string lis
   let rec merge (l : string list list) =
     match head_not_in_tails l with
     | Some c -> (match remove c l with
-      | [] -> [c]
-      | n -> c :: merge n)
+        | [] -> [c]
+        | n -> c :: merge n)
     | None -> raise No_linearization
   in
   let el = Hashtbl.find input target in 
   match el with 
-    | [] -> [target]
-    | parents -> 
-      Format.eprintf "PARENTS\n";
-      List.iter (fun s -> Format.eprintf "%s," s) parents;
-      let parents_linearizations: string list list = List.map (fun c -> Format.eprintf "calling for %s" c; c3 input c) parents in
-      List.iter (fun l -> 
-        Format.eprintf "\n ---->";
-        List.iter (fun s -> Format.eprintf "%s, " s) l) parents_linearizations;
-      [target] @ (merge (parents_linearizations @ [parents]))
+  | [] -> [target]
+  | parents -> 
+    let parents_linearizations: string list list = List.map (fun c -> c3 input c) parents in
+    let linearizations: string list = (merge (parents_linearizations @ [parents])) in 
+    [target] @ linearizations
 let () = 
   let input = [
     ("Z", ["K1";"K3";"K2"]);
@@ -133,15 +129,15 @@ let () =
   in
   let rec add_to_table tbl input = 
     match input with 
-      | [] -> tbl 
-      | x :: xs -> 
-        let (x, lst) = x in 
-        Hashtbl.add tbl x lst;
-        add_to_table tbl xs
+    | [] -> tbl 
+    | x :: xs -> 
+      let (x, lst) = x in 
+      Hashtbl.add tbl x lst;
+      add_to_table tbl xs
   in
   let tbl = add_to_table (Hashtbl.create 64) input in 
-  let res = c3 tbl "K1" in 
-  (* List.iter (fun x -> Format.eprintf "%s," x) res; *)
+  let res = c3 tbl "Z" in 
+  List.iter (fun x -> Format.eprintf "%s," x) res;
   ()
 (* (string * string list) *)
 
