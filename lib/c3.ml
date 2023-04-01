@@ -21,14 +21,14 @@ python semantics
 https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=055708e7d53226e1da480f76796ac58f15f8abdc
 https://www.python.org/download/releases/2.3/mro/
 *)
-(* open Types *)
-module ST = Set.Make(String)
-(* type graph = (string * ST.t) *)
+open Types
+
+
 (* 
    C++
 
 https://stackoverflow.com/questions/3310910/method-resolution-order-in-c *)
-(* 
+
 let head = function
   | [] -> []
   | x -> [List.hd x]
@@ -57,8 +57,8 @@ exception No_linearization
 let rec merge (l : string list list) =
   match head_not_in_tails l with
   | Some c -> (match remove c l with
-    | [] -> [c]
-    | n -> c :: merge n)
+      | [] -> [c]
+      | n -> c :: merge n)
   | None -> raise No_linearization
 (* (string * string list) list*)
 
@@ -66,79 +66,15 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
   let contract_def: contract_def = Hashtbl.find ct cname in 
   let super_contracts: string list = contract_def.super_contracts in
   match super_contracts with 
-    | [] -> [cname]
-    | _ -> 
-      let super_linearizations: string list list = List.map (fun c -> c3_linearization c ct) super_contracts in
-      let linearization: string list = merge (super_linearizations @ [super_contracts]) in
-      [contract_def.name] @ linearization *)
+  | [] -> [cname]
+  | _ -> 
+    let super_linearizations: string list list = List.map (fun c -> c3_linearization c ct) super_contracts in
+    let linearization: string list = merge (super_linearizations @ [super_contracts]) in
+    [contract_def.name] @ linearization 
 
-exception No_linearization
 
-let rec c3 (input: (string, string list) Hashtbl.t) (target: string): string list = 
-  let head = function
-    | [] -> []
-    | x -> [List.hd x]
-  in
-  let tail = function
-    | [] -> []
-    | x -> [List.tl x]
-  in
-  let concat_map f l = List.concat @@ List.map f l
-  in
-  let head_not_in_tails (l : string list list) =
-    let heads = concat_map head l in
-    let tails = concat_map tail l in
-    let find_a_head_that_is_not_in_tails acc v = match acc with
-      | Some x -> Some x
-      | None -> if List.exists (List.mem v) tails then None else Some v
-    in
-    List.fold_left find_a_head_that_is_not_in_tails None heads
-  in
-  let remove to_remove l =
-    let rem to_remove = List.filter (fun e -> e != to_remove) in
-    rem [] @@ List.map (rem to_remove) l
 
-  in
-  let rec merge (l : string list list) =
-    match head_not_in_tails l with
-    | Some c -> (match remove c l with
-        | [] -> [c]
-        | n -> c :: merge n)
-    | None -> raise No_linearization
-  in
-  let el = Hashtbl.find input target in 
-  match el with 
-  | [] -> [target]
-  | parents -> 
-    let parents_linearizations: string list list = List.map (fun c -> c3 input c) parents in
-    let linearizations: string list = (merge (parents_linearizations @ [parents])) in 
-    [target] @ linearizations
-let () = 
-  let input = [
-    ("Z", ["K1";"K3";"K2"]);
-    ("K2", ["B"; "D"; "E"]);
-    ("K3", ["A"; "D"]);
-    ("K1", ["C"; "A"; "B"]);
-    ("E", ["O"]);
-    ("D", ["O"]);
-    ("C", ["O"]);
-    ("B", ["O"]);
-    ("A", ["O"]);
-    ("O", [])
-  ]
-  in
-  let rec add_to_table tbl input = 
-    match input with 
-    | [] -> tbl 
-    | x :: xs -> 
-      let (x, lst) = x in 
-      Hashtbl.add tbl x lst;
-      add_to_table tbl xs
-  in
-  let tbl = add_to_table (Hashtbl.create 64) input in 
-  let res = c3 tbl "Z" in 
-  List.iter (fun x -> Format.eprintf "%s," x) res;
-  ()
+
 (* (string * string list) *)
 
 (* (class, set<classes>) set*)(* A ---> B1 ---> B ---> C ---> D*)

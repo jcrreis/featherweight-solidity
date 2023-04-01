@@ -109,7 +109,7 @@ type gamma_addresses = (values, t_exp) Hashtbl.t
 
 type gamma_contracts = (values, t_exp) Hashtbl.t
 
-type gamma = (gamma_vars, gamma_addresses, gamma_contracts)
+type gamma = (gamma_vars * gamma_addresses * gamma_contracts)
 
 exception TypeMismatch of t_exp * t_exp 
 

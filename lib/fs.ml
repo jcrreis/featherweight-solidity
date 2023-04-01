@@ -536,14 +536,20 @@ let rec eval_expr
                   let res = update_balance ct (VAddress a) (VUInt v) vars conf in
                   begin match res with 
                     | Ok blockchain -> 
-                      let ctr: values = get_contract_by_address blockchain (VAddress a) in 
-                      let (cname, _, _) = Hashtbl.find blockchain (ctr, VAddress a) in 
-                      Hashtbl.add vars "msg.sender" (Val(top conf));
-                      Hashtbl.add vars "msg.value" (Val(VUInt v));
-                      Hashtbl.add vars "this" (Val ctr);
-                      Stack.push (VAddress a) sigma;
-                      let (_, e) = function_body cname "fb" [] ct in 
-                      eval_expr ct vars (blockchain, blockchain', sigma, e)
+                      let (contracts, accounts) = blockchain in 
+                      let ctr: values = get_contract_by_address contracts (VAddress a) in 
+                      if ctr = VUnit then (*it's an account*)
+                        (blockchain, blockchain', sigma, Val(VUnit))
+                      else
+                        begin 
+                          let (cname, _, _) = Hashtbl.find contracts (ctr, VAddress a) in 
+                          Hashtbl.add vars "msg.sender" (Val(top conf));
+                          Hashtbl.add vars "msg.value" (Val(VUInt v));
+                          Hashtbl.add vars "this" (Val ctr);
+                          Stack.push (VAddress a) sigma;
+                          let (_, e) = function_body cname "fb" [] ct in 
+                          eval_expr ct vars (blockchain, blockchain', sigma, e)
+                        end
                     | Error () -> (blockchain, blockchain', sigma, Revert)
                   end
                 | Error () -> (blockchain, blockchain', sigma, Revert)
@@ -554,7 +560,8 @@ let rec eval_expr
       end
   | New (s, e1, le) ->
     begin
-      let c = Hashtbl.length blockchain in
+      let (contracts, accounts) = blockchain in 
+      let c = Hashtbl.length contracts in
       let a = generate_new_ethereum_address() in
       let contract_def: contract_def = Hashtbl.find ct s in
       let c3_linearization_hierarchy: string list = c3_linearization contract_def.name ct in 
@@ -564,11 +571,13 @@ let rec eval_expr
           | (_, _, _, Val (VUInt n)) ->
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
             begin match res with
-              | Ok blockchain ->  
+              | Ok blockchain ->
+                let (contracts, accounts) = blockchain in   
                 let (state, lvars) = make_local_variables_and_state_variables c3_linearization_hierarchy ct vars le in                 
                 let sv = init_contract_state state in
-                Hashtbl.add blockchain (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
+                Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
                 Hashtbl.add vars "this" (Val(VContract c));
+                let blockchain = (contracts, accounts) in 
                 (* execute super contracts ... *)
                 let (blockchain, blockchain', sigma, _) = List.fold_left (fun (conf: conf) (ctr_super: string) -> 
                     let res = exec_contract_constructor ctr_super vars lvars conf in 
@@ -589,8 +598,9 @@ let rec eval_expr
           | (_, _, _, Val (VUInt n)) ->
             let (state, lvars) = make_local_variables_and_state_variables c3_linearization_hierarchy ct vars le in 
             let sv = init_contract_state state in
-            Hashtbl.add blockchain (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
+            Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
             Hashtbl.add vars "this" (Val(VContract c));
+            let blockchain = (contracts, accounts) in 
             (* execute super contracts ... *)
             let (blockchain, blockchain', sigma, _) = List.fold_left (fun (conf: conf) (ctr_super: string) -> 
               let res = exec_contract_constructor ctr_super vars lvars conf in 
@@ -609,8 +619,9 @@ let rec eval_expr
   | Cons (s, e1) -> 
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with (*Contract_Name(address) C(e)*)  (*CAST*)
       | (_, _, _, Val(VAddress a)) ->
-        let c = get_contract_by_address blockchain (VAddress a) in
-        let (cname, _, _) = Hashtbl.find blockchain (c, VAddress a) in
+        let (contracts, accounts) = blockchain in
+        let c = get_contract_by_address contracts (VAddress a) in
+        let (cname, _, _) = Hashtbl.find contracts (c, VAddress a) in
         let contract_hierarchy: string list = c3_linearization cname ct in 
         let rec is_contract_or_supercontract (hierarchy: string list) (c_name: string) : bool =
           match hierarchy with 
@@ -657,13 +668,14 @@ let rec eval_expr
   | Call (e1, s, e2, le) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
-        let a = get_address_by_contract blockchain (VContract c) in
+        let (contracts, accounts) = blockchain in 
+        let a = get_address_by_contract contracts (VContract c) in
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
           | (_, _, _, Val(VUInt n)) ->
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
             begin match res with
               | Ok blockchain ->
-                let (contract_name, _, _) = Hashtbl.find blockchain (VContract c, a) in
+                let (contract_name, _, _) = Hashtbl.find contracts (VContract c, a) in
                 let (args, body) = function_body contract_name s le ct in
                 if body = Return Revert then
                   (blockchain, blockchain', sigma, Revert)
@@ -708,7 +720,8 @@ let rec eval_expr
   | CallTopLevel (e1, s, e2, e3, le) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
-        let a = get_address_by_contract blockchain (VContract c) in
+        let (contracts, accounts) = blockchain in 
+        let a = get_address_by_contract contracts (VContract c) in
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
           | (_, _, _, Val(VUInt n)) ->
             let res = begin match eval_expr ct vars (blockchain, blockchain', sigma, e3) with
@@ -717,7 +730,7 @@ let rec eval_expr
             end in
             begin match res with
               | Ok blockchain ->
-                let (contract_name, _, _) = Hashtbl.find blockchain (VContract c, a) in
+                let (contract_name, _, _) = Hashtbl.find contracts (VContract c, a) in
                 let (args, body) = function_body contract_name s le ct in
                 if body = Return Revert then
                   (blockchain, blockchain', sigma, Revert)
@@ -769,11 +782,13 @@ let rec eval_expr
   | StateAssign (e1, s , e2) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
-        let a = get_address_by_contract blockchain (VContract c) in
+        let (contracts, accounts) = blockchain in 
+        let a = get_address_by_contract contracts (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-        let (c_name, map, n) = Hashtbl.find blockchain (VContract c, a) in
+        let (c_name, map, n) = Hashtbl.find contracts (VContract c, a) in
         let map' = StateVars.add s e2' map in
-        Hashtbl.replace blockchain (VContract(c),a) (c_name, map', n);
+        Hashtbl.replace contracts (VContract(c),a) (c_name, map', n);
+        let blockchain = (contracts, accounts) in 
         (blockchain, blockchain', sigma, e2')
       | _ -> assert false
     end
