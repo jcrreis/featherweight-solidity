@@ -27,14 +27,17 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
   | Val (VAddress a), _ -> 
     begin 
       try 
-        let a = Hashtbl.find gamma (Val (VAddress a)) in 
+      (* gamma_vars * gamma_addresses * gamma_contracts *)
+        let (_, gamma_addresses, _) = gamma in 
+        let a = Hashtbl.find gamma_addresses (VAddress a) in 
         if compareType a t ct then () else raise (TypeMismatch (a, t))
       with Not_found -> raise (UnboundVariable a)
     end
   | Val (VContract i), _ ->
     begin 
       try 
-        let c = Hashtbl.find gamma (Val (VContract i)) in 
+        let (_, _, gamma_contracts) = gamma in 
+        let c = Hashtbl.find gamma_contracts (VContract i) in 
         if compareType c t ct then () else raise (TypeMismatch (c, t))
       with Not_found -> raise (UnboundVariable "")
     end 
@@ -42,7 +45,8 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
   | MsgSender, t -> 
     begin 
       try 
-        let t_x = Hashtbl.find gamma (MsgSender) in
+        let (gamma_vars, _, _) = gamma in 
+        let t_x = Hashtbl.find gamma_vars "msg.sender" in
         if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "msg.sender")
     end 
@@ -54,7 +58,8 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
   | Var x, t -> 
     begin 
       try 
-        let t_x = Hashtbl.find gamma (Var x) in
+        let (gamma_vars, _, _) = gamma in 
+        let t_x = Hashtbl.find gamma_vars x in
         if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable x)
     end 
@@ -67,9 +72,10 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Val (VUnit) -> axioms gamma e t ct
   | Val (VAddress _) -> axioms gamma e t ct
   | Val (VContract _) -> axioms gamma e t ct
-  | Val (VMapping (m, t_exp)) -> 
+  | Val (VMapping (_m, _t_exp)) -> 
     (*VER*)
-    let map_t = Hashtbl.find gamma (Val(VMapping(m, t_exp))) in  (*get type of this mapping*)
+    assert false
+    (* let map_t = Hashtbl.find gamma (Val(VMapping(m, t_exp))) in  (*get type of this mapping*)
     begin match map_t, t with
       | Map (t1, t2), Map (t3, t4) -> 
           if compareType t1 t3 ct && compareType t2 t4 ct then 
@@ -77,7 +83,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
           else
             raise (TypeMismatch (map_t, t))
       | _ -> raise (TypeMismatch (map_t, t)) (* if t <> Map(t3, t4), => typemismatch*)
-    end
+    end *)
   | Var _ -> axioms gamma e t ct
   | AritOp a -> begin match a with 
       | Plus (e1, e2) -> 
@@ -187,7 +193,8 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     (* Verify if This references a contract *)
     begin 
       try 
-        let t_x = Hashtbl.find gamma (This None) in
+        let (gamma_vars, _, _) = gamma in 
+        let t_x = Hashtbl.find gamma_vars "this" in
         if compareType t_x t ct then () 
         else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "this")
@@ -198,17 +205,19 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     (* typecheck gamma e1 (Map ()) ct blockchain; *)
     assert false
   | MapWrite (_e1, _e2, _e3) -> assert false 
-  | StateRead (e1, s) -> (*VER*)
-    typecheck gamma e1 (CTop) ct blockchain; (* verify e1 points to a contract*)
+  | StateRead (_e1, _s) -> (*VER*)
+    (* typecheck gamma e1 (CTop) ct blockchain; (* verify e1 points to a contract*)
     begin 
       try 
         let t_x = Hashtbl.find gamma (StateRead(e1, s)) in 
         if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable ("State Var " ^ s)) 
-    end 
-  | StateAssign (e1, s, e2) -> 
-        typecheck gamma (StateRead(e1, s)) t ct blockchain;
-        typecheck gamma e2 t ct blockchain
+    end  *)
+    assert false
+  | StateAssign (_e1, _s, _e2) -> 
+        (* typecheck gamma (StateRead(e1, s)) t ct blockchain;
+        typecheck gamma e2 t ct blockchain *)
+        assert false
   | Transfer (e1, e2) ->
     if t <> Unit then 
       raise (TypeMismatch (Unit, t));
@@ -242,8 +251,9 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
        typecheck gamma e2 UInt ct blockchain;
        typecheck gamma e3 Address ct blockchain;  *)
   | Let (t_e, s, e1, e2) -> 
+    let (gamma_vars, _, _) = gamma in 
     typecheck gamma e1 t_e ct blockchain;
-    Hashtbl.add gamma (Var s) t_e;
+    Hashtbl.add gamma_vars s t_e;
     typecheck gamma e2 t ct blockchain;
     (* typecheck e2 with ???*)
   | _ -> assert false
