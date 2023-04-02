@@ -62,7 +62,7 @@ let rec merge (l : 'a hierarchy list list) =
   | None -> raise No_linearization
 (* (string * string list) list*)
 
-let rec c3_linearization (cname: string) (ct: contract_table) : string list = 
+let rec c3_linearization (contract_def: contract_def) : string list = 
   let rec c3_exn = function
     | Class (_, []) as res -> [res]
     | Class (_, parents) as res -> res :: (merge @@ (List.map c3_exn parents) @ [parents])
@@ -71,7 +71,6 @@ let rec c3_linearization (cname: string) (ct: contract_table) : string list =
     | exception No_linearization -> None
     | v -> Some v
   in 
-  let contract_def: contract_def = Hashtbl.find ct cname in 
   let super_contracts: string hierarchy = contract_def.super_contracts in
   match c3 super_contracts with 
     | Some v -> List.map (fun (Class(c, _)) -> c) v 

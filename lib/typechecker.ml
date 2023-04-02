@@ -12,7 +12,8 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
     | CTop, C _ -> false 
     | C _, CTop -> true
     | C name1, C name2 -> 
-      if List.mem name1 (c3_linearization name2 ct) then true else false
+      let contract_def: contract_def = Hashtbl.find ct name2 in 
+      if List.mem name1 (c3_linearization contract_def) then true else false
     | _ -> t1 = t2
 
 

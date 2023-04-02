@@ -583,7 +583,7 @@ let rec eval_expr
       let c = Hashtbl.length contracts in
       let a = generate_new_ethereum_address() in
       let contract_def: contract_def = Hashtbl.find ct s in
-      let c3_linearization_hierarchy: string list = c3_linearization contract_def.name ct in 
+      let c3_linearization_hierarchy: string list = c3_linearization contract_def in 
       let (t_es, _) = contract_def.constructor in
       if (List.length t_es = List.length le) && ((top conf) != VUnit) then
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
@@ -644,7 +644,8 @@ let rec eval_expr
         let (contracts, _accounts) = blockchain in
         let c = get_contract_by_address contracts (VAddress a) in
         let (cname, _, _) = Hashtbl.find contracts (c, VAddress a) in
-        let contract_hierarchy: string list = c3_linearization cname ct in 
+        let contract_def: contract_def = Hashtbl.find ct cname in 
+        let contract_hierarchy: string list = c3_linearization contract_def in 
         let rec is_contract_or_supercontract (hierarchy: string list) (c_name: string) : bool =
           match hierarchy with 
           | [] -> false 

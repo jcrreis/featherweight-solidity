@@ -29,7 +29,7 @@ let wikipedia_example_c3_linearization ct =
   Hashtbl.add ct "K2" {name="K2"; super_contracts=k2; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
   Hashtbl.add ct "Z" {name="Z"; super_contracts=Class("Z", [k1; k3; k2]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
 
-  let l = c3_linearization "Z" ct in
+  let l = c3_linearization (Hashtbl.find ct "Z") in
   Format.eprintf "[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
@@ -43,7 +43,7 @@ let test_python_mro_example ct =
   Hashtbl.add ct "E" {name="E"; super_contracts=Class("E",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
   Hashtbl.add ct "F" {name="F"; super_contracts=Class("F",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
 
-  let l = c3_linearization "A" ct in
+  let l = c3_linearization (Hashtbl.find ct "A") in
   Format.eprintf "[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
@@ -68,6 +68,34 @@ let get_liquidity ct vars b b' s sender contract =
   let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
 
+let add_contract_to_contract_table contract ct = 
+  let linearization: string list = c3_linearization contract in 
+  Format.eprintf "AQUIIIII";
+  List.iter (fun s -> Format.eprintf "%s" s) linearization;
+  let contracts_hierarchy = (List.map (fun cname -> 
+    if cname = contract.name then contract else 
+    Hashtbl.find ct cname) linearization) in
+  let method_table = Hashtbl.create 64 in 
+  let method_table = List.fold_left (fun tbl (c_def: contract_def) -> 
+    let functions = c_def.functions in 
+    let tbl = List.fold_left (fun tbl (f: fun_def) -> 
+      if Hashtbl.mem tbl f.name then tbl else (Hashtbl.add tbl f.name f;tbl)
+      ) tbl functions
+    in 
+    tbl 
+  ) method_table contracts_hierarchy
+  in 
+  let contract: contract_def = {
+    name = contract.name;
+    super_contracts = contract.super_contracts;
+    super_constructors_args = contract.super_constructors_args;  
+    state = contract.state; 
+    constructor = contract.constructor;
+    functions = contract.functions;
+    function_lookup_table = method_table;
+  }
+  in 
+  Hashtbl.add ct contract.name contract ; ct 
 
 
 let () =
@@ -90,9 +118,9 @@ let () =
     (*https://github.com/federicobond/c3-linearization*)
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
-    Hashtbl.add ct "Bank" (bank_contract());
-    Hashtbl.add ct "SimpleBank" (simple_bank_contract());
-    Hashtbl.add ct "BankWithDepositTracker" (bank_with_deposit_tracker_contract());
+    let ct = add_contract_to_contract_table (bank_contract()) ct in 
+    let ct = add_contract_to_contract_table (simple_bank_contract()) ct in 
+    let ct = add_contract_to_contract_table (bank_with_deposit_tracker_contract()) ct in 
     Format.eprintf "\n%s\n" (expr_to_string e);
     let a1 = (VAddress (generate_new_ethereum_address())) in
     let a2 = (VAddress (generate_new_ethereum_address())) in  
