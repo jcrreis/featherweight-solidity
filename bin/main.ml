@@ -70,7 +70,6 @@ let get_liquidity ct vars b b' s sender contract =
 
 let add_contract_to_contract_table contract ct = 
   let linearization: string list = c3_linearization contract in 
-  Format.eprintf "AQUIIIII";
   List.iter (fun s -> Format.eprintf "%s" s) linearization;
   let contracts_hierarchy = (List.map (fun cname -> 
     if cname = contract.name then contract else 
