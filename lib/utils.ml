@@ -174,20 +174,6 @@ let generate_new_ethereum_address () : string =
   "0x" ^ (String.sub address 24 40)
 
 let function_type (contract_name: string) (function_name: string) (ct: contract_table) : (t_exp list * t_exp) =
-  (* let hierarchy : string list = c3_linearization contract_name ct in 
-  let rec find_function (contract_hierarchy : string list) (function_name: string) (ct: contract_table) : (t_exp list * t_exp) = 
-    match contract_hierarchy with 
-      | [] -> ([], TRevert)
-      | x :: xs -> 
-        let contract : contract_def = Hashtbl.find ct x in  
-        let functions_def : fun_def list = contract.functions in
-        try
-          let f = List.find (fun (x : fun_def) -> x.name = function_name) (functions_def) in
-          let t_es = List.map (fun (t_e, _) -> t_e) f.args in
-          (t_es, f.rettype)
-        with Not_found -> find_function xs function_name ct 
-  in
-  find_function hierarchy function_name ct   *)
   let contract_def: contract_def = Hashtbl.find ct contract_name in 
   let lookup_table = contract_def.function_lookup_table in 
   try
@@ -203,24 +189,6 @@ let function_body
 (values: expr list)
 (ct: contract_table) :
 ((t_exp * string) list) * expr =
-  (* let hierarchy : string list = c3_linearization contract_name ct in
-  let rec find_function 
-  (contract_hierarchy : string list) 
-  (function_name : string) 
-  (values : expr list)
-  (ct: contract_table) :
-  ((t_exp * string) list) * expr = 
-    match contract_hierarchy with 
-      | [] -> ([], Return Revert)
-      | x :: xs -> 
-        let contract : contract_def = Hashtbl.find ct x in  
-        let functions_def : fun_def list = contract.functions in
-        try
-          let f = List.find (fun (x : fun_def) -> x.name = function_name) (functions_def) in
-          if List.length values = List.length f.args then (f.args, f.body) else ([], Return Revert)
-        with Not_found -> find_function xs function_name values ct
-  in
-  find_function hierarchy function_name values ct  *)
   let contract_def: contract_def = Hashtbl.find ct contract_name in 
   let lookup_table = contract_def.function_lookup_table in 
   try
@@ -245,30 +213,6 @@ let get_address_by_contract (contracts: contracts ) (contract: values) : values 
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) contracts VUnit
 
 
-(* let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
-  let visited = SS.singleton (contract.name) in
-  let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) (visited: SS.t) : string list =
-    match cs with
-    | [] -> []
-    | x :: xs ->
-      let contract_def: contract_def = Hashtbl.find ct x in
-      let super_contract_hierarchy: string list = contract_def.super_contracts in
-      let visited = SS.union visited (SS.singleton x) in 
-      let super_contract_hierarchy: string list = 
-        (List.fold_left (fun lst ctr -> 
-            if List.mem ctr cs then 
-              if SS.mem ctr visited then 
-                raise (Failure "Mutually recursive inheritance detected")
-              else 
-                lst 
-            else (List.append lst [ctr])
-          ) [] super_contract_hierarchy)  in 
-      let xs = List.append xs super_contract_hierarchy in
-      x :: (get_all_super_contracts xs ct visited)
-  in
-  get_all_super_contracts contract.super_contracts ct visited *)
-
-
 let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
   let contract_def: contract_def = Hashtbl.find ct contract_name in  
   let functions_list: fun_def list = contract_def.functions in 
@@ -282,79 +226,3 @@ let fsender (contract_name: string) (function_name: string) (ct: contract_table)
         find_function_def xs function_name 
   in
   find_function_def functions_list function_name  
-
-
-(* let contract_with_super_contracts (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : (contract_def * contract_table, string) result =
-  let append_identifier_to_state (state: (t_exp * string) list) (id: (t_exp * string)) : ((t_exp * string) list, string) result = 
-    let rec is_allowed_to_append (state: (t_exp * string) list) (id: (t_exp * string)) : bool =  
-      match state with 
-      | [] -> true 
-      | x :: xs -> 
-        if snd x = snd id then false else is_allowed_to_append xs id 
-    in
-    let can_append = is_allowed_to_append state id in  
-    if can_append then Ok(state @ [id]) else Error("Identifier " ^ snd id ^ " already exists in contract " ^ contract.name)
-  in 
-  let rec append_super_state_to_contract (contract_state: (t_exp * string) list) (super_contract_state: (t_exp * string) list) : ((t_exp * string) list, string) result = 
-    match super_contract_state with 
-    | [] -> Ok(contract_state) 
-    | x :: xs -> 
-      let res = append_identifier_to_state contract_state x in 
-      match res with 
-      | Ok(new_state) -> append_super_state_to_contract new_state xs 
-      | Error(e) -> Error(e)
-  in
-  let append_function_to_list (contract_functions: fun_def list) (f: fun_def) : (fun_def list, string) result = 
-    let rec is_allowed_to_append (c_functions: fun_def list) (fdef: fun_def) : bool =  
-      match c_functions with 
-      | [] -> true 
-      | x :: xs -> 
-        if x.name = fdef.name && x.args = fdef.args then false else is_allowed_to_append xs fdef 
-    in
-    let can_append = is_allowed_to_append contract_functions f in  
-    if can_append then Ok(contract_functions @ [f]) else Error("Function " ^ f.name ^ " already exists in contract " ^ contract.name)
-  in 
-  let rec append_super_functions_to_contract (contract_funs: fun_def list) (super_contract_funs: fun_def list) : (fun_def list, string) result  =
-    match super_contract_funs with 
-    | [] -> Ok(contract_funs) 
-    | x :: xs -> 
-      let res = append_function_to_list contract_funs x in 
-      match res with 
-      | Error(e) -> Error(e)
-      | Ok(new_contract_funs) -> append_super_functions_to_contract new_contract_funs xs 
-  in
-
-  if List.length contract.super_contracts = 0 then 
-    begin
-      Hashtbl.add ct contract.name contract;
-      Ok(contract, ct) 
-    end
-  else
-    let contract = List.fold_left (fun (contract: contract_def) (super_contract_name: string) -> 
-        let super_contract: contract_def = Hashtbl.find ct super_contract_name in
-        let res = append_super_state_to_contract contract.state super_contract.state in
-        let state = match res with 
-          | Error(e) -> raise (Failure e)
-          | Ok(s) -> s
-        in
-        let res = append_super_functions_to_contract contract.functions super_contract.functions in
-        let functions = match res with 
-          | Error(e) -> raise (Failure e)
-          | Ok(f) -> f
-        in 
-        let super_contracts: string list = super_contract.super_contracts in  
-        let super_constructors_args: expr list list = super_contract.super_constructors_args in
-        let contract = {
-          name = contract.name; 
-          state = state; 
-          super_contracts = contract.super_contracts @ super_contracts;
-          super_constructors_args = contract.super_constructors_args @ super_constructors_args; 
-          constructor = contract.constructor; 
-          functions = functions
-        }
-        in 
-        Hashtbl.add ct contract.name contract;
-        contract
-      ) contract contract.super_contracts in  
-    Ok(contract, ct)
- *)

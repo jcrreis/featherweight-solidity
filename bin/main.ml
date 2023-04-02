@@ -29,7 +29,10 @@ let wikipedia_example_c3_linearization ct =
   Hashtbl.add ct "K2" {name="K2"; super_contracts=k2; super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
   Hashtbl.add ct "Z" {name="Z"; super_contracts=Class("Z", [k1; k3; k2]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
 
-  let l = c3_linearization (Hashtbl.find ct "Z") in
+  let l = match c3_linearization (Hashtbl.find ct "Z") with 
+    | Ok v -> v 
+    | _ -> assert false
+  in 
   Format.eprintf "[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
@@ -43,7 +46,10 @@ let test_python_mro_example ct =
   Hashtbl.add ct "E" {name="E"; super_contracts=Class("E",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
   Hashtbl.add ct "F" {name="F"; super_contracts=Class("F",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
 
-  let l = c3_linearization (Hashtbl.find ct "A") in
+  let l = match c3_linearization (Hashtbl.find ct "A") with 
+    | Ok v -> v
+    | _ -> assert false 
+  in 
   Format.eprintf "[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
@@ -69,7 +75,10 @@ let get_liquidity ct vars b b' s sender contract =
   eval_expr ct vars conf
 
 let add_contract_to_contract_table contract ct = 
-  let linearization: string list = c3_linearization contract in 
+  let linearization: string list = match c3_linearization contract with 
+    | Ok v -> v 
+    | _ -> assert false  
+  in 
   List.iter (fun s -> Format.eprintf "%s" s) linearization;
   let contracts_hierarchy = (List.map (fun cname -> 
     if cname = contract.name then contract else 
