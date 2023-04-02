@@ -1,4 +1,5 @@
 module StateVars = Map.Make(String)
+type 'a hierarchy = Class of ('a * 'a hierarchy list)
 
 type t_exp =
   | C of string (*name of contract*)  (*string * string *)(* * hash_contract_code? *)
@@ -80,15 +81,17 @@ and fun_def = {
   body : expr;
 }
 
+
 and contract_def = {
   name : string;
-  super_contracts: string list;
+  super_contracts: string hierarchy;
   super_constructors_args: (expr list) list;  
   state : (t_exp * string) list; 
   constructor : (t_exp * string) list * expr;
   functions : fun_def list;
   function_lookup_table: (string, fun_def) Hashtbl.t (* When should we populate this function? maybe add a boolean variable?*)
 }
+
 
 
 type contract_table = (string, contract_def) Hashtbl.t (* string, string? , contract_def*)
@@ -114,5 +117,6 @@ type gamma = (gamma_vars * gamma_addresses * gamma_contracts)
 exception TypeMismatch of t_exp * t_exp 
 
 exception UnboundVariable of string 
+
 
 (*https://aws.amazon.com/blockchain/what-is-ethereum/*)

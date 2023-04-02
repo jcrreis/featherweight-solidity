@@ -87,7 +87,7 @@ contract:
       le2 = list(fun_def) RBRACE {
                           Types.AddContract({
                                   name = contract_name;
-                                  super_contracts = [];
+                                  super_contracts = Class(contract_name, []);
                                   super_constructors_args = [];
                                   state = state_variables;
                                   constructor = (le1, e1);

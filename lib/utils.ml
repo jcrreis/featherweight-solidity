@@ -245,7 +245,7 @@ let get_address_by_contract (contracts: contracts ) (contract: values) : values 
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) contracts VUnit
 
 
-let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
+(* let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) Hashtbl.t) : string list =
   let visited = SS.singleton (contract.name) in
   let rec get_all_super_contracts (cs: string list) (ct: (string, contract_def) Hashtbl.t) (visited: SS.t) : string list =
     match cs with
@@ -266,7 +266,7 @@ let get_contract_hierarchy (contract: contract_def) (ct: (string, contract_def) 
       let xs = List.append xs super_contract_hierarchy in
       x :: (get_all_super_contracts xs ct visited)
   in
-  get_all_super_contracts contract.super_contracts ct visited
+  get_all_super_contracts contract.super_contracts ct visited *)
 
 
 let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 

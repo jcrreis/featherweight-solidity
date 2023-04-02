@@ -31,8 +31,8 @@ let rec values_to_string (v: values) : string =
   | VContract (e1) -> "Contract " ^ (string_of_int e1)
   | VMapping (e1, _t_e) -> 
     (Hashtbl.fold (fun k v s -> match k, v with
-      | Val(v1), Val(v2) -> s ^ values_to_string v1 ^ " ---> " ^ values_to_string v2 ^ "\n"
-      | _ -> assert false) e1 "[ \n") ^ " ]"
+         | Val(v1), Val(v2) -> s ^ values_to_string v1 ^ " ---> " ^ values_to_string v2 ^ "\n"
+         | _ -> assert false) e1 "[ \n") ^ " ]"
   | VUnit -> ""
 
 let rec expr_to_string (e: expr) : string =
@@ -69,13 +69,13 @@ let rec expr_to_string (e: expr) : string =
   | StateRead (e1, s1) -> expr_to_string e1 ^ "." ^ s1
   | Transfer (e1, e2) -> expr_to_string e1 ^ ".transfer(" ^ expr_to_string e2 ^ ")"
   | New (s1, e1, le) -> 
-     let (_, print_args) = List.fold_left (fun (i, s) e  -> 
-      (
-        if i <> ((List.length le) - 1) then
-          (i+1, s ^ (expr_to_string e) ^ ",")
-        else
-          (i+1, s ^ (expr_to_string e))
-      )
+    let (_, print_args) = List.fold_left (fun (i, s) e  -> 
+        (
+          if i <> ((List.length le) - 1) then
+            (i+1, s ^ (expr_to_string e) ^ ",")
+          else
+            (i+1, s ^ (expr_to_string e))
+        )
       ) (0, "") le in 
     "new " ^ s1 ^ "(" ^ expr_to_string e1 ^ ")(" ^  print_args ^ ")"
   | Cons (s1, e1) -> s1 ^ "(" ^ expr_to_string e1 ^ ")"
@@ -86,13 +86,12 @@ let rec expr_to_string (e: expr) : string =
   | MapRead (e1, e2) -> expr_to_string e1 ^ "[" ^ expr_to_string e2 ^ "]"
   | MapWrite (e1, e2, e3) -> expr_to_string e1 ^ "[" ^ expr_to_string e2 ^ "]" ^ " = " ^ expr_to_string e3 
   | Call (e1, s1, e2, le) -> expr_to_string e1 ^ "." ^ s1 ^ ".value" ^ "(" ^ expr_to_string e2 ^ ")" 
-      ^ "." ^ List.fold_left (fun s e -> s ^ (expr_to_string e ) ^ ", ") "(" le ^ ")"
+                             ^ "." ^ List.fold_left (fun s e -> s ^ (expr_to_string e ) ^ ", ") "(" le ^ ")"
   | CallTopLevel (_e1, _s1, _e2, _e3, _le) -> "CallTopLevel"
   | Revert -> "revert()"
   | If (e1, e2, e3) -> "if(" ^ expr_to_string e1 ^ ")" ^ " then " ^ expr_to_string e2 ^ " else " ^ expr_to_string e3 
   | Return (e1) -> "return " ^ expr_to_string e1
-  | _ -> assert false
-
+  | _ -> "not applicable"
 
 let function_to_string (func: fun_def) : string = "\nfunction " ^ func.name ^ "(" ^ 
                                                   (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" func.args) ^ ")\n{\n" ^
@@ -100,16 +99,11 @@ let function_to_string (func: fun_def) : string = "\nfunction " ^ func.name ^ "(
                                                   ^ "\n}\n"
 
 let contract_to_string (contract: contract_def) : string = 
-  let (super_contracts, _) = (List.fold_left (fun (s, i) cname -> 
-    if i <> ((List.length contract.super_contracts) - 1) then 
-      (s ^ cname ^ ", ", i + 1)
-    else
-      (s ^ cname, i + 1))
-    ("", 0) contract.super_contracts
-  )
-  in 
   let (params, e) = contract.constructor in
-  "contract " ^ contract.name ^ " is " ^ super_contracts ^ "\n{\n" ^ 
+  let super_contracts = match contract.super_contracts with
+    | Class (_, sc) -> sc 
+  in 
+  "contract " ^ contract.name ^ " is " ^ List.fold_left (fun s (Class(c,_)) -> s ^ c ^ ", ") "" super_contracts ^ "\n{\n" ^ 
   (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ";\n") "" contract.state) ^ 
   "\nconstructor(" ^ (List.fold_left (fun s (t_e, v) -> s ^ (t_exp_to_string t_e) ^ " " ^ v ^ ",") "" params) ^ "){\n" ^
   (expr_to_string e) ^ "\n}" ^ (List.fold_left (fun s f -> s ^ (function_to_string f)) "" contract.functions)
@@ -117,7 +111,7 @@ let contract_to_string (contract: contract_def) : string =
 
 
 let print_blockchain (blockchain: blockchain) _tbl : unit = 
-  let (contracts, _accounts) = blockchain in
+  let (contracts, accounts) = blockchain in
   Hashtbl.iter (fun (c, a) (cname, sv, n) ->  match c, a, cname, sv, n with 
       | VContract(_), VAddress(_), s', sv', VUInt(_) -> 
         begin
@@ -127,6 +121,15 @@ let print_blockchain (blockchain: blockchain) _tbl : unit =
         end
       | _ -> assert false
     ) contracts
+    ;
+    Hashtbl.iter (fun a n ->  match a, n with 
+        | VAddress _, VUInt _ -> 
+          begin
+            Format.eprintf "\nAccount: %s  ," (values_to_string a);
+            Format.eprintf "Balance: %s\n" (values_to_string n);
+          end
+        | _ -> assert false
+      ) accounts
 
 
 

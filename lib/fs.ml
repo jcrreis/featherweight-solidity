@@ -115,14 +115,32 @@ let rec eval_expr
     let (blockchain, blockchain', sigma, _) = conf in
     let (contracts, accounts) = blockchain in 
     let contract = get_contract_by_address contracts address in
-    let (c, sv, old_balance) = Hashtbl.find contracts (contract, address) in
-    match eval_expr ct vars (blockchain, blockchain', sigma, (AritOp (Plus (Val old_balance, Val value)))) with
-    | (_, _, _, Val new_balance) ->
-      begin match new_balance with
-        | VUInt i -> if i < 0 then Error () else (Hashtbl.replace contracts (contract, address) (c, sv, new_balance) ; Ok (contracts, accounts))
+    if contract <> VUnit then 
+      begin 
+        let (c, sv, old_balance) = Hashtbl.find contracts (contract, address) in
+        match eval_expr ct vars (blockchain, blockchain', sigma, (AritOp (Plus (Val old_balance, Val value)))) with
+        | (_, _, _, Val new_balance) ->
+          begin match new_balance with
+            | VUInt i -> 
+              if i < 0 then Error () else (Hashtbl.replace contracts (contract, address) (c, sv, new_balance) ; Ok (contracts, accounts))
+            | _ -> assert false
+          end
         | _ -> assert false
-      end
-    | _ -> assert false
+      end 
+    else 
+      begin 
+        let old_balance = Hashtbl.find accounts address in 
+        match eval_expr ct vars (blockchain, blockchain', sigma, (AritOp (Plus (Val old_balance, Val value)))) with
+        | (_, _, _, Val new_balance) ->
+          begin match new_balance with
+            | VUInt i -> 
+              if i < 0 then Error () else (Hashtbl.replace accounts address new_balance; Ok (contracts, accounts))
+            | _ -> assert false
+          end
+        | _ -> assert false
+        
+      end 
+    
   in
   let get_default_for_type (t_e: t_exp) : (expr) = match t_e with 
     | C _ -> Val(VContract(0))
@@ -174,11 +192,12 @@ let rec eval_expr
             end
           else () 
         end;
+        let Class(_, sc) = contract.super_contracts in 
         let super_contracts_params:  ((t_exp * string) list * string) list = List.map (fun (cname: string) -> 
             let contract: contract_def = Hashtbl.find ct cname in 
             let (contract_params, _) = contract.constructor in 
             (contract_params, cname)
-          ) contract.super_contracts in 
+          ) (List.map (fun (Class(c, _)) -> c) sc) in 
 
         let lvars =  List.fold_left2 (fun 
                                        (lvars: (string, (string * expr) list) Hashtbl.t) 
@@ -736,6 +755,7 @@ let rec eval_expr
                 let (contract_name, _, _) = Hashtbl.find contracts (VContract c, a) in
                 let (args, body) = function_body contract_name s le ct in
                 if body = Return Revert then
+                  (* não está a encontrar metodo *)
                   (blockchain, blockchain', sigma, Revert)
                 else
                   begin

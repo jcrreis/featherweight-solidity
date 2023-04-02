@@ -1,4 +1,4 @@
-type 'a hierarchy = Class of ('a * 'a hierarchy list)
+open Types
 
 let head = function
   | [] -> []
@@ -28,8 +28,8 @@ exception No_linearization
 let rec merge (l : 'a hierarchy list list) =
   match head_not_in_tails l with
   | Some c -> (match remove c l with
-    | [] -> [c]
-    | n -> c :: merge n)
+      | [] -> [c]
+      | n -> c :: merge n)
   | None -> raise No_linearization
 
 let rec c3_exn = function
@@ -40,24 +40,28 @@ let c3 cls = match c3_exn cls with
   | exception No_linearization -> None
   | v -> Some v
 
+let rec show_hierarchy = function
+  | Class (n, _) -> n
+and show_hierarchy_list lat =
+  "[" ^ String.concat ", " (List.map show_hierarchy lat) ^ "]"
 
-  (* let () =
-  let rec show_hierarchy = function
-    | Class (n, _) -> n
-  and show_hierarchy_list lat =
-    "[" ^ String.concat ", " (List.map show_hierarchy lat) ^ "]"
-  and o = Class ("O", [])
-  and a = Class ("A", [o])
-  and b = Class ("B", [o])
-  and c = Class ("C", [o])
-  and d = Class ("D", [o])
-  and e = Class ("E", [o])
-  and k1 = Class ("K1", [a; b; c])
-  and k2 = Class ("K2", [d; b; e])
-  and k3 = Class ("K3", [d; a])
-  and z = Class ("Z", [k1; k2; k3])
-  in
-  print_endline @@ show_hierarchy z;
-  match c3 z with
-  | Some v -> print_endline @@ show_hierarchy_list v
-  | None -> print_endline "No linearization" *)
+(* let () =
+   let rec show_hierarchy = function
+   | Class (n, _) -> n
+   and show_hierarchy_list lat =
+   "[" ^ String.concat ", " (List.map show_hierarchy lat) ^ "]"
+   and o = Class ("O", [])
+   and a = Class ("A", [o])
+   and b = Class ("B", [o])
+   and c = Class ("C", [o])
+   and d = Class ("D", [o])
+   and e = Class ("E", [o])
+   and k1 = Class ("K1", [a; b; c])
+   and k2 = Class ("K2", [d; b; e])
+   and k3 = Class ("K3", [d; a])
+   and z = Class ("Z", [k1; k2; k3])
+   in
+   print_endline @@ show_hierarchy z;
+   match c3 z with
+   | Some v -> print_endline @@ show_hierarchy_list v
+   | None -> print_endline "No linearization" *)

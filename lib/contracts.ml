@@ -11,7 +11,7 @@ let eoa_contract () : contract_def =
   
   {
     name = "EOAContract";
-    super_contracts = [];
+    super_contracts = Class("EOAContract", []);
     super_constructors_args = [];
     state = [];
     constructor = ([],Val VUnit);
@@ -77,7 +77,7 @@ let bank_contract () : contract_def =
   } in
   {
     name = "Bank";
-    super_contracts = [];
+    super_contracts = Class("Bank", []);
     super_constructors_args = [];
     state = [(Map(Address CTop, UInt),"balances")];
     constructor = ([], (Val VUnit));
@@ -95,7 +95,7 @@ let simple_bank_contract() =
     } in
   {
     name = "SimpleBank";
-    super_contracts = ["Bank"];
+    super_contracts = Class("SimpleBank",[Class("Bank",[])]);
     super_constructors_args = [[]];
     state = []; (*(Map(Address CTop, UInt),"balances")*)
     constructor = ([], (Val VUnit));
@@ -125,7 +125,7 @@ let simple_bank_contract() =
     in
     {
       name = "BankWithDepositTracker";
-      super_contracts = ["Bank"];
+      super_contracts = Class("BankWithDepositTracker",[Class("Bank",[])]);
       super_constructors_args = [[]];
       state = [(UInt, "tracker")]; (*(Map(Address CTop, UInt),"balances")*)
       constructor = ([], StateAssign(This None, "tracker",Val(VUInt 0)));
@@ -195,7 +195,7 @@ let simple_bank_contract() =
     } in
     {
       name = "BloodBank";
-      super_contracts = [];
+      super_contracts = Class("BloodBank", []);
       super_constructors_args = [];
       state = [(Map(Address CTop, Bool), "healty"); (Address CTop, "doctor"); (UInt, "blood")];
       constructor = ([(Map(Address CTop, Bool), "healty"); (Address CTop, "doctor"); (UInt, "blood")],
@@ -234,7 +234,7 @@ let simple_bank_contract() =
     {
       name = "Donor";
       (* is EOACONTRACT ?? *)
-      super_contracts = [];
+      super_contracts = Class("Donor", []);
       super_constructors_args = [];
       state = [(UInt, "blood"); (Address CTop, "bank")];
       constructor = ([(UInt, "blood"); (Address CTop,"bank")], (Seq(

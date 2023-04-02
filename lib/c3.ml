@@ -39,7 +39,7 @@ let tail = function
 
 let concat_map f l = List.concat @@ List.map f l
 
-let head_not_in_tails (l : string list list) =
+let head_not_in_tails (l : 'a hierarchy list list) =
   let heads = concat_map head l in
   let tails = concat_map tail l in
   let find_a_head_that_is_not_in_tails acc v = match acc with
@@ -54,7 +54,7 @@ let remove to_remove l =
 
 exception No_linearization
 
-let rec merge (l : string list list) =
+let rec merge (l : 'a hierarchy list list) =
   match head_not_in_tails l with
   | Some c -> (match remove c l with
       | [] -> [c]
@@ -63,14 +63,19 @@ let rec merge (l : string list list) =
 (* (string * string list) list*)
 
 let rec c3_linearization (cname: string) (ct: contract_table) : string list = 
+  let rec c3_exn = function
+    | Class (_, []) as res -> [res]
+    | Class (_, parents) as res -> res :: (merge @@ (List.map c3_exn parents) @ [parents])
+  in
+  let c3 cls = match c3_exn cls with
+    | exception No_linearization -> None
+    | v -> Some v
+  in 
   let contract_def: contract_def = Hashtbl.find ct cname in 
-  let super_contracts: string list = contract_def.super_contracts in
-  match super_contracts with 
-  | [] -> [cname]
-  | _ -> 
-    let super_linearizations: string list list = List.map (fun c -> c3_linearization c ct) super_contracts in
-    let linearization: string list = merge (super_linearizations @ [super_contracts]) in
-    [contract_def.name] @ linearization 
+  let super_contracts: string hierarchy = contract_def.super_contracts in
+  match c3 super_contracts with 
+    | Some v -> List.map (fun (Class(c, _)) -> c) v 
+    | None -> raise No_linearization
 
 
 
