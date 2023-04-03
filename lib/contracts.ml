@@ -173,7 +173,7 @@ let simple_bank_contract() =
       annotation = None;
       args = [];
       body = Return (
-          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+        If(This (Some("onlyOwner", [])),
              Return(StateRead(This None, "balance")),
              Revert
             )
