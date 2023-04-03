@@ -54,6 +54,7 @@ let test_python_mro_example ct =
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
 
+
 let deposit ct vars b b' s n sender contract = 
   let conf = (b, b', s,  CallTopLevel(contract, "deposit", Val(VUInt n), Val(sender), [])) in 
   eval_expr ct vars conf 
@@ -73,6 +74,13 @@ let get_balance ct vars b b' s sender contract =
 let get_liquidity ct vars b b' s sender contract = 
   let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
+
+let _transferTo ct vars b b' s n _to sender contract = 
+  let conf = (b, b', s, CallTopLevel(contract, "transferTo", Val (VUInt 0), Val (sender), [
+    Val _to; Val (VUInt n) 
+  ])) in 
+  eval_expr ct vars conf
+
 
 let add_contract_to_contract_table contract ct = 
   let linearization: string list = match c3_linearization contract with 
@@ -106,38 +114,18 @@ let add_contract_to_contract_table contract ct =
   Hashtbl.add ct contract.name contract ; ct 
 
 
-let () =
-  let cin = open_in fname in
-  let lexbuf = Lexing.from_channel cin in
-  try
-    let e: expr = Parser.prog Lexer.read lexbuf in
-    let ct: contract_table = Hashtbl.create 64 in
-    let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
-    let sigma: values Stack.t = Stack.create() in
-    let _conf: conf = (blockchain, blockchain, sigma, e) in
-    let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-    let _p: program = (ct, blockchain, e) in
-    (* ADD CONTRACTS TO CONTRACT TABLE *)
-    (* Hashtbl.add ct "Bank" (bank_contract());
-       Hashtbl.add ct "BloodBank" (blood_bank_contract());
-       Hashtbl.add ct "Donor" (donor_contract());
-       Hashtbl.add ct "EOAContract" (eoa_contract()); *)
-    (* Hashtbl.add ct "Bank" (bank_contract()); *)
-    (*https://github.com/federicobond/c3-linearization*)
-    wikipedia_example_c3_linearization ct; 
-    test_python_mro_example ct;
-    let ct = add_contract_to_contract_table (bank_contract()) ct in 
-    let ct = add_contract_to_contract_table (simple_bank_contract()) ct in 
-    let ct = add_contract_to_contract_table (bank_with_deposit_tracker_contract()) ct in 
-    Format.eprintf "\n%s\n" (expr_to_string e);
-    let a1 = (VAddress (generate_new_ethereum_address())) in
-    let a2 = (VAddress (generate_new_ethereum_address())) in  
-    let (_contracts, accounts) = blockchain in  
-    Hashtbl.add accounts a1 (VUInt 100000); 
-    Hashtbl.add accounts a2 (VUInt 100000);  
-    print_blockchain blockchain vars;
-    let e = New("BankWithDepositTracker", Val(VUInt 0), []) in 
-    let conf = (blockchain, blockchain, sigma, e) in 
+let bank_example ct vars blockchain sigma =
+  let ct = add_contract_to_contract_table (bank_contract()) ct in 
+  let ct = add_contract_to_contract_table (simple_bank_contract()) ct in 
+  let ct = add_contract_to_contract_table (bank_with_deposit_tracker_contract()) ct in 
+  let a1 = (VAddress (generate_new_ethereum_address())) in
+  let a2 = (VAddress (generate_new_ethereum_address())) in  
+  let (_contracts, accounts) = blockchain in  
+  Hashtbl.add accounts a1 (VUInt 100000); 
+  Hashtbl.add accounts a2 (VUInt 100000);  
+  print_blockchain blockchain vars;
+  let e = New("BankWithDepositTracker", Val(VUInt 0), []) in 
+  let conf = (blockchain, blockchain, sigma, e) in 
     let (blockchain, blockchain', sigma, contract) = eval_expr ct vars conf in
     match contract with 
     | Revert -> Format.eprintf "Revert@.";
@@ -176,34 +164,53 @@ let () =
 
                   Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
                   Format.eprintf "%s" (contract_to_string (donor_contract()));
-                  (* let s = read_whole_file "./contracts/bank.sol" in
-                     Format.eprintf "%s\n" (encode_contract s); *)
-                  (* let (_, _, _, e1) = eval_expr ct vars (blockchain, blockchain, sigma, AritOp(Minus(Val(VUInt 2), Val(VUInt 3)))) in
-                     Format.eprintf "\n RESULTADO:  %s" (expr_to_string e1); 
-                     Format.eprintf "\n%s\n" (encode_contract (contract_to_string (donor_contract())));
-                     let (blockchain, _blockchain', _sigma, res) = eval_expr ct vars conf in
-                     Format.eprintf "Contract Table: @.";
-                     print_contract_table ct vars;
-                     Format.eprintf "Blockchain: @.";
-                     print_blockchain blockchain vars; *)
+
                   let (_contracts, _accounts) = blockchain in
                   let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64 ) in 
-                  (* let c1 = match get_contract_by_address contracts a1  with 
-                     | VContract i -> C i 
-                     | _ -> assert false 
-                     in 
-                     let t_a: t_exp = Address c1 in 
-                     let c2 = match get_contract_by_address contracts a2  with 
-                     | VContract i -> C i 
-                     | _ -> assert false 
-                     in 
-                     let t_a': t_exp = Address c2 in 
-                     Hashtbl.add gamma (Val a1) t_a;
-                     Hashtbl.add gamma (Val a2) t_a'; *)
-                  (* a1 e a2 tem tipo EOAContract..... deviam pertencer ao mesmo tipo?*)
-                  typecheck gamma (MsgSender) (Address CTop) ct blockchain;
-                  (* typecheck gamma (Val a1) (t_a) ct blockchain;
-                     typecheck gamma (Val a2) (t_a') ct blockchain; *)
+                  typecheck gamma (MsgSender) (Address CTop) ct blockchain
+
+
+let () =
+  let cin = open_in fname in
+  let lexbuf = Lexing.from_channel cin in
+  try
+    let e: expr = Parser.prog Lexer.read lexbuf in
+    let ct: contract_table = Hashtbl.create 64 in
+    let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
+    let sigma: values Stack.t = Stack.create() in
+    let _conf: conf = (blockchain, blockchain, sigma, e) in
+    let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
+    let _p: program = (ct, blockchain, e) in
+    (* ADD CONTRACTS TO CONTRACT TABLE *)
+    (* Hashtbl.add ct "Bank" (bank_contract());
+       Hashtbl.add ct "BloodBank" (blood_bank_contract());
+       Hashtbl.add ct "Donor" (donor_contract());
+       Hashtbl.add ct "EOAContract" (eoa_contract()); *)
+    (* Hashtbl.add ct "Bank" (bank_contract()); *)
+    (*https://github.com/federicobond/c3-linearization*)
+    wikipedia_example_c3_linearization ct; 
+    test_python_mro_example ct;
+    if true then 
+      bank_example ct vars blockchain sigma;
+    let ct = add_contract_to_contract_table (wallet_contract()) ct in 
+    let a1 = (VAddress (generate_new_ethereum_address())) in
+    let a2 = (VAddress (generate_new_ethereum_address())) in  
+    let (_contracts, accounts) = blockchain in  
+    Hashtbl.add accounts a1 (VUInt 100000); 
+    Hashtbl.add accounts a2 (VUInt 100000);  
+    let e = New("Wallet", Val(VUInt 10000), []) in
+    Stack.push a1 sigma;
+    let (blockchain, blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
+    Format.eprintf "%s" (expr_to_string contract);
+    Format.eprintf "AQUIIIIIIIIIIII@.";
+
+    
+    let (_blockchain, _blockchain', _sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
+      match res with 
+      | Revert -> Format.eprintf "Revert@.";
+      | _ -> Format.eprintf "Result get balance A1: %s@." (expr_to_string res);
+      print_blockchain blockchain vars;
+    ()
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

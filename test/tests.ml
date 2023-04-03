@@ -179,7 +179,7 @@ let test_contract =
   } in  
   {
     name = "Test";
-    super_contracts = [];
+    super_contracts = Class("Test",[]);
     super_constructors_args = [];
     state = [(Map(Address CTop, UInt), "test_map"); (Address CTop, "test_sv1"); (UInt, "test_sv2")];
     constructor = ([(Address CTop, "test_sv1"); (UInt, "test_sv2")], Seq(
@@ -197,7 +197,7 @@ let test_division_by_zero = Test.make ~name:"test division by zero"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          (eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Div(e,Val (VUInt 0)))))
           =
@@ -217,7 +217,7 @@ let test_arit_plus_op = Test.make ~name:"test plus arithmetic operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let e' = AritOp(Plus(e,e)) in 
 
@@ -251,7 +251,7 @@ let test_arit_minus_op = Test.make ~name:"test minus arithmetic operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          (* let e' = AritOp(Plus(e,e)) in  *)
          (
@@ -268,7 +268,7 @@ let test_arit_div_op = Test.make ~name:"test div arithmetic operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          (* let e' = AritOp(Plus(e,e)) in  *)
          (
@@ -285,7 +285,7 @@ let test_arit_times_op = Test.make ~name:"test times arithmetic operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let e' = AritOp(Plus(e,e)) in 
          (* Commutative 2e + e = e + 2e *)
@@ -326,7 +326,7 @@ let test_arit_op = Test.make ~name:"test arithmetic operators"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          eval_expr ct vars (blockchain, blockchain, sigma, (AritOp(Plus(e,e))))
          =
@@ -341,7 +341,7 @@ let test_bool_op = Test.make ~name:"test boolean operators"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          (
            (* De morgan laws*)
@@ -379,7 +379,7 @@ let test_if = Test.make ~name:"test if operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let (e1, e2, e3) = match e with 
            | If (e1, e2, e3) -> 
@@ -422,7 +422,7 @@ let test_let = Test.make ~name:"test let operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
 
          let (s1, e1, e2, ef) = match e with 
@@ -463,7 +463,7 @@ let test_assign = Test.make ~name:"test assign operator"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, (Let(UInt, "x", e1, Seq(Assign("x", e3),e2)))) in 
          let (_, _, _, valread) =  eval_expr ct vars (blockchain, blockchain, sigma, Var "x") in
@@ -483,7 +483,7 @@ let test_add_contract_to_ct = Test.make ~name:"test add contract to contract tab
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
          let (_, _, _, res) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
@@ -500,7 +500,7 @@ let test_new_contract = Test.make ~name:"test new contract"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
          let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
@@ -516,7 +516,8 @@ let test_new_contract = Test.make ~name:"test new contract"
            | (_, _, _, Val(address)) -> address
            | _ -> assert false
          in
-         let (cname, sv, bal) = Hashtbl.find blockchain (res, address) in
+         let (contracts, _accounts) = blockchain in 
+         let (cname, sv, bal) = Hashtbl.find contracts (res, address) in
 
          let test_var1_val = StateVars.find "test_sv1" sv in 
          let test_var2_val = StateVars.find "test_sv2" sv in 
@@ -537,7 +538,7 @@ let test_balance = Test.make ~name:"test balance function"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
          let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
@@ -569,7 +570,7 @@ let test_address = Test.make ~name:"test address function"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
          let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
@@ -585,7 +586,8 @@ let test_address = Test.make ~name:"test address function"
            | (_, _, _, Val(address)) -> address
            | _ -> assert false
          in
-         let (cname, _sv, _) = Hashtbl.find blockchain (res, address) in
+         let (contracts, _accounts) = blockchain in 
+         let (cname, _sv, _) = Hashtbl.find contracts (res, address) in
          (
            cname = contract.name 
          )
@@ -598,7 +600,7 @@ let test_stateread = Test.make ~name:"test state read"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
          let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
@@ -621,7 +623,7 @@ let test_statewrite= Test.make ~name:"test state write"
        begin 
          let ct = Hashtbl.create 64 in 
          let vars = Hashtbl.create 64 in 
-         let blockchain = Hashtbl.create 64 in  
+         let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
          let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 
@@ -640,7 +642,8 @@ let test_statewrite= Test.make ~name:"test state write"
          (
            let (blockchain, _, _, sa1) = eval_expr ct vars (blockchain, blockchain, sigma, StateAssign(Val(res), "test_sv1", Val(VAddress "0x1"))) in 
            let (blockchain, _, _, sa2) = eval_expr ct vars (blockchain, blockchain, sigma, StateAssign(Val(res), "test_sv2", Val(n'))) in 
-           let (_, sv, _) = Hashtbl.find blockchain (res, address) in  
+           let (contracts, _accounts) = blockchain in 
+           let (_, sv, _) = Hashtbl.find contracts (res, address) in  
 
            (sa1 = Val(VAddress "0x1")) && (sa2 = Val(n')) 
            &&
@@ -657,7 +660,7 @@ let test_statewrite= Test.make ~name:"test state write"
    begin 
     let ct = Hashtbl.create 64 in 
     let vars = Hashtbl.create 64 in 
-    let blockchain = Hashtbl.create 64 in  
+    let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
     let sigma = Stack.create() in 
     let contract: contract_def = eoa_contract in 
     let n' = match eval_expr ct vars (blockchain, blockchain, sigma, n) with 

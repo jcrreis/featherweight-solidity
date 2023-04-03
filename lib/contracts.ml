@@ -134,6 +134,77 @@ let simple_bank_contract() =
     }
 
 
+  let wallet_contract () : contract_def = 
+    let deposit = {
+      name = "deposit";
+      rettype = Unit;
+      annotation = None;
+      args = [];
+      body = Return (
+          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+             (StateAssign(
+                 This None,
+                 "balance",
+                AritOp(Plus(StateRead(This None, "balance"), MsgValue))   
+              )),
+             Revert
+            )
+        );
+    } in
+    let withdraw = {
+      name = "withdraw";
+      rettype = Unit;
+      annotation = None;
+      args = [(UInt, "amount")];
+      body = Return (
+          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+             Seq((StateAssign(
+                 This None,
+                 "balance",
+                AritOp(Plus(StateRead(This None, "balance"), Var("amount")))   
+              )), Transfer(MsgSender, Var("amount"))),
+             Revert
+            )
+        );
+    } in
+    let getBalance = {
+      name = "getBalance";
+      rettype = UInt;
+      annotation = None;
+      args = [];
+      body = Return (
+          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+             Return(StateRead(This None, "balance")),
+             Revert
+            )
+        );
+    } in
+    let transferTo = {
+      name = "transferTo";
+      rettype = Unit;
+      annotation = None;
+      args = [(Address CTop, "walletAddress"); (UInt, "amount")];
+      body = Return (
+          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+          Call(Cons("Wallet", Var "walletAddress"),"deposit",Var "amount",[]),
+             Revert
+            )
+        );
+    } in
+    {
+      name = "Wallet";
+      super_contracts = Class("Wallet", []);
+      super_constructors_args = [];
+      state = [(Address CTop, "owner"); (UInt, "balance")];
+      constructor = ([],
+                     Seq((StateAssign(This None, "owner", MsgSender)), (StateAssign(This None, "balance", 
+                     AritOp(Plus(StateRead(This None, "balance"), MsgValue))
+                     )))
+                    );
+      functions = [deposit; withdraw; getBalance; transferTo];
+      function_lookup_table = Hashtbl.create 64;
+    }
+
   let blood_bank_contract () : contract_def =
     let setHealth = {
       name = "setHealth";
@@ -203,7 +274,6 @@ let simple_bank_contract() =
                            Seq((StateAssign(This None, "doctor", Var("doctor"))),
                                StateAssign(This None, "blood", Var("blood")))))));
   
-      (* constructor = ([], Val(VUnit));           *)
       functions = [setHealth; isHealty; donate; getDoctor; getBlood];
       function_lookup_table = Hashtbl.create 64;
     }
@@ -233,7 +303,6 @@ let simple_bank_contract() =
     } in
     {
       name = "Donor";
-      (* is EOACONTRACT ?? *)
       super_contracts = Class("Donor", []);
       super_constructors_args = [];
       state = [(UInt, "blood"); (Address CTop, "bank")];

@@ -599,6 +599,8 @@ let rec eval_expr
                 let sv = init_contract_state state in
                 Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
                 Hashtbl.add vars "this" (Val(VContract c));
+                Hashtbl.add vars "msg.sender" (Val (top conf));
+                Hashtbl.add vars "msg.value" (Val (VUInt n));
                 let (_, blockchain', sigma, e) = conf in 
                 let blockchain = (contracts, accounts) in 
                 (* execute super contracts ... *)
@@ -762,7 +764,6 @@ let rec eval_expr
                 let (contract_name, _, _) = Hashtbl.find contracts (VContract c, a) in
                 let (args, body) = function_body contract_name s le ct in
                 if body = Return Revert then
-                  (* não está a encontrar metodo *)
                   (blockchain, blockchain', sigma, Revert)
                 else
                   begin
