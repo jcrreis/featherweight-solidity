@@ -179,13 +179,20 @@ let simple_bank_contract() =
             )
         );
     } in
+    let onlyOwner = {
+      name = "onlyOwner";
+      rettype = Bool;
+      annotation = None;
+      args = [];
+      body = Return (BoolOp(Equals(MsgSender, StateRead(This None, "owner"))));
+    } in
     let transferTo = {
       name = "transferTo";
       rettype = Unit;
       annotation = None;
       args = [(Address CTop, "walletAddress"); (UInt, "amount")];
       body = Return (
-          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+          If(This (Some("onlyOwner", [])),
           Call(Cons("Wallet", Var "walletAddress"),"deposit",Var "amount",[]),
              Revert
             )
@@ -201,7 +208,7 @@ let simple_bank_contract() =
                      AritOp(Plus(StateRead(This None, "balance"), MsgValue))
                      )))
                     );
-      functions = [deposit; withdraw; getBalance; transferTo];
+      functions = [deposit; withdraw; getBalance; transferTo; onlyOwner];
       function_lookup_table = Hashtbl.create 64;
     }
 
