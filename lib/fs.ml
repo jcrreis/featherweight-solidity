@@ -63,6 +63,7 @@ let eval_bool_expr (e: bool_ops) : expr = match e with
     end
   | Equals (e1, e2) -> begin match e1, e2 with
       | Val (VUInt n1), Val (VUInt n2) -> if n1 = n2 then Val (VBool (True)) else Val (VBool (False))
+      | Val (VAddress a1), Val (VAddress a2) -> if a1 = a2 then Val (VBool (True)) else Val (VBool (False))
       | _ -> assert false
     end
   | Greater (e1, e2) -> begin match e1, e2 with
@@ -387,12 +388,19 @@ let rec eval_expr
         end
       | Equals (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
+          | Val (VAddress _), Val (VAddress _) -> (blockchain, blockchain', sigma, eval_bool_expr b1)
           | Val (VUInt i), e2 -> 
             let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
             if e2' = Revert then 
               (blockchain, blockchain', sigma, Revert) 
             else 
               eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (Val (VUInt i), e2')))
+          | Val (VAddress a), e2 ->
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+          else 
+            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (Val (VAddress a), e2')))
           | e1, e2 -> 
             let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
             if e1' = Revert then 
