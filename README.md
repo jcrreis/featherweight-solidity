@@ -44,3 +44,6 @@ notas:
 
 - verificar que a assinatura da função é esta 
 - verficar que valor se deve retornar 
+
+- fazer c3 linerization generic
+- 

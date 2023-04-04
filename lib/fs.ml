@@ -812,13 +812,13 @@ let rec eval_expr
   | StateAssign (e1, s , e2) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
-        let (contracts, accounts) = blockchain in 
+        let (contracts, _accounts) = blockchain in 
         let a = get_address_by_contract contracts (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         let (c_name, map, n) = Hashtbl.find contracts (VContract c, a) in
         let map' = StateVars.add s e2' map in
         Hashtbl.replace contracts (VContract(c),a) (c_name, map', n);
-        let blockchain = (contracts, accounts) in 
+        (* let blockchain = (contracts, accounts) in  *)
         (blockchain, blockchain', sigma, e2')
       | _ -> assert false
     end

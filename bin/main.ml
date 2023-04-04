@@ -190,7 +190,7 @@ let () =
     (*https://github.com/federicobond/c3-linearization*)
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
-    if false then 
+    if true then 
       bank_example ct vars blockchain sigma;
     let ct = add_contract_to_contract_table (wallet_contract()) ct in 
     let a1 = (VAddress (generate_new_ethereum_address())) in
@@ -202,12 +202,12 @@ let () =
     Stack.push a1 sigma;
     let (blockchain, blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
     Format.eprintf "%s" (expr_to_string contract);
-    
-    let (_blockchain, _blockchain', _sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
+    print_blockchain blockchain vars;
+
+    let (_blockchain, _blockchain', _sigma, res) = get_balance ct vars blockchain blockchain' sigma a2 contract in
       match res with 
       | Revert -> Format.eprintf "Revert@.";
       | _ -> Format.eprintf "Result get balance: %s@." (expr_to_string res);
-      print_blockchain blockchain vars;
     ()
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
