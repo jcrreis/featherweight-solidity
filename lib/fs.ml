@@ -156,16 +156,7 @@ let rec eval_expr
   in
   let init_contract_state (state: (t_exp * string) list) : (expr) StateVars.t =
     List.fold_left (fun sv (t_e, s) -> 
-        match t_e with
-        | C (_n) -> StateVars.add s (Val(VContract(0))) sv
-        | Bool -> StateVars.add s (Val(VBool(False))) sv
-        | UInt -> StateVars.add s (Val(VUInt(0))) sv
-        | Address _-> StateVars.add s (Val(VAddress("0x0000000000000000000000000000000000000000"))) sv
-        | Map (_t1, t2) -> StateVars.add s (Val(VMapping(Hashtbl.create 64, t2))) sv
-        | Fun (_t1, _t2) -> StateVars.add s Revert sv
-        | Unit -> assert false
-        | TRevert -> assert false
-        | CTop -> assert false
+        StateVars.add s (get_default_for_type t_e) sv
       ) StateVars.empty state
   in
   let make_local_variables_and_state_variables 
