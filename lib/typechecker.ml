@@ -262,3 +262,39 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma e2 t ct blockchain;
     (* typecheck e2 with ???*)
   | _ -> assert false
+
+
+
+
+
+
+
+
+
+
+
+
+
+  (* type ty =
+  | Mapping of ty * ty
+
+type context = (string * ty) list
+
+let rec infer_type (ctx : context) (exp : exp) : ty =
+  match exp with
+  | MappingAccess (e1, e2) ->
+    let t1 = infer_type ctx e1 in
+    let t2 = infer_type ctx e2 in
+    begin match t1 with
+      | Mapping (t3, t4) ->
+        if subtype t2 t3 then t4
+        else failwith "Type error: invalid mapping access"
+      | _ -> failwith "Type error: expected a mapping"
+    end
+  (* Other cases for the infer_type function *)
+  | _ -> failwith "Type error: unsupported expression"
+and subtype (t1 : ty) (t2 : ty) : bool =
+  match t1, t2 with
+  | Mapping (t11, t12), Mapping (t21, t22) ->
+    subtype t21 t11 && subtype t12 t22
+  | _, _ -> t1 = t2 *)
