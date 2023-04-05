@@ -75,9 +75,9 @@ let get_liquidity ct vars b b' s sender contract =
   let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
 
-let _transferTo ct vars b b' s n _to sender contract = 
+let transferTo ct vars b b' s n wallet_address sender contract = 
   let conf = (b, b', s, CallTopLevel(contract, "transferTo", Val (VUInt 0), Val (sender), [
-    Val _to; Val (VUInt n) 
+    wallet_address; Val (VUInt n) 
   ])) in 
   eval_expr ct vars conf
 
@@ -190,7 +190,7 @@ let () =
     (*https://github.com/federicobond/c3-linearization*)
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
-    if true then 
+    if false then 
       bank_example ct vars blockchain sigma;
     let ct = add_contract_to_contract_table (wallet_contract()) ct in 
     let a1 = (VAddress (generate_new_ethereum_address())) in
@@ -201,14 +201,36 @@ let () =
     let e = New("Wallet", Val(VUInt 10000), []) in
     Stack.push a1 sigma;
     let (blockchain, blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
-    Format.eprintf "%s" (expr_to_string contract);
-    print_blockchain blockchain vars;
-
-    let (_blockchain, _blockchain', _sigma, res) = get_balance ct vars blockchain blockchain' sigma a2 contract in
+    let e = New("Wallet", Val(VUInt 0), []) in
+    Stack.push a2 sigma;
+    let (blockchain, blockchain', sigma, contract2) = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
+    let (blockchain, blockchain', sigma, res) = get_balance ct vars blockchain blockchain' sigma a1 contract in
       match res with 
       | Revert -> Format.eprintf "Revert@.";
       | _ -> Format.eprintf "Result get balance: %s@." (expr_to_string res);
-    ()
+      (* ct vars b b' s n sender contract *)
+      let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 10000 a1 contract in
+      match res with 
+        | Revert -> Format.eprintf "Revert@.";
+        | _ -> Format.eprintf "%s@." (expr_to_string res);
+      let (_blockchain, _blockchain', _sigma, res) = withdraw ct vars blockchain blockchain' sigma 850 a1 contract in
+      match res with 
+        | Revert -> Format.eprintf "Revert@.";
+        | _ -> Format.eprintf "%s@." (expr_to_string res);
+      (* let _transferTo ct vars b b' s n wallet_address sender contract  *)
+      let (blockchain, blockchain', sigma, res) = withdraw ct vars blockchain blockchain' sigma 850 a1 contract in
+      match res with 
+        | Revert -> Format.eprintf "Revert@.";
+        | _ -> Format.eprintf "%s@." (expr_to_string res);
+      let (blockchain, blockchain', sigma, res) = eval_expr ct vars (blockchain, blockchain', sigma, (Address(contract2))) in
+      match res with 
+        | Revert -> Format.eprintf "Revert@.";
+        | _ -> Format.eprintf "%s@." (expr_to_string res);
+      let (_blockchain, _blockchain', _sigma, res) = transferTo ct vars blockchain blockchain' sigma 850 (Address(contract2)) a1 contract in
+      match res with 
+        | Revert -> Format.eprintf "Revert@.";
+        | _ -> Format.eprintf "%s@." (expr_to_string res);
+      print_blockchain blockchain vars;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

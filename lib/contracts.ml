@@ -141,7 +141,7 @@ let simple_bank_contract() =
       annotation = None;
       args = [];
       body = Return (
-          If(BoolOp(Equals(MsgSender, StateRead(This None, "owner"))),
+          If(BoolOp(Greater(MsgValue, Val (VUInt 0))),
              (StateAssign(
                  This None,
                  "balance",
@@ -161,7 +161,7 @@ let simple_bank_contract() =
              Seq((StateAssign(
                  This None,
                  "balance",
-                AritOp(Plus(StateRead(This None, "balance"), Var("amount")))   
+                AritOp(Minus(StateRead(This None, "balance"), Var("amount")))   
               )), Transfer(MsgSender, Var("amount"))),
              Revert
             )

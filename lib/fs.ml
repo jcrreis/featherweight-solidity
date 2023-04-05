@@ -5,7 +5,7 @@
 open Types
 open Utils
 open C3 
-(* open Pprinters *)
+open Pprinters
 
 let eval_arit_expr (e: arit_ops) : expr = match e with
   | Plus (e1, e2) -> begin match e1, e2 with
@@ -666,7 +666,8 @@ let rec eval_expr
           (blockchain, blockchain', sigma, Val c)
         else
           (blockchain, blockchain', sigma, Revert)
-      | _ -> assert false
+      | (_, _, _, Val (_)) -> Format.eprintf "%s" (expr_to_string e1); assert false 
+      | (_, _, _, e2) -> eval_expr ct vars (blockchain, blockchain', sigma, Cons (s, e2))
     end
   | Seq (e1, e2) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Revert) -> eval_expr ct vars (blockchain, blockchain', sigma, Revert)
@@ -702,7 +703,10 @@ let rec eval_expr
         let a = get_address_by_contract contracts (VContract c) in
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
           | (_, _, _, Val(VUInt n)) ->
+            (* VER *)
+            Format.eprintf "%s" (values_to_string (top conf));
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
+
             begin match res with
               | Ok blockchain ->
                 let (contract_name, _, _) = Hashtbl.find contracts (VContract c, a) in
