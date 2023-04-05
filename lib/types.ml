@@ -118,5 +118,5 @@ exception TypeMismatch of t_exp * t_exp
 
 exception UnboundVariable of string 
 
-
+exception NoLinearization of string 
 (*https://aws.amazon.com/blockchain/what-is-ethereum/*)
