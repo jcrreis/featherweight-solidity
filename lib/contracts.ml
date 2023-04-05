@@ -193,7 +193,14 @@ let simple_bank_contract() =
       args = [(Address CTop, "walletAddress"); (UInt, "amount")];
       body = Return (
           If(This (Some("onlyOwner", [])),
-          Call(Cons("Wallet", Var "walletAddress"),"deposit",Var "amount",[]),
+          Seq(
+            Call(Cons("Wallet", Var "walletAddress"),"deposit",Var "amount",[]),
+            (StateAssign(
+                 This None,
+                 "balance",
+                AritOp(Minus(StateRead(This None, "balance"), Var("amount")))   
+              ))
+            ),
              Revert
             )
         );
