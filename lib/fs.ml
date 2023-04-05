@@ -703,10 +703,14 @@ let rec eval_expr
         let a = get_address_by_contract contracts (VContract c) in
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e2) with
           | (_, _, _, Val(VUInt n)) ->
-            (* VER *)
-            Format.eprintf "%s" (values_to_string (top conf));
+            (* alteração, atribuir ao topo de sigma o address do this *)
+            let (blockchain, blockchain', sigma, this) : conf =  eval_expr ct vars (blockchain, blockchain', sigma, This None) in 
+            let this_addr : values = match this with 
+              | Val (VContract i) -> get_address_by_contract contracts (VContract i) 
+              | _ -> assert false
+            in 
+            Stack.push this_addr sigma;
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
-
             begin match res with
               | Ok blockchain ->
                 let (contract_name, _, _) = Hashtbl.find contracts (VContract c, a) in
