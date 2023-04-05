@@ -190,7 +190,7 @@ let simple_bank_contract() =
       name = "transferTo";
       rettype = Unit;
       annotation = None;
-      args = [(Address CTop, "walletAddress"); (UInt, "amount")];
+      args = [(Address (C"Bank"), "walletAddress"); (UInt, "amount")];
       body = Return (
           If(This (Some("onlyOwner", [])),
           Seq(

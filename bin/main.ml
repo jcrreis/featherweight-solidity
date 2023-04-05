@@ -243,7 +243,7 @@ let () =
       match res with 
         | Revert -> Format.eprintf "Revert@.";
         | _ -> Format.eprintf "%s@." (expr_to_string res);
-      let (_blockchain, _blockchain', _sigma, res) = transferTo ct vars blockchain blockchain' sigma 850 (Address(contract2)) a1 contract in
+      let (_blockchain, _blockchain', _sigma, res) = transferTo ct vars blockchain blockchain' sigma 850 ((Address(contract2))) a1 contract in
       match res with 
         | Revert -> Format.eprintf "Revert@.";
         | _ -> Format.eprintf "%s@." (expr_to_string res);
