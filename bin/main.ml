@@ -55,20 +55,21 @@ let test_python_mro_example ct =
   Format.eprintf "]\n"
 
 
-let _test_fail_mro ct = 
+let test_fail_mro = 
   (*https://www.python.org/download/releases/2.3/mro/*)
-  Hashtbl.add ct "C" {name="C"; super_contracts=Class("C", [Class("B",[]); Class("A", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "B" {name="B"; super_contracts=Class("B", [Class("A",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "A" {name="A"; super_contracts=Class("A", []); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  let ct: contract_table = Hashtbl.create 64 in
+  Hashtbl.replace ct "C" {name="C"; super_contracts=Class("C", [Class("A",[]); Class("B", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.replace ct "B" {name="B"; super_contracts=Class("B", [Class("A",[]);Class("C",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.replace ct "A" {name="A"; super_contracts=Class("A", [Class("C",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
  
 
   let l = match c3_linearization (Hashtbl.find ct "C") with 
     | Ok v -> v
     | Error s -> raise (NoLinearization s)
   in 
-  Format.eprintf "[";
+  Format.eprintf "$[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
-  Format.eprintf "]\n"
+  Format.eprintf "]$\n"
   
 
 let deposit ct vars b b' s n sender contract = 
@@ -206,7 +207,7 @@ let () =
     (*https://github.com/federicobond/c3-linearization*)
     wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
-    (* test_fail_mro ct; *)
+    test_fail_mro;
     if false then 
       bank_example ct vars blockchain sigma;
     let ct = add_contract_to_contract_table (wallet_contract()) ct in 
