@@ -187,30 +187,8 @@ let bank_example ct vars blockchain sigma =
                   typecheck gamma (MsgSender) (Address CTop) ct blockchain
 
 
-let () =
-  let cin = open_in fname in
-  let lexbuf = Lexing.from_channel cin in
-  try
-    let e: expr = Parser.prog Lexer.read lexbuf in
-    let ct: contract_table = Hashtbl.create 64 in
-    let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
-    let sigma: values Stack.t = Stack.create() in
-    let _conf: conf = (blockchain, blockchain, sigma, e) in
-    let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-    let _p: program = (ct, blockchain, e) in
-    (* ADD CONTRACTS TO CONTRACT TABLE *)
-    (* Hashtbl.add ct "Bank" (bank_contract());
-       Hashtbl.add ct "BloodBank" (blood_bank_contract());
-       Hashtbl.add ct "Donor" (donor_contract());
-       Hashtbl.add ct "EOAContract" (eoa_contract()); *)
-    (* Hashtbl.add ct "Bank" (bank_contract()); *)
-    (*https://github.com/federicobond/c3-linearization*)
-    wikipedia_example_c3_linearization ct; 
-    test_python_mro_example ct;
-    test_fail_mro;
-    if false then 
-      bank_example ct vars blockchain sigma;
-    let ct = add_contract_to_contract_table (wallet_contract()) ct in 
+let wallet_example ct vars blockchain sigma = 
+  let ct = add_contract_to_contract_table (wallet_contract()) ct in 
     let a1 = (VAddress (generate_new_ethereum_address())) in
     let a2 = (VAddress (generate_new_ethereum_address())) in  
     let (_contracts, accounts) = blockchain in  
@@ -248,7 +226,33 @@ let () =
       match res with 
         | Revert -> Format.eprintf "Revert@.";
         | _ -> Format.eprintf "%s@." (expr_to_string res);
-      print_blockchain blockchain vars;
+      print_blockchain blockchain vars
+
+
+let () =
+  let cin = open_in fname in
+  let lexbuf = Lexing.from_channel cin in
+  try
+    let e: expr = Parser.prog Lexer.read lexbuf in
+    let ct: contract_table = Hashtbl.create 64 in
+    let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
+    let sigma: values Stack.t = Stack.create() in
+    let _conf: conf = (blockchain, blockchain, sigma, e) in
+    let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
+    let _p: program = (ct, blockchain, e) in
+    (* ADD CONTRACTS TO CONTRACT TABLE *)
+    (* Hashtbl.add ct "Bank" (bank_contract());
+       Hashtbl.add ct "BloodBank" (blood_bank_contract());
+       Hashtbl.add ct "Donor" (donor_contract());
+       Hashtbl.add ct "EOAContract" (eoa_contract()); *)
+    (* Hashtbl.add ct "Bank" (bank_contract()); *)
+    (*https://github.com/federicobond/c3-linearization*)
+    wikipedia_example_c3_linearization ct; 
+    test_python_mro_example ct;
+    test_fail_mro; (* Ver porque não retorna erro *)
+    if false then 
+      bank_example ct vars blockchain sigma;
+    wallet_example ct vars blockchain sigma;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

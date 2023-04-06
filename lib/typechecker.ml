@@ -201,20 +201,22 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     end 
   | This Some (_s, _le) -> assert false
   (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
-  | MapRead (_e1, _e2) ->  
-    (* typecheck gamma e1 (Map ()) ct blockchain; *)
-    assert false
+  | MapRead (e1, e2) ->  
+    begin match e1 with 
+      | Val(VMapping (_, t_exp)) ->
+        typecheck gamma e1 (Map (UInt , t)) ct blockchain;
+        typecheck gamma e2 t ct blockchain;
+        if compareType t_exp t ct then () 
+        else raise (TypeMismatch (t_exp, t))
+      | _ -> raise (TypeMismatch (t, t))
+    end
   | MapWrite (_e1, _e2, _e3) -> assert false 
-  | StateRead (_e1, _s) -> (*VER*)
-    (* typecheck gamma e1 (CTop) ct blockchain; (* verify e1 points to a contract*)
-    begin 
-      try 
-        let t_x = Hashtbl.find gamma (StateRead(e1, s)) in 
-        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
-      with Not_found -> raise (UnboundVariable ("State Var " ^ s)) 
-    end  *)
-    assert false
-  | StateAssign (_e1, _s, _e2) -> 
+  | StateRead (e1, _s) -> (*VER*)
+    typecheck gamma e1 CTop ct blockchain;
+
+  | StateAssign (e1, _s, _e2) -> 
+    typecheck gamma e1 CTop ct blockchain;
+
         (* typecheck gamma (StateRead(e1, s)) t ct blockchain;
         typecheck gamma e2 t ct blockchain *)
         assert false
@@ -255,7 +257,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma e1 t_e ct blockchain;
     Hashtbl.add gamma_vars s t_e;
     typecheck gamma e2 t ct blockchain;
-    (* typecheck e2 with ???*)
   | _ -> assert false
 
 

@@ -578,7 +578,7 @@ let rec eval_expr
       end
   | New (s, e1, le) ->
     begin
-      let (contracts, accounts) = blockchain in 
+      let (contracts, _accounts) = blockchain in 
       let c = Hashtbl.length contracts in
       let a = generate_new_ethereum_address() in
       let contract_def: contract_def = Hashtbl.find ct s in
@@ -593,7 +593,6 @@ let rec eval_expr
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
             begin match res with
               | Ok blockchain ->
-                let (contracts, accounts) = blockchain in   
                 let (state, lvars) = make_local_variables_and_state_variables c3_linearization_hierarchy ct vars le in                 
                 let sv = init_contract_state state in
                 Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
@@ -601,7 +600,6 @@ let rec eval_expr
                 Hashtbl.add vars "msg.sender" (Val (top conf));
                 Hashtbl.add vars "msg.value" (Val (VUInt n));
                 let (_, blockchain', sigma, e) = conf in 
-                let blockchain = (contracts, accounts) in 
                 (* execute super contracts ... *)
                 let (blockchain, blockchain', sigma, _) = List.fold_left (fun (conf: conf) (ctr_super: string) -> 
                     let res = exec_contract_constructor ctr_super vars lvars conf in 
@@ -625,8 +623,6 @@ let rec eval_expr
             Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
             Hashtbl.add vars "this" (Val(VContract c));
             let (_, blockchain', sigma, e) = conf in 
-            let blockchain = (contracts, accounts) in 
-
             (* execute super contracts ... *)
             let (blockchain, blockchain', sigma, _) = List.fold_left (fun (conf: conf) (ctr_super: string) -> 
                 let res = exec_contract_constructor ctr_super vars lvars conf in 
@@ -826,7 +822,6 @@ let rec eval_expr
         let (c_name, map, n) = Hashtbl.find contracts (VContract c, a) in
         let map' = StateVars.add s e2' map in
         Hashtbl.replace contracts (VContract(c),a) (c_name, map', n);
-        (* let blockchain = (contracts, accounts) in  *)
         (blockchain, blockchain', sigma, e2')
       | _ -> assert false
     end
