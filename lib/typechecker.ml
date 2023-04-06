@@ -77,18 +77,13 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Val (VUnit) -> axioms gamma e t ct
   | Val (VAddress _) -> axioms gamma e t ct
   | Val (VContract _) -> axioms gamma e t ct
-  | Val (VMapping (_m, _t_exp)) -> 
-    (*VER*)
-    assert false
-    (* let map_t = Hashtbl.find gamma (Val(VMapping(m, t_exp))) in  (*get type of this mapping*)
-    begin match map_t, t with
-      | Map (t1, t2), Map (t3, t4) -> 
-          if compareType t1 t3 ct && compareType t2 t4 ct then 
-            Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; typecheck gamma v t2 ct blockchain) m
-          else
-            raise (TypeMismatch (map_t, t))
-      | _ -> raise (TypeMismatch (map_t, t)) (* if t <> Map(t3, t4), => typemismatch*)
-    end *)
+  | Val (VMapping (m, t_exp)) -> 
+    begin match t with 
+      | Map (t1, t2) -> 
+        Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; typecheck gamma v t2 ct blockchain) m;
+        if compareType t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
+      | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
+    end
   | Var _ -> axioms gamma e t ct
   | AritOp a -> begin match a with 
       | Plus (e1, e2) -> 
