@@ -88,17 +88,12 @@ let eval_bool_expr (e: bool_ops) : expr = match e with
     end
 
 
-let state_vars_contract (contract_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp * string) list =
-  let contract : contract_def = Hashtbl.find ct contract_name in contract.state
-
-
 let top
     (conf: conf) : values =
   let (_, _, sigma, _) = conf in
   try
     Stack.top sigma
   with Stack.Empty -> VUnit
-
 
 let rec eval_expr
     (ct: (string, contract_def) Hashtbl.t)
@@ -174,6 +169,10 @@ let rec eval_expr
         begin 
           if i = 0 then
             begin 
+              (*SC = c3_linearization(C) : list Contracts *)
+              (* C_1 lst @ [constructor_params(C) -> le ]*)
+              (* C_n lst @ [constructor_params(SC) -> args(SC)]*)
+              (* map main contract constructor params and args *)
               let lst = List.fold_left2 (fun (lst: ((string * expr) list)) (param: (t_exp * string)) (arg: expr) ->
                   let (_, s) = param in 
                   let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
@@ -190,7 +189,9 @@ let rec eval_expr
             let (contract_params, _) = contract.constructor in 
             (contract_params, cname)
           ) (List.map (fun (Class(c, _)) -> c) sc) in 
+        (* GET SUPER CONTRACTS CONSTRUCOR PARAMS *)
 
+        (* MAP EACH CONSTRUCOR PARAMS WITH ARGUMENTS FROM THE SUPER CONTRACT  *)
         let lvars =  List.fold_left2 (fun 
                                        (lvars: (string, (string * expr) list) Hashtbl.t) 
                                        (params: ((t_exp * string) list * string)) 

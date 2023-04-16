@@ -11,6 +11,7 @@ type t_exp =
   | Fun of t_exp list * t_exp
   | TRevert
   | CTop 
+  (* | Generic of string  *)
 
 type b_val =
   | True

@@ -64,17 +64,17 @@ let rec merge (l : 'a hierarchy list list) =
 
 let rec c3 (hierarchy: 'a hierarchy) : ('a list, string) result = 
   let rec c3_exn = function
-  | Class (_, []) as res -> [res]
-  | Class (_, parents) as res -> res :: (merge @@ (List.map c3_exn parents) @ [parents])
+    | Class (_, []) as res -> [res]
+    | Class (_, parents) as res -> res :: (merge @@ (List.map c3_exn parents) @ [parents])
   in
   match c3_exn hierarchy with 
-    | exception No_linearization -> Error("No linearization")
-    | v ->  Ok(List.map (fun (Class(c, _)) -> c) v)
+  | exception No_linearization -> Error("No linearization")
+  | v ->  Ok(List.map (fun (Class(c, _)) -> c) v)
 
 let c3_linearization (contract_def: contract_def) : (string list, string) result = 
   let super_contracts: string hierarchy = contract_def.super_contracts in
   c3 super_contracts
-  
+
 
 (* 'a hierarchy *)
 

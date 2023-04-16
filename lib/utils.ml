@@ -184,17 +184,17 @@ let function_type (contract_name: string) (function_name: string) (ct: contract_
 
 
 let function_body
-(contract_name: string)
-(function_name: string)
-(values: expr list)
-(ct: contract_table) :
-((t_exp * string) list) * expr =
+    (contract_name: string)
+    (function_name: string)
+    (values: expr list)
+    (ct: contract_table) :
+  ((t_exp * string) list) * expr =
   let contract_def: contract_def = Hashtbl.find ct contract_name in 
   let lookup_table = contract_def.function_lookup_table in 
   try
     let f : fun_def = Hashtbl.find lookup_table function_name in 
     if List.length values = List.length f.args 
-      then (f.args, f.body) 
+    then (f.args, f.body) 
     else 
       ([], Return Revert)
   with Not_found -> ([], Return Revert)
@@ -212,6 +212,8 @@ let get_contract_by_address (contracts: contracts ) (address: values) : values =
 let get_address_by_contract (contracts: contracts ) (contract: values) : values =
   Hashtbl.fold (fun (k1, k2) (_, _, _) acc -> if k1 = contract then k2 else acc) contracts VUnit
 
+let state_vars_contract (contract_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp * string) list =
+  let contract : contract_def = Hashtbl.find ct contract_name in contract.state
 
 let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
   let contract_def: contract_def = Hashtbl.find ct contract_name in  
