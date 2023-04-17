@@ -74,9 +74,33 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
   | Val (VBool _) -> Bool
   | Val (VUInt _) -> UInt
   | Val (VUnit) -> Unit
-  | Val (VAddress _a) -> Address CTop
-  (*Address (C contract)*)
-  (* Retornar tipo None em vez de failure?*)
+  | Val (VAddress a) -> 
+    begin 
+      try 
+        let (_, gamma_addresses, _) = g in 
+        let a = Hashtbl.find gamma_addresses (VAddress a) in 
+        a
+      with Not_found -> raise (UnboundVariable "")
+    end  
+  | Val (VMapping (_m, _t_exp)) -> 
+    assert false
+    (* Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; 
+                       typecheck gamma v t2 ct blockchain) m
+    begin match t with 
+      | Map (t1, t2) -> 
+        (* C name ; Address name*)
+        ;
+        if compareType t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
+      | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
+    end *)
+  | Var s -> 
+    begin 
+      try 
+        let (gamma_vars, _, _) = g in 
+        let t_x = Hashtbl.find gamma_vars s in
+        t_x
+      with Not_found -> raise (UnboundVariable s)
+    end  
   | Val (VContract i) -> 
     begin 
       try 
@@ -161,6 +185,7 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
           let t_e2 : t_exp = infer_type g e2 ct in 
           match t_e1, t_e2 with 
           | UInt, UInt -> Bool
+          | Address _, Address _ -> Bool
           | _ -> raise (Failure "Não consegui inferir") 
         end
       | Greater (e1, e2) ->
@@ -261,6 +286,80 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
           if t_e2 = t_e3 then t_e2 else raise (Failure "Não consegui inferir") 
         end 
     end
+  | Assign (_s, _e1) -> 
+    assert false 
+  | Transfer (e1, e2) ->
+    begin 
+      let t_e1 : t_exp = infer_type g e1 ct in 
+      let t_e2 : t_exp = infer_type g e2 ct in 
+      match t_e1, t_e2 with 
+        | Address _, UInt -> Unit
+        | _ -> raise (Failure "Não consegui inferir")  
+    end
+  | MapRead (e1, e2) ->  
+    begin
+      let t_e1 : t_exp = infer_type g e1 ct in 
+      let _t_e2 : t_exp = infer_type g e2 ct in 
+      match t_e1 with 
+        | Map (_t1, _t2) -> 
+          begin match e1 with 
+            | Val(VMapping (_, _t_exp)) -> 
+              assert false 
+            | _ -> raise (Failure "Não consegui inferir")  
+          end 
+        | _ -> raise (Failure "Não consegui inferir")  
+    end
+  | MapWrite _ ->
+    Unit
+      (* | Val(VMapping (_, t_exp)) ->
+        (* how do we know t1? *)
+        typecheck gamma e1 (Map (UInt , t)) ct blockchain;
+        typecheck gamma e2 UInt ct blockchain;
+        if compareType t_exp t ct then () 
+        else raise (TypeMismatch (t_exp, t))
+      | _ -> raise (TypeMismatch (t, t)) *)  (* | MapWrite (e1, e2, e3) ->
+    begin match t with 
+      | Map(t1, t2) ->
+        typecheck gamma e1 t ct blockchain;
+        typecheck gamma e2 t1 ct blockchain;
+        typecheck gamma e3 t2 ct blockchain;
+      | _ -> raise (TypeMismatch (Map(UInt, t), t))
+    end
+  | StateRead (e1, s) -> (*VER*)
+    begin 
+      typecheck gamma e1 CTop ct blockchain;
+      let t_e : t_exp = infer_type gamma e1 ct in  
+      let cname : string = match t_e with 
+        | C name -> name 
+        | Address (C name) -> name 
+        | _ -> assert false 
+      in
+      let sv : (t_exp * string) list = state_vars_contract cname ct in 
+      try
+        let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
+        if compareType t_e t ct then () else raise (TypeMismatch (t_e, t))
+      with Not_found -> raise (UnboundVariable "s")
+    end
+  | StateAssign (e1, s, e2) -> 
+    typecheck gamma (StateRead (e1, s)) t ct blockchain;
+    typecheck gamma e2 t ct blockchain; *)
+    
+  | StateRead (e1, s) -> (*VER*)
+    begin 
+      let t_e : t_exp = infer_type g e1 ct in  
+      let cname : string = match t_e with 
+        | C name -> name 
+        | Address (C name) -> name 
+        | _ -> raise (Failure "Não consegui inferir")  
+      in
+      let sv : (t_exp * string) list = state_vars_contract cname ct in 
+      try
+        let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
+        t_e
+      with Not_found -> raise (UnboundVariable "s")
+    end
+  | StateAssign _ -> 
+    Unit
   | _ -> assert false 
 
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e with 
@@ -412,7 +511,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         typecheck gamma e1 t ct blockchain;
         typecheck gamma e2 t1 ct blockchain;
         typecheck gamma e3 t2 ct blockchain;
-
       | _ -> raise (TypeMismatch (Map(UInt, t), t))
     end
   | StateRead (e1, s) -> (*VER*)
