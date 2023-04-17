@@ -1,6 +1,7 @@
 open Types 
 open Utils
 open C3 
+open Pprinters 
 
 let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with 
@@ -70,6 +71,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
     end 
   | _ -> assert false
 
+(* return (t_exp, string) result ??? *)
 let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e with 
   | Val (VBool _) -> Bool
   | Val (VUInt _) -> UInt
@@ -343,7 +345,7 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
   | StateAssign (e1, s, e2) -> 
     typecheck gamma (StateRead (e1, s)) t ct blockchain;
     typecheck gamma e2 t ct blockchain; *)
-    
+
   | StateRead (e1, s) -> (*VER*)
     begin 
       let t_e : t_exp = infer_type g e1 ct in  
@@ -356,10 +358,45 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
       try
         let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
         t_e
-      with Not_found -> raise (UnboundVariable "s")
+      with Not_found -> raise (UnboundVariable ((expr_to_string e1) ^ s))
     end
   | StateAssign _ -> 
     Unit
+  | New (s, e, le) ->
+    (* type check contract blockchain ...*)
+    begin
+      let t_e : t_exp = infer_type g e ct in 
+      if t_e <> UInt then 
+        raise (Failure "Não consegui inferir")  
+      else 
+        begin 
+          let c_def: contract_def = Hashtbl.find ct s in
+          let (args, _) = c_def.constructor in 
+          let ts = List.map (fun (t_e, _) -> t_e) args in
+          List.iter2 (fun t_cx e_cx -> 
+            let t_ecx : t_exp = infer_type g e_cx ct in 
+            if t_cx <> t_ecx then raise (Failure "Não consegui inferir") else ()) 
+            ts le;
+          C s 
+        end
+    end
+  | Cons (s, e1) -> 
+    (* e1 is always an address, however it can be a Val (Address a) || MsgSender || Var x || this.sv *)
+    (* we need to make sure that s == cname, thus we need to access the contract stored in the blockchain*)
+    begin
+      let t_e1 : t_exp = infer_type g e1 ct in 
+      match t_e1 with 
+        | Address t_exp ->
+          begin match t_exp with 
+            | C name -> 
+              begin 
+                let res : bool = compareType (C name) (C s) ct in 
+                if res then (C name) else raise (Failure "Não consegui inferir") 
+              end
+            | _ -> raise (Failure "Não consegui inferir")  
+          end
+        | _ -> raise (Failure "Não consegui inferir")  
+    end
   | _ -> assert false 
 
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e with 
