@@ -85,6 +85,7 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
       with Not_found -> raise (UnboundVariable "")
     end  
   | Val (VMapping (_m, _t_exp)) -> 
+    (* Ver como tipificar e chegar ao valor das chaves (e values) de cada mapa, MAPA VAZIO pode tipificar para qualquer mapa? *)
     assert false
     (* Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; 
                        typecheck gamma v t2 ct blockchain) m
@@ -397,6 +398,14 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
           end
         | _ -> raise (Failure "Não consegui inferir")  
     end
+  | Let (t_e, s, e1, e2) -> 
+    let (gamma_vars, _, _) = g in 
+    let t_e1 : t_exp = infer_type g e1 ct in 
+    if t_e1 <> t_e then 
+      raise (Failure "Não consegui inferir")  
+    else 
+      Hashtbl.add gamma_vars s t_e;
+      infer_type g e2 ct 
   | _ -> assert false 
 
 let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockchain: blockchain) : unit = 
