@@ -22,7 +22,7 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
   | _ -> t1 = t2
 
 
-let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = match e,t with 
+(* let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
   | Val (VBool _), _ -> raise (TypeMismatch (Bool, t))
   | Val (VUInt n), UInt -> if n >= 0 then () else raise (TypeMismatch (UInt, t))
@@ -69,7 +69,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
         if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable x)
     end 
-  | _ -> assert false
+  | _ -> assert false *)
 
 (* return (t_exp, string) result ??? *)
 let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e with 
@@ -399,8 +399,11 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
     end
   | _ -> assert false 
 
-let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e with 
-  | Val (VBool _) -> axioms gamma e t ct
+let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockchain: blockchain) : unit = 
+  let t_e : t_exp = infer_type gamma e ct in 
+  if compareType t t_e ct then () else raise (TypeMismatch (t_e, t))
+
+  (* | Val (VBool _) -> axioms gamma e t ct
   | Val (VUInt _) -> axioms gamma e t ct
   | Val (VUnit) -> axioms gamma e t ct
   | Val (VAddress _) -> axioms gamma e t ct
@@ -597,7 +600,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma e1 t_e ct blockchain;
     Hashtbl.add gamma_vars s t_e;
     typecheck gamma e2 t ct blockchain;
-  | _ -> assert false
+  | _ -> assert false *)
 
 
 
