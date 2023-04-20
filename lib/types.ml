@@ -6,7 +6,7 @@ type t_exp =
   | Bool
   | Unit
   | UInt
-  | Address of t_exp 
+  | Address of t_exp option 
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
   | TRevert
@@ -102,7 +102,7 @@ type contracts = ((values * values), (string * (expr) StateVars.t * values)) Has
 type accounts =  (values, values) Hashtbl.t (*  addresses * balance *) (* CALLTOPLEVEL CAN ONLY BE CALLED BY THIS TYPE OF SENDER, THIS SENDER HOWEVER CAN ALSO CALL NEW*)
 
 type blockchain = (contracts * accounts)
-(c, a) = blockchain
+
 type conf = (blockchain * blockchain * values Stack.t * expr)
 
 type program = (contract_table * blockchain * expr)

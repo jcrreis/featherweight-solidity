@@ -3,6 +3,7 @@ open Utils
 open C3 
 open Pprinters 
 
+
 let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with 
   | Address _, Address CTop -> true
@@ -72,6 +73,7 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
   | _ -> assert false *)
 
 (* return (t_exp, string) result ??? *)
+(* Ok(t_exp) || Error (string)*)
 let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e with 
   | Val (VBool _) -> Bool
   | Val (VUInt _) -> UInt
@@ -113,14 +115,9 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
       with Not_found -> raise (UnboundVariable "")
     end  
   | AritOp a -> begin match a with 
-      | Plus (e1, e2) -> 
-        begin 
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> UInt
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
+      | Plus _ -> 
+        UInt
+        
       | Div (e1, e2) -> 
         begin 
           let t_e1 : t_exp = infer_type g e1 ct in 
@@ -200,13 +197,14 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
           | _ -> raise (Failure "Não consegui inferir") 
         end
       | GreaterOrEquals (e1, e2) ->
-        begin  
+        (* begin  
           let t_e1 : t_exp = infer_type g e1 ct in 
           let t_e2 : t_exp = infer_type g e2 ct in 
           match t_e1, t_e2 with 
           | UInt, UInt -> Bool
           | _ -> raise (Failure "Não consegui inferir") 
-        end
+        end *)
+        Bool
       | Lesser (e1, e2) ->
         begin  
           let t_e1 : t_exp = infer_type g e1 ct in 
@@ -299,7 +297,8 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
         | Address _, UInt -> Unit
         | _ -> raise (Failure "Não consegui inferir")  
     end
-  | MapRead (e1, e2) ->  
+  | MapRead (e1, e2) ->
+    balances[1 + 2]  
     begin
       let t_e1 : t_exp = infer_type g e1 ct in 
       let _t_e2 : t_exp = infer_type g e2 ct in 
@@ -421,7 +420,9 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
     begin match t with 
       | Map (t1, t2) -> 
         (* C name ; Address name*)
-        Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; 
+        Hashtbl.iter (fun k v -> 
+          
+          typecheck gamma k t1 ct blockchain; 
                        typecheck gamma v t2 ct blockchain) m;
         if compareType t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
       | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
@@ -432,7 +433,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
       | Plus (e1, e2) -> 
         if t <> UInt then 
           raise (TypeMismatch (UInt, t));
-        typecheck gamma e1 UInt ct blockchain ;
+        typecheck gamma e1 UInt ct blockchain;
         typecheck gamma e2 UInt ct blockchain
       | Div (e1, e2) -> 
         if t <> UInt then 
@@ -545,11 +546,14 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
   | This Some (_s, _le) -> assert false
   (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
   | MapRead (e1, e2) ->  
+    (* inferir primeiro tipo de e2, e depois *)
     begin match e1 with 
       | Val(VMapping (_, t_exp)) ->
         (* how do we know t1? *)
-        typecheck gamma e1 (Map (UInt , t)) ct blockchain;
-        typecheck gamma e2 UInt ct blockchain;
+        let t_e2 = infer_type .. 
+
+        typecheck gamma e1 (Map (<> , t)) ct blockchain;
+        typecheck gamma e2 t_e2 ct blockchain;
         if compareType t_exp t ct then () 
         else raise (TypeMismatch (t_exp, t))
       | _ -> raise (TypeMismatch (t, t))

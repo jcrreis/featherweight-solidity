@@ -39,3 +39,7 @@ Bidirectional typechecking -- ver até sexta
 notas:
 
 - c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
+
+sendo trabalhador-estudante só tenho conseguido dedicar 25% do tempo quando na elaboração se espera que seja a 100%, contudo tenho avançado de forma positiva na elaboração,conseguido cumprir os objetivos que têm sido estabelecidos dentro dos prazos combinados e temos programado que seja concluido no final deste semestre.
+
+1 - Seguir as regras, 
