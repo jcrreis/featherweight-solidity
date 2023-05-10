@@ -4,12 +4,12 @@ open C3
 open Pprinters 
 
 
-let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
+let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with 
   | Address _, Address CTop -> true
   | Address CTop, Address _ -> false
   | Address (C name1), Address (C name2) -> 
-    compareType (C name1) (C name2) ct
+    subtyping (C name1) (C name2) ct
   | CTop, CTop -> true
   | CTop, C _ -> false 
   | C _, CTop -> true
@@ -23,7 +23,7 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
   | _ -> t1 = t2
 
 
-(* let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = match e,t with 
+let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = match e,t with 
   | Val (VBool _), Bool -> ()  
   | Val (VBool _), _ -> raise (TypeMismatch (Bool, t))
   | Val (VUInt n), UInt -> if n >= 0 then () else raise (TypeMismatch (UInt, t))
@@ -37,7 +37,7 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
         (* gamma_vars * gamma_addresses * gamma_contracts *)
         let (_, gamma_addresses, _) = gamma in 
         let a = Hashtbl.find gamma_addresses (VAddress a) in 
-        if compareType a t ct then () else raise (TypeMismatch (a, t))
+        if subtyping a t ct then () else raise (TypeMismatch (a, t))
       with Not_found -> raise (UnboundVariable a)
     end
   | Val (VContract i), _ ->
@@ -45,7 +45,7 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
       try 
         let (_, _, gamma_contracts) = gamma in 
         let c = Hashtbl.find gamma_contracts (VContract i) in 
-        if compareType c t ct then () else raise (TypeMismatch (c, t))
+        if subtyping c t ct then () else raise (TypeMismatch (c, t))
       with Not_found -> raise (UnboundVariable "")
     end 
   | MsgSender, Address CTop -> ()
@@ -54,12 +54,11 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
       try 
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars "msg.sender" in
-        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
+        if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "msg.sender")
     end 
-  (*
   | MsgSender, Address (Some _s) -> assert false
-  | MsgSender, _ -> raise (TypeMismatch (Address CTop, t)) *)
+  | MsgSender, _ -> raise (TypeMismatch (Address CTop, t))
   | MsgValue, UInt -> ()
   | MsgValue, _ -> raise (TypeMismatch (UInt, t))
   | Var x, t -> 
@@ -67,349 +66,15 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
       try 
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars x in
-        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
+        if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable x)
     end 
-  | _ -> assert false *)
+  | _ -> assert false
 
-(* return (t_exp, string) result ??? *)
-(* Ok(t_exp) || Error (string)*)
-
-
-let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e with 
-  | Val (VBool _) -> Bool
-  | Val (VUInt _) -> UInt
-  | Val (VUnit) -> Unit
-  | Val (VAddress a) -> 
-    begin 
-      try 
-        let (_, gamma_addresses, _) = g in 
-        let a = Hashtbl.find gamma_addresses (VAddress a) in 
-        a
-      with Not_found -> raise (UnboundVariable "")
-    end  
-  | Val (VMapping (_m, _t_exp)) -> 
-    (* Ver como tipificar e chegar ao valor das chaves (e values) de cada mapa, MAPA VAZIO pode tipificar para qualquer mapa? *)
-    assert false
-    (* Hashtbl.iter (fun k v -> typecheck gamma k t1 ct blockchain; 
-                       typecheck gamma v t2 ct blockchain) m
-    begin match t with 
-      | Map (t1, t2) -> 
-        (* C name ; Address name*)
-        ;
-        if compareType t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
-      | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
-    end *)
-  | Var s -> 
-    begin 
-      try 
-        let (gamma_vars, _, _) = g in 
-        let t_x = Hashtbl.find gamma_vars s in
-        t_x
-      with Not_found -> raise (UnboundVariable s)
-    end  
-  | Val (VContract i) -> 
-    begin 
-      try 
-        let (_, _, gamma_contracts) = g in 
-        let c = Hashtbl.find gamma_contracts (VContract i) in 
-        c
-      with Not_found -> raise (UnboundVariable "")
-    end  
-  | AritOp a -> begin match a with 
-      | Plus _ -> 
-        UInt
-        
-      | Div (e1, e2) -> 
-        begin 
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> UInt
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Times (e1, e2) -> 
-        begin 
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> UInt
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Minus (e1, e2) -> 
-        begin 
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> UInt
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Exp (e1, e2) -> 
-        begin 
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> UInt
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Mod (e1, e2) -> 
-        begin 
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> UInt
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-    end
-  | BoolOp b -> begin match b with 
-      | Neg e1 -> 
-        let t_e1 : t_exp = infer_type g e1 ct in 
-        if t_e1 = Bool then Bool else raise (Failure "Não consegui inferir") 
-      | Conj (e1, e2) -> 
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | Bool, Bool -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Disj (e1, e2) ->
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | Bool, Bool -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Equals (e1, e2) ->
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> Bool
-          | Address _, Address _ -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Greater (e1, e2) ->
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | GreaterOrEquals (_, _) ->
-        (* begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end *)
-        Bool
-      | Lesser (e1, e2) ->
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | LesserOrEquals (e1, e2) ->
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-      | Inequals (e1, e2) ->
-        begin  
-          let t_e1 : t_exp = infer_type g e1 ct in 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          match t_e1, t_e2 with 
-          | UInt, UInt -> Bool
-          | _ -> raise (Failure "Não consegui inferir") 
-        end
-    end
-  | Revert -> TRevert
-  | This None -> 
-    begin 
-      try 
-        let (gamma_vars, _, _) = g in 
-        let t_x = Hashtbl.find gamma_vars "this" in
-        t_x
-      with Not_found -> raise (UnboundVariable "this")
-    end 
-  | Balance e1 ->  
-    begin 
-      let t_e1 : t_exp = infer_type g e1 ct in 
-      match t_e1 with 
-      | C _ -> UInt 
-      | Address _ -> UInt
-      (* CTop, C "Bank" C ".." C ("..")*)
-      | _ -> raise (Failure "Não consegui inferir") 
-    end
-  | Address e1 -> 
-    begin
-      let t_e1 : t_exp = infer_type g e1 ct in 
-      match t_e1 with 
-      | CTop -> Address CTop 
-      | C name -> Address (C name)
-      | Address t_e -> Address t_e
-      | _ -> raise (Failure "Não consegui inferir") 
-    end 
-  | Seq (_, e2) ->
-    let t_e2 : t_exp = infer_type g e2 ct in 
-    t_e2 
-  | MsgSender -> 
-    begin 
-      try 
-        let (gamma_vars, _, _) = g in 
-        let t_x = Hashtbl.find gamma_vars "msg.sender" in
-        t_x
-      with Not_found -> raise (UnboundVariable "msg.sender")
-    end 
-  | MsgValue ->
-    begin 
-      try 
-        let (gamma_vars, _, _) = g in 
-        let t_x = Hashtbl.find gamma_vars "msg.value" in
-        t_x
-      with Not_found -> raise (UnboundVariable "msg.sender")
-    end  
-  | If (e1, e2, e3) -> 
-    begin
-      let t_e1 : t_exp = infer_type g e1 ct in 
-      if t_e1 <> Bool then raise (Failure "Não consegui inferir") 
-      else 
-        begin 
-          let t_e2 : t_exp = infer_type g e2 ct in 
-          let t_e3 : t_exp = infer_type g e3 ct in 
-          if t_e2 = t_e3 then t_e2 else raise (Failure "Não consegui inferir") 
-        end 
-    end
-  | Assign (_s, _e1) -> 
-    assert false 
-  | Transfer (e1, e2) ->
-    begin 
-      let t_e1 : t_exp = infer_type g e1 ct in 
-      let t_e2 : t_exp = infer_type g e2 ct in 
-      match t_e1, t_e2 with 
-        | Address _, UInt -> Unit
-        | _ -> raise (Failure "Não consegui inferir")  
-    end
-  | MapRead (e1, e2) ->
-    begin
-      let t_e1 : t_exp = infer_type g e1 ct in 
-      let _t_e2 : t_exp = infer_type g e2 ct in 
-      match t_e1 with 
-        | Map (_t1, _t2) -> 
-          begin match e1 with 
-            | Val(VMapping (_, _t_exp)) -> 
-              assert false 
-            | _ -> raise (Failure "Não consegui inferir")  
-          end 
-        | _ -> raise (Failure "Não consegui inferir")  
-    end
-  | MapWrite _ ->
-    Unit
-      (* | Val(VMapping (_, t_exp)) ->
-        (* how do we know t1? *)
-        typecheck gamma e1 (Map (UInt , t)) ct blockchain;
-        typecheck gamma e2 UInt ct blockchain;
-        if compareType t_exp t ct then () 
-        else raise (TypeMismatch (t_exp, t))
-      | _ -> raise (TypeMismatch (t, t)) *)  (* | MapWrite (e1, e2, e3) ->
-    begin match t with 
-      | Map(t1, t2) ->
-        typecheck gamma e1 t ct blockchain;
-        typecheck gamma e2 t1 ct blockchain;
-        typecheck gamma e3 t2 ct blockchain;
-      | _ -> raise (TypeMismatch (Map(UInt, t), t))
-    end
-  | StateRead (e1, s) -> (*VER*)
-    begin 
-      typecheck gamma e1 CTop ct blockchain;
-      let t_e : t_exp = infer_type gamma e1 ct in  
-      let cname : string = match t_e with 
-        | C name -> name 
-        | Address (C name) -> name 
-        | _ -> assert false 
-      in
-      let sv : (t_exp * string) list = state_vars_contract cname ct in 
-      try
-        let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
-        if compareType t_e t ct then () else raise (TypeMismatch (t_e, t))
-      with Not_found -> raise (UnboundVariable "s")
-    end
-  | StateAssign (e1, s, e2) -> 
-    typecheck gamma (StateRead (e1, s)) t ct blockchain;
-    typecheck gamma e2 t ct blockchain; *)
-
-  | StateRead (e1, s) -> (*VER*)
-    begin 
-      let t_e : t_exp = infer_type g e1 ct in  
-      let cname : string = match t_e with 
-        | C name -> name 
-        | Address (C name) -> name 
-        | _ -> raise (Failure "Não consegui inferir")  
-      in
-      let sv : (t_exp * string) list = state_vars_contract cname ct in 
-      try
-        let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
-        t_e
-      with Not_found -> raise (UnboundVariable ((expr_to_string e1) ^ s))
-    end
-  | StateAssign _ -> 
-    Unit
-  | New (s, e, le) ->
-    (* type check contract blockchain ...*)
-    begin
-      let t_e : t_exp = infer_type g e ct in 
-      if t_e <> UInt then 
-        raise (Failure "Não consegui inferir")  
-      else 
-        begin 
-          let c_def: contract_def = Hashtbl.find ct s in
-          let (args, _) = c_def.constructor in 
-          let ts = List.map (fun (t_e, _) -> t_e) args in
-          List.iter2 (fun t_cx e_cx -> 
-            let t_ecx : t_exp = infer_type g e_cx ct in 
-            if t_cx <> t_ecx then raise (Failure "Não consegui inferir") else ()) 
-            ts le;
-          C s 
-        end
-    end
-  | Cons (s, e1) -> 
-    (* e1 is always an address, however it can be a Val (Address a) || MsgSender || Var x || this.sv *)
-    (* we need to make sure that s == cname, thus we need to access the contract stored in the blockchain*)
-    begin
-      let t_e1 : t_exp = infer_type g e1 ct in 
-      match t_e1 with 
-        | Address t_exp ->
-          begin match t_exp with 
-            | C name -> 
-              begin 
-                let res : bool = compareType (C name) (C s) ct in 
-                if res then (C name) else raise (Failure "Não consegui inferir") 
-              end
-            | _ -> raise (Failure "Não consegui inferir")  
-          end
-        | _ -> raise (Failure "Não consegui inferir")  
-    end
-  | Let (t_e, s, e1, e2) -> 
-  typecheck e1 t_e ...; 
-    let (gamma_vars, _, _) = g in 
-    let t_e1 : t_exp = infer_type g e1 ct in 
-    if compareType t_e1 t_e ct then () else raise (Failure "Não consegui inferir")   
-  | _ -> assert false 
 
 let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockchain: blockchain) : unit = 
-  let t_e : t_exp = infer_type gamma e ct in 
-  if compareType t t_e ct then () else raise (TypeMismatch (t_e, t))
-
-  (* | Val (VBool _) -> axioms gamma e t ct
+  
+  | Val (VBool _) -> axioms gamma e t ct
   | Val (VUInt _) -> axioms gamma e t ct
   | Val (VUnit) -> axioms gamma e t ct
   | Val (VAddress _) -> axioms gamma e t ct
@@ -422,7 +87,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
           
           typecheck gamma k t1 ct blockchain; 
                        typecheck gamma v t2 ct blockchain) m;
-        if compareType t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
+        if subtyping t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
       | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
     end
   | Var _ -> axioms gamma e t ct
@@ -537,7 +202,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
       try 
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars "this" in
-        if compareType t_x t ct then () 
+        if subtyping t_x t ct then () 
         else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "this")
     end 
@@ -552,7 +217,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
 
         typecheck gamma e1 (Map (<> , t)) ct blockchain;
         typecheck gamma e2 t_e2 ct blockchain;
-        if compareType t_exp t ct then () 
+        if subtyping t_exp t ct then () 
         else raise (TypeMismatch (t_exp, t))
       | _ -> raise (TypeMismatch (t, t))
     end
@@ -576,7 +241,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
       let sv : (t_exp * string) list = state_vars_contract cname ct in 
       try
         let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
-        if compareType t_e t ct then () else raise (TypeMismatch (t_e, t))
+        if subtyping t_e t ct then () else raise (TypeMismatch (t_e, t))
       with Not_found -> raise (UnboundVariable "s")
     end
   | StateAssign (e1, s, e2) -> 
@@ -602,16 +267,16 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
     typecheck gamma e1 (Address (CTop)) ct blockchain;
     (* get_contract_by_address blockchain a*)
     (* typecheck gamma e (C(-1)) ct blockchain *)
-    (* | CallTopLevel (e1, s, e2, e3, le) -> 
+    | CallTopLevel (e1, s, e2, e3, le) -> 
        typecheck gamma e1 (C(-1, "")) ct blockchain;
        typecheck gamma e2 UInt ct blockchain;
-       typecheck gamma e3 Address ct blockchain;  *)
+       typecheck gamma e3 Address ct blockchain; 
   | Let (t_e, s, e1, e2) -> 
     let (gamma_vars, _, _) = gamma in 
     typecheck gamma e1 t_e ct blockchain;
     Hashtbl.add gamma_vars s t_e;
     typecheck gamma e2 t ct blockchain;
-  | _ -> assert false *)
+  | _ -> assert false
 
 
 
