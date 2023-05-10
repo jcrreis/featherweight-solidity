@@ -4,12 +4,12 @@ open C3
 open Pprinters 
 
 
-let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
+let rec  (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with 
   | Address _, Address CTop -> true
   | Address CTop, Address _ -> false
   | Address (C name1), Address (C name2) -> 
-    compareType (C name1) (C name2) ct
+    subtyping (C name1) (C name2) ct
   | CTop, CTop -> true
   | CTop, C _ -> false 
   | C _, CTop -> true
@@ -37,7 +37,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
         (* gamma_vars * gamma_addresses * gamma_contracts *)
         let (_, gamma_addresses, _) = gamma in 
         let a = Hashtbl.find gamma_addresses (VAddress a) in 
-        if compareType a t ct then () else raise (TypeMismatch (a, t))
+        if subtyping a t ct then () else raise (TypeMismatch (a, t))
       with Not_found -> raise (UnboundVariable a)
     end
   | Val (VContract i), _ ->
@@ -45,7 +45,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
       try 
         let (_, _, gamma_contracts) = gamma in 
         let c = Hashtbl.find gamma_contracts (VContract i) in 
-        if compareType c t ct then () else raise (TypeMismatch (c, t))
+        if subtyping c t ct then () else raise (TypeMismatch (c, t))
       with Not_found -> raise (UnboundVariable "")
     end 
   | MsgSender, Address CTop -> ()
@@ -54,7 +54,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
       try 
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars "msg.sender" in
-        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
+        if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "msg.sender")
     end 
   | MsgSender, Address (Some _s) -> assert false
@@ -66,7 +66,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
       try 
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars x in
-        if compareType t_x t ct then () else raise (TypeMismatch (t_x, t))
+        if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable x)
     end 
   | _ -> assert false
@@ -87,7 +87,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
           
           typecheck gamma k t1 ct blockchain; 
                        typecheck gamma v t2 ct blockchain) m;
-        if compareType t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
+        if subtyping t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
       | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
     end
   | Var _ -> axioms gamma e t ct
@@ -202,7 +202,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
       try 
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars "this" in
-        if compareType t_x t ct then () 
+        if subtyping t_x t ct then () 
         else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "this")
     end 
@@ -217,7 +217,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
 
         typecheck gamma e1 (Map (<> , t)) ct blockchain;
         typecheck gamma e2 t_e2 ct blockchain;
-        if compareType t_exp t ct then () 
+        if subtyping t_exp t ct then () 
         else raise (TypeMismatch (t_exp, t))
       | _ -> raise (TypeMismatch (t, t))
     end
@@ -241,7 +241,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
       let sv : (t_exp * string) list = state_vars_contract cname ct in 
       try
         let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
-        if compareType t_e t ct then () else raise (TypeMismatch (t_e, t))
+        if subtyping t_e t ct then () else raise (TypeMismatch (t_e, t))
       with Not_found -> raise (UnboundVariable "s")
     end
   | StateAssign (e1, s, e2) -> 
