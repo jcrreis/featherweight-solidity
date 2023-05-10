@@ -6,7 +6,8 @@ type t_exp =
   | Bool
   | Unit
   | UInt
-  | Address of t_exp option 
+  (* | Address of t_exp option  *)
+  | Address of t_exp
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
   | TRevert

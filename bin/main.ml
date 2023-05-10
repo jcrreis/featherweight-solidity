@@ -14,7 +14,7 @@ let print_position lexbuf =
   Format.eprintf "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
-let wikipedia_example_c3_linearization ct = 
+let _wikipedia_example_c3_linearization ct = 
   (*https://en.wikipedia.org/wiki/C3_linearization*)
   Hashtbl.add ct "C" {name="C"; super_contracts=Class("C",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64};
   Hashtbl.add ct "B" {name="B"; super_contracts=Class("B",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
@@ -37,7 +37,7 @@ let wikipedia_example_c3_linearization ct =
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
 
-let test_python_mro_example ct = 
+let _test_python_mro_example ct = 
   (*https://www.python.org/download/releases/2.3/mro/*)
   Hashtbl.add ct "C" {name="C"; super_contracts=Class("C", [Class("D",[]); Class("F", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
   Hashtbl.add ct "B" {name="B"; super_contracts=Class("B", [Class("E",[]); Class("D", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
@@ -55,7 +55,7 @@ let test_python_mro_example ct =
   Format.eprintf "]\n"
 
 
-let test_fail_mro = 
+(* let _test_fail_mro = 
   (*https://www.python.org/download/releases/2.3/mro/*)
   let ct: contract_table = Hashtbl.create 64 in
   Hashtbl.replace ct "C" {name="C"; super_contracts=Class("C", [Class("A",[]); Class("B", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
@@ -69,7 +69,7 @@ let test_fail_mro =
   in 
   Format.eprintf "$[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
-  Format.eprintf "]$\n"
+  Format.eprintf "]$\n" *)
 
 
 let deposit ct vars b b' s n sender contract = 
@@ -131,7 +131,7 @@ let add_contract_to_contract_table contract ct =
   Hashtbl.add ct contract.name contract ; ct 
 
 
-let bank_example ct vars blockchain sigma =
+let _bank_example ct vars blockchain sigma =
   let ct = add_contract_to_contract_table (bank_contract()) ct in 
   let ct = add_contract_to_contract_table (simple_bank_contract()) ct in 
   let ct = add_contract_to_contract_table (bank_with_deposit_tracker_contract()) ct in 
@@ -226,6 +226,7 @@ let wallet_example ct vars blockchain sigma =
             match res with 
             | Revert -> Format.eprintf "Revert@.";
             | _ -> Format.eprintf "%s@." (expr_to_string res);
+              Format.eprintf "======================================";
               print_blockchain blockchain vars
 
 
@@ -247,11 +248,11 @@ let () =
        Hashtbl.add ct "EOAContract" (eoa_contract()); *)
     (* Hashtbl.add ct "Bank" (bank_contract()); *)
     (*https://github.com/federicobond/c3-linearization*)
-    wikipedia_example_c3_linearization ct; 
+    (* wikipedia_example_c3_linearization ct; 
     test_python_mro_example ct;
-    test_fail_mro; (* Ver porque não retorna erro *)
-    if false then 
-      bank_example ct vars blockchain sigma;
+    test_fail_mro; Ver porque não retorna erro *)
+    (* if false then 
+      bank_example ct vars blockchain sigma; *)
     wallet_example ct vars blockchain sigma;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";

@@ -74,6 +74,8 @@ let rec compareType (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
 
 (* return (t_exp, string) result ??? *)
 (* Ok(t_exp) || Error (string)*)
+
+
 let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e with 
   | Val (VBool _) -> Bool
   | Val (VUInt _) -> UInt
@@ -196,7 +198,7 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
           | UInt, UInt -> Bool
           | _ -> raise (Failure "Não consegui inferir") 
         end
-      | GreaterOrEquals (e1, e2) ->
+      | GreaterOrEquals (_, _) ->
         (* begin  
           let t_e1 : t_exp = infer_type g e1 ct in 
           let t_e2 : t_exp = infer_type g e2 ct in 
@@ -298,7 +300,6 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
         | _ -> raise (Failure "Não consegui inferir")  
     end
   | MapRead (e1, e2) ->
-    balances[1 + 2]  
     begin
       let t_e1 : t_exp = infer_type g e1 ct in 
       let _t_e2 : t_exp = infer_type g e2 ct in 
@@ -398,13 +399,10 @@ let rec infer_type (g: gamma) (e: expr) (ct: contract_table) : t_exp = match e w
         | _ -> raise (Failure "Não consegui inferir")  
     end
   | Let (t_e, s, e1, e2) -> 
+  typecheck e1 t_e ...; 
     let (gamma_vars, _, _) = g in 
     let t_e1 : t_exp = infer_type g e1 ct in 
-    if t_e1 <> t_e then 
-      raise (Failure "Não consegui inferir")  
-    else 
-      Hashtbl.add gamma_vars s t_e;
-      infer_type g e2 ct 
+    if compareType t_e1 t_e ct then () else raise (Failure "Não consegui inferir")   
   | _ -> assert false 
 
 let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockchain: blockchain) : unit = 
