@@ -1,14 +1,14 @@
 open Types 
-open Utils
+(* open Utils *)
 open C3 
-open Pprinters 
+(* open Pprinters  *)
 
 
 let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with 
-  | Address _, Address CTop -> true
-  | Address CTop, Address _ -> false
-  | Address (C name1), Address (C name2) -> 
+  | Address _, Address (Some CTop) -> true
+  | Address (Some CTop), Address _ -> false
+  | Address (Some (C name1)), Address (Some (C name2)) -> 
     subtyping (C name1) (C name2) ct
   | CTop, CTop -> true
   | CTop, C _ -> false 
@@ -48,7 +48,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
         if subtyping c t ct then () else raise (TypeMismatch (c, t))
       with Not_found -> raise (UnboundVariable "")
     end 
-  | MsgSender, Address CTop -> ()
+  | MsgSender, Address (Some CTop) -> ()
   | MsgSender, t -> 
     begin 
       try 
@@ -57,8 +57,8 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
         if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "msg.sender")
     end 
-  | MsgSender, Address (Some _s) -> assert false
-  | MsgSender, _ -> raise (TypeMismatch (Address CTop, t))
+  (* | MsgSender, Address (Some _s) -> assert false
+  | MsgSender, _ -> raise (TypeMismatch (Address (Some CTop), t)) *)
   | MsgValue, UInt -> ()
   | MsgValue, _ -> raise (TypeMismatch (UInt, t))
   | Var x, t -> 
@@ -72,8 +72,7 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
   | _ -> assert false
 
 
-let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockchain: blockchain) : unit = 
-  
+let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = match e with 
   | Val (VBool _) -> axioms gamma e t ct
   | Val (VUInt _) -> axioms gamma e t ct
   | Val (VUnit) -> axioms gamma e t ct
@@ -174,12 +173,12 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
   | Balance e1 -> 
     if t <> UInt then 
       raise (TypeMismatch (UInt, t));
-    typecheck gamma e1 (Address CTop) ct blockchain;
+    typecheck gamma e1 (Address (Some CTop)) ct blockchain;
   | Address e1 -> 
     begin match t with 
-      | Address CTop -> typecheck gamma e1 CTop ct blockchain
-      | Address (C i) -> typecheck gamma e1 (C i) ct blockchain 
-      | _ -> raise (TypeMismatch (Address CTop, t))
+      | Address (Some CTop) -> typecheck gamma e1 CTop ct blockchain
+      | Address (Some (C i)) -> typecheck gamma e1 (C i) ct blockchain 
+      | _ -> raise (TypeMismatch (Address (Some CTop), t))
     end 
   | Return e1 -> typecheck gamma e1 t ct blockchain 
   | Seq (_, e2) ->
@@ -208,17 +207,15 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
     end 
   | This Some (_s, _le) -> assert false
   (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
-  | MapRead (e1, e2) ->  
+  | MapRead (e1, _e2) ->  
     (* inferir primeiro tipo de e2, e depois *)
     begin match e1 with 
-      | Val(VMapping (_, t_exp)) ->
-        (* how do we know t1? *)
-        let t_e2 = infer_type .. 
-
-        typecheck gamma e1 (Map (<> , t)) ct blockchain;
+      | Val(VMapping (_, _t_exp)) ->
+        (* typecheck gamma e1 (Map (<> , t)) ct blockchain;
         typecheck gamma e2 t_e2 ct blockchain;
         if subtyping t_exp t ct then () 
-        else raise (TypeMismatch (t_exp, t))
+        else raise (TypeMismatch (t_exp, t)) *)
+        assert false
       | _ -> raise (TypeMismatch (t, t))
     end
   | MapWrite (e1, e2, e3) ->
@@ -229,9 +226,9 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
         typecheck gamma e3 t2 ct blockchain;
       | _ -> raise (TypeMismatch (Map(UInt, t), t))
     end
-  | StateRead (e1, s) -> (*VER*)
+  | StateRead (_e1, _s) -> (*VER*)
     begin 
-      typecheck gamma e1 CTop ct blockchain;
+      (* typecheck gamma e1 CTop ct blockchain;
       let t_e : t_exp = infer_type gamma e1 ct in  
       let cname : string = match t_e with 
         | C name -> name 
@@ -242,7 +239,8 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
       try
         let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
         if subtyping t_e t ct then () else raise (TypeMismatch (t_e, t))
-      with Not_found -> raise (UnboundVariable "s")
+      with Not_found -> raise (UnboundVariable "s") *)
+      assert false
     end
   | StateAssign (e1, s, e2) -> 
     typecheck gamma (StateRead (e1, s)) t ct blockchain;
@@ -251,7 +249,7 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
     if t <> Unit then 
       raise (TypeMismatch (Unit, t));
     typecheck gamma e2 UInt ct blockchain;
-    typecheck gamma e1 (Address CTop) ct blockchain
+    typecheck gamma e1 (Address (Some CTop)) ct blockchain
   | New (s, e, le) ->
     (* type check contract blockchain ...*)
     if t <> (CTop) then 
@@ -264,13 +262,13 @@ let typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (_blockch
   | Cons (_s, e1) -> 
     (* e1 is always an address, however it can be a Val (Address a) || MsgSender || Var x || this.sv *)
     (* we need to make sure that s == cname, thus we need to access the contract stored in the blockchain*)
-    typecheck gamma e1 (Address (CTop)) ct blockchain;
+    typecheck gamma e1 (Address (Some (CTop))) ct blockchain;
     (* get_contract_by_address blockchain a*)
     (* typecheck gamma e (C(-1)) ct blockchain *)
-    | CallTopLevel (e1, s, e2, e3, le) -> 
-       typecheck gamma e1 (C(-1, "")) ct blockchain;
+    | CallTopLevel (e1, _s, e2, e3, _le) -> 
+       typecheck gamma e1 CTop ct blockchain;
        typecheck gamma e2 UInt ct blockchain;
-       typecheck gamma e3 Address ct blockchain; 
+       typecheck gamma e3 (Address None) ct blockchain; 
   | Let (t_e, s, e1, e2) -> 
     let (gamma_vars, _, _) = gamma in 
     typecheck gamma e1 t_e ct blockchain;

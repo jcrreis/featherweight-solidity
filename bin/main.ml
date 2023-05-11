@@ -184,7 +184,7 @@ let _bank_example ct vars blockchain sigma =
 
                 let (_contracts, _accounts) = blockchain in
                 let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64 ) in 
-                typecheck gamma (MsgSender) (Address CTop) ct blockchain
+                typecheck gamma (MsgSender) (Address (Some CTop)) ct blockchain
 
 
 let wallet_example ct vars blockchain sigma = 
@@ -253,7 +253,15 @@ let () =
     test_fail_mro; Ver porque não retorna erro *)
     (* if false then 
       bank_example ct vars blockchain sigma; *)
+  if false then 
     wallet_example ct vars blockchain sigma;
+  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
+  typecheck gamma (Val(VUInt 2)) UInt ct blockchain;
+  typecheck gamma (AritOp(Plus(Val(VUInt 2),Val(VUInt 2)))) UInt ct blockchain;
+  (* typecheck gamma (MsgSender) (Address None) ct blockchain;
+  typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
+  let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
+  typecheck gamma e1 UInt ct blockchain;
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

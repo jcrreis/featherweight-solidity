@@ -7,7 +7,7 @@ type t_exp =
   | Unit
   | UInt
   (* | Address of t_exp option  *)
-  | Address of t_exp
+  | Address of t_exp option
   | Map of t_exp * t_exp
   | Fun of t_exp list * t_exp
   | TRevert

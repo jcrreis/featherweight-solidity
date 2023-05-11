@@ -52,7 +52,7 @@ let bank_contract () : contract_def =
     name = "transfer";
     rettype = Unit;
     annotation = None;
-    args = [(Address CTop, "to"); (UInt, "amount")];
+    args = [(Address (Some CTop), "to"); (UInt, "amount")];
     body = If(BoolOp(GreaterOrEquals(MapRead(StateRead(This None,"balances"),MsgSender),Var("amount"))),
               Seq(StateAssign(This None, "balances", MapWrite(
                   StateRead(This None,"balances"), MsgSender, AritOp(Minus(MapRead(StateRead(This None,"balances"),MsgSender), Var("amount"))))),
@@ -79,7 +79,7 @@ let bank_contract () : contract_def =
     name = "Bank";
     super_contracts = Class("Bank", []);
     super_constructors_args = [];
-    state = [(Map(Address CTop, UInt),"balances")];
+    state = [(Map(Address (Some CTop), UInt),"balances")];
     constructor = ([], (Val VUnit));
     functions = [deposit; getBalance; transfer; withdraw; getLiquidity];
     function_lookup_table = Hashtbl.create 64;
@@ -97,7 +97,7 @@ let simple_bank_contract() =
     name = "SimpleBank";
     super_contracts = Class("SimpleBank",[Class("Bank",[])]);
     super_constructors_args = [[]];
-    state = []; (*(Map(Address CTop, UInt),"balances")*)
+    state = []; (*(Map(Address (Some CTop), UInt),"balances")*)
     constructor = ([], (Val VUnit));
     functions = [fb];
     function_lookup_table = Hashtbl.create 64;
@@ -127,7 +127,7 @@ let simple_bank_contract() =
       name = "BankWithDepositTracker";
       super_contracts = Class("BankWithDepositTracker",[Class("Bank",[])]);
       super_constructors_args = [[]];
-      state = [(UInt, "tracker")]; (*(Map(Address CTop, UInt),"balances")*)
+      state = [(UInt, "tracker")]; (*(Map(Address (Some CTop), UInt),"balances")*)
       constructor = ([], StateAssign(This None, "tracker",Val(VUInt 0)));
       functions = [fb; executeLiquidity];
       function_lookup_table = Hashtbl.create 64;
@@ -190,7 +190,7 @@ let simple_bank_contract() =
       name = "transferTo";
       rettype = Unit;
       annotation = None;
-      args = [(Address (C "Bank"), "walletAddress"); (UInt, "amount")];
+      args = [(Address (Some (C "Bank")), "walletAddress"); (UInt, "amount")];
       body = Return (
           If(This (Some("onlyOwner", [])),
           Seq(
@@ -209,7 +209,7 @@ let simple_bank_contract() =
       name = "Wallet";
       super_contracts = Class("Wallet", []);
       super_constructors_args = [];
-      state = [(Address CTop, "owner"); (UInt, "balance")];
+      state = [(Address (Some CTop), "owner"); (UInt, "balance")];
       constructor = ([],
                      Seq((StateAssign(This None, "owner", MsgSender)), (StateAssign(This None, "balance", 
                      AritOp(Plus(StateRead(This None, "balance"), MsgValue))
@@ -224,7 +224,7 @@ let simple_bank_contract() =
       name = "setHealth";
       rettype = Unit;
       annotation = None;
-      args = [(Address CTop, "donor"); (Bool, "isHealty")];
+      args = [(Address (Some CTop), "donor"); (Bool, "isHealty")];
       body = Return (
           If(BoolOp(Equals(MsgSender, StateRead(This None, "doctor"))),
              (StateAssign(
@@ -240,7 +240,7 @@ let simple_bank_contract() =
       name = "isHealty";
       rettype = Bool;
       annotation = None;
-      args = [(Address CTop, "donor")];
+      args = [(Address (Some CTop), "donor")];
       body = Return(
           If(BoolOp(Equals(MsgSender, StateRead(This None, "doctor"))),
              MapRead(StateRead(This None, "healty"), Var("donor")),
@@ -266,7 +266,7 @@ let simple_bank_contract() =
     } in
     let getDoctor = {
       name = "getDoctor";
-      rettype = Address CTop;
+      rettype = Address (Some CTop);
       annotation = None;
       args = [];
       body = Return(StateRead(This None, "doctor"));
@@ -282,8 +282,8 @@ let simple_bank_contract() =
       name = "BloodBank";
       super_contracts = Class("BloodBank", []);
       super_constructors_args = [];
-      state = [(Map(Address CTop, Bool), "healty"); (Address CTop, "doctor"); (UInt, "blood")];
-      constructor = ([(Map(Address CTop, Bool), "healty"); (Address CTop, "doctor"); (UInt, "blood")],
+      state = [(Map(Address (Some CTop), Bool), "healty"); (Address (Some CTop), "doctor"); (UInt, "blood")];
+      constructor = ([(Map(Address (Some CTop), Bool), "healty"); (Address (Some CTop), "doctor"); (UInt, "blood")],
                      (Seq((StateAssign(This None, "healty", Var("healty")),
                            Seq((StateAssign(This None, "doctor", Var("doctor"))),
                                StateAssign(This None, "blood", Var("blood")))))));
@@ -319,8 +319,8 @@ let simple_bank_contract() =
       name = "Donor";
       super_contracts = Class("Donor", []);
       super_constructors_args = [];
-      state = [(UInt, "blood"); (Address CTop, "bank")];
-      constructor = ([(UInt, "blood"); (Address CTop,"bank")], (Seq(
+      state = [(UInt, "blood"); (Address (Some CTop), "bank")];
+      constructor = ([(UInt, "blood"); (Address (Some CTop),"bank")], (Seq(
           StateAssign(This None, "blood", Var("blood")),
           StateAssign(This None, "bank", Var("bank"))
         )));
