@@ -14,12 +14,12 @@ let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
   | CTop, C _ -> false 
   | C _, CTop -> true
   | C name1, C name2 -> 
-    let contract_def: contract_def = Hashtbl.find ct name2 in
+    let contract_def: contract_def = Hashtbl.find ct name1 in
     let contract_hierarchy: string list = match c3_linearization contract_def with 
       | Ok v -> v
       | _ -> assert false 
     in
-    if List.mem name1 contract_hierarchy then true else false
+    if List.mem name2 contract_hierarchy then true else false
   | _ -> t1 = t2
 
 
@@ -177,7 +177,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
   | Address e1 -> 
     begin match t with 
       | Address (Some CTop) -> typecheck gamma e1 CTop ct blockchain
-      | Address (Some (C i)) -> typecheck gamma e1 (C i) ct blockchain 
+      | Address (Some (C i)) -> typecheck gamma e1 (C i) ct blockchain
       | _ -> raise (TypeMismatch (Address (Some CTop), t))
     end 
   | Return e1 -> typecheck gamma e1 t ct blockchain 
@@ -265,10 +265,10 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma e1 (Address (Some (CTop))) ct blockchain;
     (* get_contract_by_address blockchain a*)
     (* typecheck gamma e (C(-1)) ct blockchain *)
-    | CallTopLevel (e1, _s, e2, e3, _le) -> 
-       typecheck gamma e1 CTop ct blockchain;
-       typecheck gamma e2 UInt ct blockchain;
-       typecheck gamma e3 (Address None) ct blockchain; 
+  | CallTopLevel (e1, _s, e2, e3, _le) -> 
+      typecheck gamma e1 CTop ct blockchain;
+      typecheck gamma e2 UInt ct blockchain;
+      typecheck gamma e3 (Address None) ct blockchain; 
   | Let (t_e, s, e1, e2) -> 
     let (gamma_vars, _, _) = gamma in 
     typecheck gamma e1 t_e ct blockchain;

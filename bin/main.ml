@@ -260,8 +260,22 @@ let () =
   typecheck gamma (AritOp(Plus(Val(VUInt 2),Val(VUInt 2)))) UInt ct blockchain;
   (* typecheck gamma (MsgSender) (Address None) ct blockchain;
   typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
-  let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
-  typecheck gamma e1 UInt ct blockchain;
+  (* let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
+  typecheck gamma e1 UInt ct blockchain; *)
+  Hashtbl.add ct "C" {name="C"; super_contracts=Class("C", [Class("D",[]); Class("F", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.add ct "B" {name="B"; super_contracts=Class("B", [Class("E",[]); Class("D", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.add ct "A" {name="A"; super_contracts=Class("C", [Class("B", [Class("E",[]); Class("D", [])]);Class("C", [Class("D",[]); Class("F", [])])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.add ct "D" {name="D"; super_contracts=Class("D",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.add ct "E" {name="E"; super_contracts=Class("E",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+  Hashtbl.add ct "F" {name="F"; super_contracts=Class("F",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+
+  let (gv, ga, gc) = gamma in 
+  Hashtbl.add gc (VContract 1) (C "A");  
+  (* let e1 : expr = Let(Address (Some (C "B")), "x", Address(Val(VContract 1)), Val(VUInt 2)) in  *)
+  let e1 : expr = Let(C "B", "x", Val(VContract 1), Val(VUInt 2)) in 
+  Hashtbl.iter (fun k v -> Format.eprintf "%s" ((values_to_string k) ^ " value " ^ (t_exp_to_string v));) gc;
+  
+  typecheck (gv, ga, gc) e1 UInt ct blockchain; 
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
