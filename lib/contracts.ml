@@ -209,13 +209,13 @@ let simple_bank_contract() =
       name = "Wallet";
       super_contracts = Class("Wallet", []);
       super_constructors_args = [];
-      state = [(Address (Some CTop), "owner"); (UInt, "balance")];
+      state = [(Address None, "owner"); (UInt, "balance")];
       constructor = ([],
                      Seq((StateAssign(This None, "owner", MsgSender)), (StateAssign(This None, "balance", 
                      AritOp(Plus(StateRead(This None, "balance"), MsgValue))
                      )))
                     );
-      functions = [deposit; withdraw; getBalance; transferTo; onlyOwner];
+      functions = [onlyOwner; deposit; withdraw; getBalance; transferTo];
       function_lookup_table = Hashtbl.create 64;
     }
 

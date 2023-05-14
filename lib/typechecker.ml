@@ -1,7 +1,7 @@
 open Types 
-(* open Utils *)
+open Utils
 open C3 
-(* open Pprinters  *)
+open Pprinters 
 
 
 let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
@@ -64,6 +64,8 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
   | Var x, t -> 
     begin 
       try 
+        Format.eprintf "\n%s" x;
+        Format.eprintf "%s" (t_exp_to_string t);
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars x in
         if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
@@ -83,7 +85,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       | Map (t1, t2) -> 
         (* C name ; Address name*)
         Hashtbl.iter (fun k v -> 
-          
           typecheck gamma k t1 ct blockchain; 
                        typecheck gamma v t2 ct blockchain) m;
         if subtyping t_exp t2 ct then () else raise (TypeMismatch (t_exp, t2))
@@ -141,8 +142,16 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       | Equals (e1, e2) ->
         if t <> Bool then 
           raise (TypeMismatch (Bool, t));
-        typecheck gamma e1 UInt ct blockchain;
-        typecheck gamma e2 UInt ct blockchain
+        begin 
+          try 
+            typecheck gamma e1 UInt ct blockchain;
+            typecheck gamma e2 UInt ct blockchain
+          with TypeMismatch _ -> 
+            begin 
+              typecheck gamma e1 (Address None) ct blockchain;
+              typecheck gamma e2 (Address None) ct blockchain
+            end 
+        end
       | Greater (e1, e2) ->
         if t <> Bool then 
           raise (TypeMismatch (Bool, t));
@@ -205,8 +214,21 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         else raise (TypeMismatch (t_x, t))
       with Not_found -> raise (UnboundVariable "this")
     end 
-  | This Some (_s, _le) -> assert false
+  | This Some (s, le) ->
   (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
+    let (gamma_vars, _, _) = gamma in 
+    let t_this = Hashtbl.find gamma_vars "this" in 
+    begin match t_this with 
+      | C name -> begin 
+        let ftype = function_type name s ct in 
+        let (t_es, rettype) = ftype in 
+        Format.eprintf "%s ---> %s" (t_exp_to_string rettype) (t_exp_to_string t);
+        if (subtyping t rettype ct) then 
+          raise (TypeMismatch (rettype, t));
+        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct blockchain;) t_es le;
+      end
+      | _ -> raise (TypeMismatch (t_this, CTop))
+    end
   | MapRead (e1, _e2) ->  
     (* inferir primeiro tipo de e2, e depois *)
     begin match e1 with 
@@ -226,25 +248,22 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         typecheck gamma e3 t2 ct blockchain;
       | _ -> raise (TypeMismatch (Map(UInt, t), t))
     end
-  | StateRead (_e1, _s) -> (*VER*)
+  | StateRead (e1, s) -> (*VER*)
     begin 
-      (* typecheck gamma e1 CTop ct blockchain;
-      let t_e : t_exp = infer_type gamma e1 ct in  
-      let cname : string = match t_e with 
-        | C name -> name 
-        | Address (C name) -> name 
-        | _ -> assert false 
-      in
-      let sv : (t_exp * string) list = state_vars_contract cname ct in 
-      try
-        let (t_e, _s) = List.find (fun (_, e_s) -> e_s = s) sv in 
-        if subtyping t_e t ct then () else raise (TypeMismatch (t_e, t))
-      with Not_found -> raise (UnboundVariable "s") *)
-      assert false
+      typecheck gamma e1 CTop ct blockchain;
+      typecheck gamma (Var s) t ct blockchain; 
     end
-  | StateAssign (e1, s, e2) -> 
-    typecheck gamma (StateRead (e1, s)) t ct blockchain;
-    typecheck gamma e2 t ct blockchain;
+  | StateAssign (e1, s, e2) ->
+    if t <> Unit then 
+      raise (TypeMismatch (Unit, t));
+    typecheck gamma e1 CTop ct blockchain;
+    begin 
+      try 
+        let (gamma_vars, _, _) = gamma in 
+        let t_x = Hashtbl.find gamma_vars s in
+        typecheck gamma e2 t_x ct blockchain
+      with Not_found -> raise (UnboundVariable s)
+    end
   | Transfer (e1, e2) ->
     if t <> Unit then 
       raise (TypeMismatch (Unit, t));

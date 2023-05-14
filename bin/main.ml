@@ -229,6 +229,27 @@ let wallet_example ct vars blockchain sigma =
               Format.eprintf "======================================";
               print_blockchain blockchain vars
 
+let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) (b: blockchain) : unit = 
+  let typecheck_constructor (g: gamma) (constructor: (t_exp * string) list * expr) (ct: contract_table) (b: blockchain) : unit = 
+    let (gv, ga, gc) = g in
+    let (args, body) = constructor in 
+    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (args);
+    typecheck (gv, ga, gc) body Unit ct b; 
+  in 
+  let typecheck_function (g: gamma) (f: fun_def) (ct: contract_table) (b: blockchain): unit =
+    let (gv, ga, gc) = g in 
+    let rettype: t_exp = f.rettype in 
+    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
+    typecheck (gv, ga, gc) (f.body) rettype ct b;
+  in 
+  let (gv, ga, gc) = g in 
+  Hashtbl.add gv "this" (C c.name);
+  Hashtbl.add gv "msg.sender" (Address None);
+  Hashtbl.add gv "msg.value" (UInt);
+  List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (c.state);
+  typecheck_constructor (gv, ga, gc) c.constructor ct b;     
+  List.iter (fun (f_def: fun_def) -> Format.eprintf "%s" f_def.name; typecheck_function (gv, ga, gc) f_def ct b) (c.functions);
+  Format.eprintf "\nContrato Validado com Sucesso!!\n"
 
 let () =
   let cin = open_in fname in
@@ -270,12 +291,15 @@ let () =
   Hashtbl.add ct "F" {name="F"; super_contracts=Class("F",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
 
   let (gv, ga, gc) = gamma in 
-  Hashtbl.add gc (VContract 1) (C "A");  
+  Hashtbl.add gc (VContract 1) (C "B");  
   (* let e1 : expr = Let(Address (Some (C "B")), "x", Address(Val(VContract 1)), Val(VUInt 2)) in  *)
   let e1 : expr = Let(C "B", "x", Val(VContract 1), Val(VUInt 2)) in 
   Hashtbl.iter (fun k v -> Format.eprintf "%s" ((values_to_string k) ^ " value " ^ (t_exp_to_string v));) gc;
   
   typecheck (gv, ga, gc) e1 UInt ct blockchain; 
+  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
+  Hashtbl.add ct "Wallet" (wallet_contract());
+  typecheck_contract gamma (wallet_contract()) ct blockchain
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
