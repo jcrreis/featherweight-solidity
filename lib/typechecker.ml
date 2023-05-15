@@ -232,20 +232,23 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     end
   | MapRead (e1, e2) ->  
     (* inferir primeiro tipo de e2, e depois *)
+    let typecheck_mapread e2 gamma t_x t ct blockchain = 
+      match t_x with 
+      | Map (t1, t2) -> 
+        typecheck gamma e2 t1 ct blockchain;
+        if subtyping t t2 ct then 
+          ()
+        else 
+          raise (TypeMismatch (t, t2))
+      | _ -> raise (Failure "unexpected operation")
+    in
     begin match e1 with 
       | Var s ->
         begin 
           try 
             let (gamma_vars, _, _) = gamma in 
             let t_x = Hashtbl.find gamma_vars s in
-            match t_x with 
-              | Map (t1, t2) -> 
-                typecheck gamma e1 t1 ct blockchain;
-                if subtyping t t2 ct then 
-                  ()
-                else 
-                  raise (TypeMismatch (t, t2))
-              | _ -> raise (Failure "unexpected operation")
+            typecheck_mapread e2 gamma t_x t ct blockchain
           with Not_found -> raise (UnboundVariable s)
         end
       | StateRead(e1, s) -> 
@@ -254,7 +257,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
           try 
             let (gamma_vars, _, _) = gamma in 
             let t_x = Hashtbl.find gamma_vars s in
-            typecheck gamma e2 t_x ct blockchain
+            typecheck_mapread e2 gamma t_x t ct blockchain
           with Not_found -> raise (UnboundVariable s)
         end
       | _ ->  raise (Failure "unexpected operation")
