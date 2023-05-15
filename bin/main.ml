@@ -299,7 +299,9 @@ let () =
   typecheck (gv, ga, gc) e1 UInt ct blockchain; 
   let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
   Hashtbl.add ct "Wallet" (wallet_contract());
-  typecheck_contract gamma (wallet_contract()) ct blockchain
+  Hashtbl.add ct "Bank" (bank_contract());
+  typecheck_contract gamma (wallet_contract()) ct blockchain;
+  typecheck_contract gamma (bank_contract()) ct blockchain
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;

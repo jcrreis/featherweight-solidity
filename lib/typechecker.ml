@@ -223,22 +223,41 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         let ftype = function_type name s ct in 
         let (t_es, rettype) = ftype in 
         Format.eprintf "%s ---> %s" (t_exp_to_string rettype) (t_exp_to_string t);
-        if (subtyping t rettype ct) then 
-          raise (TypeMismatch (rettype, t));
-        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct blockchain;) t_es le;
+        if subtyping t rettype ct then 
+          List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct blockchain;) t_es le
+        else 
+          raise (TypeMismatch (rettype, t))
       end
       | _ -> raise (TypeMismatch (t_this, CTop))
     end
-  | MapRead (e1, _e2) ->  
+  | MapRead (e1, e2) ->  
     (* inferir primeiro tipo de e2, e depois *)
     begin match e1 with 
-      | Val(VMapping (_, _t_exp)) ->
-        (* typecheck gamma e1 (Map (<> , t)) ct blockchain;
-        typecheck gamma e2 t_e2 ct blockchain;
-        if subtyping t_exp t ct then () 
-        else raise (TypeMismatch (t_exp, t)) *)
-        assert false
-      | _ -> raise (TypeMismatch (t, t))
+      | Var s ->
+        begin 
+          try 
+            let (gamma_vars, _, _) = gamma in 
+            let t_x = Hashtbl.find gamma_vars s in
+            match t_x with 
+              | Map (t1, t2) -> 
+                typecheck gamma e1 t1 ct blockchain;
+                if subtyping t t2 ct then 
+                  ()
+                else 
+                  raise (TypeMismatch (t, t2))
+              | _ -> raise (Failure "unexpected operation")
+          with Not_found -> raise (UnboundVariable s)
+        end
+      | StateRead(e1, s) -> 
+        typecheck gamma e1 CTop ct blockchain;
+        begin 
+          try 
+            let (gamma_vars, _, _) = gamma in 
+            let t_x = Hashtbl.find gamma_vars s in
+            typecheck gamma e2 t_x ct blockchain
+          with Not_found -> raise (UnboundVariable s)
+        end
+      | _ ->  raise (Failure "unexpected operation")
     end
   | MapWrite (e1, e2, e3) ->
     begin match t with 
