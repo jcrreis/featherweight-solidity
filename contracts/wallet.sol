@@ -7,7 +7,7 @@ contract Wallet {
         this.owner = msgsender;
     }
 
-    function onlyOwner() {
+    function onlyOwner() returns (bool){
         return msgsender == this.owner;
     }
 
@@ -22,7 +22,7 @@ contract Wallet {
         }
     }
 
-    function getBalance() {
+    function getBalance() returns (uint){
         return this.balance;
     }
 
