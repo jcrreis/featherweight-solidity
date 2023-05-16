@@ -7,6 +7,10 @@ contract Wallet {
         this.owner = msgsender;
     }
 
+    function fb() {
+
+    }
+
     function onlyOwner() returns (bool){
         return msgsender == this.owner;
     }
@@ -29,7 +33,7 @@ contract Wallet {
     function transferTo(address walletTo, uint amount) {
         if(this.onlyOwner()){
             Wallet(walletTo).deposit{value: amount}();
-           this.balance = this.balance - amount;
+            this.balance = this.balance - amount;
         }
     }
 

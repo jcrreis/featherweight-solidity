@@ -171,7 +171,7 @@ deploy_new_contract:
   ;
 
 fun_msg_value:
-  | LBRACE VALUE COLON i = INT RBRACE { Types.Val(VUInt i) }
+  | LBRACE VALUE COLON e = expr RBRACE { e }
 
 function_calls: 
   | e1 = expr ; DOT fname = ID e2 = option(fun_msg_value) LPAREN; le = separated_list(COMMA,expr); RPAREN { 
@@ -196,10 +196,6 @@ solidity_special_functions:
 
 this_statements:
   | THIS { Types.This None }
-  // | THIS DOT fname = ID LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.This (Some(fname, le)) } 
-
-
-  // | THIS DOT s = ID { Format.eprintf "PASSEI NO this.%s @." s; Types.This (Some s) }
   ;
 
 variables:
