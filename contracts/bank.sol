@@ -7,16 +7,19 @@ contract Bank {
 
     }
 
+    function fb() {
 
-    function deposit() {
-        this.balances[msgsender];
     }
 
-    function getBalance() {
+    function deposit() {
+        this.balances[msgsender] = this.balances[msgsender] + msgvalue;
+    }
+
+    function getBalance() returns (bool) {
         return this.balances[msgsender];
     }
 
-    function transferTo(address to, uint amount) {
+    function transferTo(address to, bool amount) {
         if(this.balances[msgsender] >= amount) {
             this.balances[msgsender] = this.balances[msgsender] - amount;
             this.balances[to] = this.balances[msgsender] + amount;

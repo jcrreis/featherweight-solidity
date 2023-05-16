@@ -23,7 +23,15 @@
 %token DIV
 %token MOD
 %token EXP
-
+// Format.eprintf "%s" (Pprinters.contract_to_string ({
+                          //         name = contract_name;
+                          //         super_contracts = Class(contract_name, []);
+                          //         super_constructors_args = [];
+                          //         state = state_variables;
+                          //         constructor = (le1, e1);
+                          //         functions = le2;
+                          //         function_lookup_table = Hashtbl.create 64;
+                          // }));
 
 // BOOLEAN OPERATORS
 %token EQ
@@ -58,7 +66,7 @@
 %token LBRACKET
 %token RBRACKET
 %token DOT
-// %token COLON
+%token COLON
 %token COMMA
 %token EOF
 %token SEMICOLON
@@ -162,9 +170,22 @@ deploy_new_contract:
   | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
   ;
 
+fun_msg_value:
+  | LBRACE VALUE COLON i = INT RBRACE { Types.Val(VUInt i) }
+
 function_calls: 
-  | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.Call (e1, fname, e2, le) }
+  | e1 = expr ; DOT fname = ID e2 = option(fun_msg_value) LPAREN; le = separated_list(COMMA,expr); RPAREN { 
+    begin
+      let e2 = match e2 with 
+        | None -> Types.Val (VUInt 0)
+        | Some e2 -> e2 
+      in
+      Types.Call (e1, fname, e2, le) 
+    end
+  }
   | e1 = expr ; DOT fname = ID DOT VALUE LPAREN; e2 = expr; RPAREN DOT SENDER LPAREN; e3 = expr; RPAREN LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.CallTopLevel (e1, fname, e2, e3, le) }
+  
+  | expr ; DOT ; fname = ID  LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.This (Some(fname, le)) }
   ;
 
 solidity_special_functions:
@@ -174,8 +195,9 @@ solidity_special_functions:
   ;
 
 this_statements:
-  | THIS fname = ID LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.This (Some(fname, le)) } 
   | THIS { Types.This None }
+  // | THIS DOT fname = ID LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.This (Some(fname, le)) } 
+
 
   // | THIS DOT s = ID { Format.eprintf "PASSEI NO this.%s @." s; Types.This (Some s) }
   ;
@@ -223,18 +245,25 @@ state_var_def:
   ;
 
 fun_type_return_declaration: 
-  | RETURNS t = typ { t }
+  | RETURNS LPAREN t = typ RPAREN { t }
   ;
 
 fun_def:
   | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
-    RPAREN LBRACE; e = fun_body; RBRACE {
-      Types.{ name = fname;
-          annotation = None;
-          rettype = Unit;
-          args = le;
-          body = e;
-  } }
+    RPAREN t = option(fun_type_return_declaration) LBRACE; e = fun_body; RBRACE {
+      begin 
+        let return_type = match t with 
+          | None -> Types.Unit 
+          | Some t -> t
+        in 
+        Types.{ name = fname;
+                annotation = None;
+                rettype = return_type;
+                args = le;
+                body = e;
+        }
+      end 
+  }
   ;
 
 fun_body: 

@@ -17,7 +17,7 @@ contract Wallet {
 
     function withdraw(uint amount) {
         if(this.onlyOwner()){
-            msgsender.transfer(_amount);
+            msgsender.transfer(amount);
             this.balance = this.balance - amount;
         }
     }
@@ -28,7 +28,7 @@ contract Wallet {
 
     function transferTo(address walletTo, uint amount) {
         if(this.onlyOwner()){
-            Wallet(_walletTo).deposit{value: amount}();
+            Wallet(walletTo).deposit{value: amount}();
            this.balance = this.balance - amount;
         }
     }

@@ -63,7 +63,6 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
     begin 
       try 
         Format.eprintf "\n%s" x;
-        Format.eprintf "%s" (t_exp_to_string t);
         let (gamma_vars, _, _) = gamma in 
         let t_x = Hashtbl.find gamma_vars x in
         if subtyping t_x t ct then () else raise (TypeMismatch (t_x, t))
@@ -213,7 +212,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       with Not_found -> raise (UnboundVariable "this")
     end 
   | This Some (s, le) ->
-  (* how do we know what type we are expect blockchaining for our map? what are the values for t1 and t2? *)
     let (gamma_vars, _, _) = gamma in 
     let t_this = Hashtbl.find gamma_vars "this" in 
     begin match t_this with 
@@ -229,7 +227,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       | _ -> raise (TypeMismatch (t_this, CTop))
     end
   | MapRead (e1, e2) ->  
-    (* inferir primeiro tipo de e2, e depois *)
     let typecheck_mapread e2 gamma t_x t ct blockchain = 
       match t_x with 
       | Map (t1, t2) -> 
@@ -244,6 +241,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       | Var s ->
         begin 
           try 
+          (* fazer função !*)
             let (gamma_vars, _, _) = gamma in 
             let t_x = Hashtbl.find gamma_vars s in
             typecheck_mapread e2 gamma t_x t ct blockchain
@@ -314,3 +312,27 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     Hashtbl.add gamma_vars s t_e;
     typecheck gamma e2 t ct blockchain;
   | _ -> assert false
+
+
+let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) (b: blockchain) : unit = 
+  let typecheck_constructor (g: gamma) (constructor: (t_exp * string) list * expr) (ct: contract_table) (b: blockchain) : unit = 
+    let (gv, ga, gc) = g in
+    let (args, body) = constructor in 
+    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (args);
+    typecheck (gv, ga, gc) body Unit ct b; 
+  in 
+  let typecheck_function (g: gamma) (f: fun_def) (ct: contract_table) (b: blockchain): unit =
+    let (gv, ga, gc) = g in 
+    let rettype: t_exp = f.rettype in 
+    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
+    (* Format.eprintf "%s" (expr_to_string f.body); *)
+    typecheck (gv, ga, gc) (f.body) rettype ct b;
+  in 
+  let (gv, ga, gc) = g in 
+  Hashtbl.add gv "this" (C c.name);
+  Hashtbl.add gv "msg.sender" (Address None);
+  Hashtbl.add gv "msg.value" (UInt);
+  List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (c.state);
+  typecheck_constructor (gv, ga, gc) c.constructor ct b;     
+  List.iter (fun (f_def: fun_def) -> typecheck_function (gv, ga, gc) f_def ct b) (c.functions);
+  Format.eprintf "\nContrato Validado com Sucesso!!\n"

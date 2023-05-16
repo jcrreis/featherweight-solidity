@@ -36,7 +36,6 @@ let _wikipedia_example_c3_linearization ct =
   Format.eprintf "[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
-
 let _test_python_mro_example ct = 
   (*https://www.python.org/download/releases/2.3/mro/*)
   Hashtbl.add ct "C" {name="C"; super_contracts=Class("C", [Class("D",[]); Class("F", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
@@ -229,27 +228,7 @@ let wallet_example ct vars blockchain sigma =
               Format.eprintf "======================================";
               print_blockchain blockchain vars
 
-let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) (b: blockchain) : unit = 
-  let typecheck_constructor (g: gamma) (constructor: (t_exp * string) list * expr) (ct: contract_table) (b: blockchain) : unit = 
-    let (gv, ga, gc) = g in
-    let (args, body) = constructor in 
-    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (args);
-    typecheck (gv, ga, gc) body Unit ct b; 
-  in 
-  let typecheck_function (g: gamma) (f: fun_def) (ct: contract_table) (b: blockchain): unit =
-    let (gv, ga, gc) = g in 
-    let rettype: t_exp = f.rettype in 
-    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
-    typecheck (gv, ga, gc) (f.body) rettype ct b;
-  in 
-  let (gv, ga, gc) = g in 
-  Hashtbl.add gv "this" (C c.name);
-  Hashtbl.add gv "msg.sender" (Address None);
-  Hashtbl.add gv "msg.value" (UInt);
-  List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (c.state);
-  typecheck_constructor (gv, ga, gc) c.constructor ct b;     
-  List.iter (fun (f_def: fun_def) -> Format.eprintf "%s" f_def.name; typecheck_function (gv, ga, gc) f_def ct b) (c.functions);
-  Format.eprintf "\nContrato Validado com Sucesso!!\n"
+
 
 let () =
   let cin = open_in fname in
@@ -259,9 +238,11 @@ let () =
     let ct: contract_table = Hashtbl.create 64 in
     let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
     let sigma: values Stack.t = Stack.create() in
-    let _conf: conf = (blockchain, blockchain, sigma, e) in
+    let conf: conf = (blockchain, blockchain, sigma, e) in
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let _p: program = (ct, blockchain, e) in
+    let _ = eval_expr ct vars conf in 
+
     (* ADD CONTRACTS TO CONTRACT TABLE *)
     (* Hashtbl.add ct "Bank" (bank_contract());
        Hashtbl.add ct "BloodBank" (blood_bank_contract());
@@ -283,25 +264,15 @@ let () =
   typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
   (* let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
   typecheck gamma e1 UInt ct blockchain; *)
-  Hashtbl.add ct "C" {name="C"; super_contracts=Class("C", [Class("D",[]); Class("F", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "B" {name="B"; super_contracts=Class("B", [Class("E",[]); Class("D", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "A" {name="A"; super_contracts=Class("C", [Class("B", [Class("E",[]); Class("D", [])]);Class("C", [Class("D",[]); Class("F", [])])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "D" {name="D"; super_contracts=Class("D",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "E" {name="E"; super_contracts=Class("E",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.add ct "F" {name="F"; super_contracts=Class("F",[]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+ 
 
-  let (gv, ga, gc) = gamma in 
-  Hashtbl.add gc (VContract 1) (C "B");  
-  (* let e1 : expr = Let(Address (Some (C "B")), "x", Address(Val(VContract 1)), Val(VUInt 2)) in  *)
-  let e1 : expr = Let(C "B", "x", Val(VContract 1), Val(VUInt 2)) in 
-  Hashtbl.iter (fun k v -> Format.eprintf "%s" ((values_to_string k) ^ " value " ^ (t_exp_to_string v));) gc;
-  
-  typecheck (gv, ga, gc) e1 UInt ct blockchain; 
   let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
-  Hashtbl.add ct "Wallet" (wallet_contract());
-  Hashtbl.add ct "Bank" (bank_contract());
-  typecheck_contract gamma (wallet_contract()) ct blockchain;
-  typecheck_contract gamma (bank_contract()) ct blockchain
+  (* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
+  Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
+  Hashtbl.add ct "Bank" (bank_contract()); *)
+  typecheck_contract gamma (Hashtbl.find ct "Example") ct blockchain;
+  (* Hashtbl.add ct "Bank" (bank_contract()); *)
+  (* typecheck_contract gamma (bank_contract()) ct blockchain; *)
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
