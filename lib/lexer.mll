@@ -22,9 +22,9 @@ let () =
       ("true", TRUE);
       ("false", FALSE);
       ("mapping", MAPPING);
-      (* ("msgsender", MSGSENDER); *)
+      ("msgsender", MSGSENDER);
       ("address", ADDRESS);
-      (* ("msgvalue", MSGVALUE); *)
+      ("msgvalue", MSGVALUE);
       ("transfer", TRANSFER);
       ("this", THIS);
       ("if", IF);

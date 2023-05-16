@@ -2,37 +2,35 @@ contract Wallet {
     uint balance;
     address owner;
 
-    constructor() payable {
-        balance = msg.value;
-        owner = msg.sender;
+    constructor() {
+        this.balance = msgvalue;
+        this.owner = msgsender;
     }
 
-    function onlyOwner() public view returns (bool) {
-        return msg.sender == owner;
+    function onlyOwner() {
+        return msgsender == this.owner;
     }
 
-    function deposit() public payable{
-        balance += msg.value;
+    function deposit() {
+        this.balance = this.balance + msgvalue;
     }
 
-    function withdraw(uint _amount) public payable {
+    function withdraw(uint amount) {
         if(this.onlyOwner()){
-            payable(msg.sender).transfer(_amount);
-            balance -= _amount;
+            msgsender.transfer(_amount);
+            this.balance = this.balance - amount;
         }
     }
 
-    function getBalance() public view returns (uint){
-        return balance;
+    function getBalance() {
+        return this.balance;
     }
 
-    function transferTo(address _walletTo, uint _amount) public {
+    function transferTo(address walletTo, uint amount) {
         if(this.onlyOwner()){
-            Wallet(_walletTo).deposit{value: _amount}();
-            balance -=  _amount;
+            Wallet(_walletTo).deposit{value: amount}();
+           this.balance = this.balance - amount;
         }
     }
 
 }
-
-

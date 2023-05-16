@@ -37,8 +37,8 @@
 %token NOT
 
 // OPERATORS
-// %token MSGSENDER
-// %token MSGVALUE
+%token MSGSENDER
+%token MSGVALUE
 %token MSG
 %token BALANCE
 %token ADDRESS
@@ -111,7 +111,7 @@ statement:
 
 
 arit_expr: 
-  | e1 = expr; PLUS; e2 = expr { AritOp(Plus(e1, e2)) }
+  | e1 = expr; PLUS; e2 = expr { Format.eprintf "AQUIII"; AritOp(Plus(e1, e2)) }
   | e1 = expr; DIV; e2 = expr { AritOp(Div(e1, e2)) }
   | e1 = expr; TIMES; e2 = expr { AritOp(Times(e1, e2)) }
   | e1 = expr; MINUS; e2 = expr { AritOp(Minus(e1, e2)) }
@@ -135,8 +135,8 @@ values:
   | TRUE {  Val(VBool True) }
   | FALSE { Val(VBool False) }
   | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
-  // | MSGSENDER { Types.MsgSender }
-  // | MSGVALUE { Types.MsgValue }   
+  | MSGSENDER { Types.MsgSender }
+  | MSGVALUE { Types.MsgValue }   
   // | MSG DOT "value" { Types.MsgSender }                       
   ;
 
@@ -171,7 +171,9 @@ solidity_special_functions:
   ;
 
 this_statements:
+  | THIS fname = ID LPAREN; le = separated_list(COMMA,expr); RPAREN { Types.This (Some(fname, le)) } 
   | THIS { Types.This None }
+
   // | THIS DOT s = ID { Format.eprintf "PASSEI NO this.%s @." s; Types.This (Some s) }
   ;
 
@@ -195,16 +197,16 @@ expr:
   | v = values { v }
   | a = arit_expr { a }   
   | b = bool_expr { b }
-  // | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
-  // | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
+  | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
+  | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
   | t = this_statements { t }
   | m = map_read_write { m }
-  // | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
-  // | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
-  // | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
+  | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
+  | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
+  | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
   // // // x = 1 
   // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
-  // | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
+  | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
   
   ;
 
