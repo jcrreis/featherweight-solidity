@@ -63,6 +63,9 @@
 %token EOF
 %token SEMICOLON
 
+//SYNTAX
+%token RETURNS
+
 %nonassoc SEMICOLON  
 %right ASSIGN
 %left PLUS MINUS MOD  
