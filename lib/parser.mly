@@ -222,6 +222,10 @@ state_var_def:
   | e = declare_variable SEMICOLON { e }
   ;
 
+fun_type_return_declaration: 
+  | RETURNS t = typ { t }
+  ;
+
 fun_def:
   | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
     RPAREN LBRACE; e = fun_body; RBRACE {
@@ -231,7 +235,7 @@ fun_def:
           args = le;
           body = e;
   } }
-
+  ;
 
 fun_body: 
   | e1 = option(statement) ; e2 = option(return_expr) { 
@@ -241,6 +245,7 @@ fun_body:
       | Some e1, None -> Seq(e1, Val(VUnit))  
       | Some e1, Some e2 -> Seq(e1, e2)   
   }
+  ;
 
 typ:
   | UINT { Types.UInt }
@@ -248,3 +253,4 @@ typ:
   | BOOL { Types.Bool }
   | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
     { Types.Map (key, value) }
+  ;
