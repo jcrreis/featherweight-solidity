@@ -187,13 +187,16 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       | _ -> raise (TypeMismatch (Address (Some CTop), t))
     end 
   | Return e1 -> typecheck gamma e1 t ct blockchain 
-  | Seq (_, e2) ->
+  | Seq (e1, e2) ->
+    (*VER*)
+    typecheck gamma e1 Unit ct blockchain;
     typecheck gamma e2 t ct blockchain
   | MsgSender -> 
     axioms gamma e t ct  
   | MsgValue ->
     axioms gamma e t ct  
   | If (e1, e2, e3) -> 
+    Format.eprintf "CHECKING IF";
     typecheck gamma e1 Bool ct blockchain;
     typecheck gamma e2 t ct blockchain;
     typecheck gamma e3 t ct blockchain;
@@ -201,8 +204,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
     typecheck gamma (Var s) t ct blockchain;
     typecheck gamma e1 t ct blockchain
   | This None -> 
-    (*VER*)
-    (* Verify if This references a contract *)
     begin 
       try 
         let (gamma_vars, _, _) = gamma in 
@@ -325,7 +326,8 @@ let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) (b: blo
     let (gv, ga, gc) = g in 
     let rettype: t_exp = f.rettype in 
     List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
-    (* Format.eprintf "%s" (expr_to_string f.body); *)
+    Format.eprintf "%s" (expr_to_string f.body);
+
     typecheck (gv, ga, gc) (f.body) rettype ct b;
   in 
   let (gv, ga, gc) = g in 

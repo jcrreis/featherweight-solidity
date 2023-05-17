@@ -9,12 +9,12 @@ contract Example {
     function fb () {
 
     }
-    function teste (uint amount) returns (uint){
-       if(balances[msgsender] && amount) {
-           return amount;
+    function teste (uint amount) {
+       if(balances[msgsender] == amount) {
+            
        }
        else {
-           return 0;
+
        }
       
     }

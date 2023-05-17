@@ -3,7 +3,7 @@ open Fs
 open Types
 open Pprinters
 open Contracts
-open Typechecker 
+(* open Typechecker  *)
 open Utils
 open C3 
 
@@ -88,7 +88,7 @@ let get_balance ct vars b b' s sender contract =
   eval_expr ct vars conf 
 
 let get_liquidity ct vars b b' s sender contract = 
-  let conf = (b, b', s, CallTopLevel(contract, "executeLiquidity", Val (VUInt 0), Val (sender), [])) in 
+  let conf = (b, b', s, CallTopLevel(contract, "getLiquidity", Val (VUInt 0), Val (sender), [])) in 
   eval_expr ct vars conf
 
 let transferTo ct vars b b' s n wallet_address sender contract = 
@@ -98,60 +98,24 @@ let transferTo ct vars b b' s n wallet_address sender contract =
   eval_expr ct vars conf
 
 
-let add_contract_to_contract_table contract ct = 
-  let linearization: string list = match c3_linearization contract with 
-    | Ok v -> v 
-    | _ -> assert false  
-  in 
-  List.iter (fun s -> Format.eprintf "%s" s) linearization;
-  let contracts_hierarchy = (List.map (fun cname -> 
-      if cname = contract.name then contract else 
-        Hashtbl.find ct cname) linearization) in
-  let method_table = Hashtbl.create 64 in 
-  let method_table = List.fold_left (fun tbl (c_def: contract_def) -> 
-      let functions = c_def.functions in 
-      let tbl = List.fold_left (fun tbl (f: fun_def) -> 
-          if Hashtbl.mem tbl f.name then tbl else (Hashtbl.add tbl f.name f;tbl)
-        ) tbl functions
-      in 
-      tbl 
-    ) method_table contracts_hierarchy
-  in 
-  let contract: contract_def = {
-    name = contract.name;
-    super_contracts = contract.super_contracts;
-    super_constructors_args = contract.super_constructors_args;  
-    state = contract.state; 
-    constructor = contract.constructor;
-    functions = contract.functions;
-    function_lookup_table = method_table;
-  }
-  in 
-  Hashtbl.add ct contract.name contract ; ct 
-
-
-let _bank_example ct vars blockchain sigma =
-  let ct = add_contract_to_contract_table (bank_contract()) ct in 
-  let ct = add_contract_to_contract_table (simple_bank_contract()) ct in 
-  let ct = add_contract_to_contract_table (bank_with_deposit_tracker_contract()) ct in 
+let bank_example ct vars blockchain sigma =
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in  
   let (_contracts, accounts) = blockchain in  
   Hashtbl.add accounts a1 (VUInt 100000); 
   Hashtbl.add accounts a2 (VUInt 100000);  
   print_blockchain blockchain vars;
-  let e = New("BankWithDepositTracker", Val(VUInt 0), []) in 
+  let e = New("Bank", Val(VUInt 0), []) in 
   let conf = (blockchain, blockchain, sigma, e) in 
   let (blockchain, blockchain', sigma, contract) = eval_expr ct vars conf in
   match contract with 
   | Revert -> Format.eprintf "Revert@.";
-  | _ -> Format.eprintf "Result: %s@." (expr_to_string contract);
+  | _ ->
     Format.eprintf "Blockchain: @.";
     print_blockchain blockchain vars;
-    Format.eprintf "\n%s\n" (contract_to_string ((Hashtbl.find ct "Bank")));
-    let (blockchain, blockchain', sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
+    let (_blockchain, _blockchain', _sigma, res) = deposit ct vars blockchain blockchain' sigma 564 a1 contract in
     match res with 
-    | Revert -> Format.eprintf "Revert1123@.";
+    | Revert -> Format.eprintf "Revert@.";
     | _ -> Format.eprintf "Result: %s@." (expr_to_string res);
       print_blockchain blockchain vars;
       let (blockchain, _blockchain', _sigma, res) = withdraw ct vars blockchain blockchain' sigma 200 a1 contract in 
@@ -176,14 +140,9 @@ let _bank_example ct vars blockchain sigma =
               match res with 
               | Revert -> Format.eprintf "Revert@.";
               | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
-                print_blockchain blockchain vars;
+                print_blockchain blockchain vars
+  
 
-                Format.eprintf "%s" (contract_to_string (blood_bank_contract()));
-                Format.eprintf "%s" (contract_to_string (donor_contract()));
-
-                let (_contracts, _accounts) = blockchain in
-                let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64 ) in 
-                typecheck gamma (MsgSender) (Address (Some CTop)) ct blockchain
 
 
 let wallet_example ct vars blockchain sigma = 
@@ -257,23 +216,23 @@ let () =
       bank_example ct vars blockchain sigma; *)
   if false then 
     wallet_example ct vars blockchain sigma;
-  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
-  typecheck gamma (Val(VUInt 2)) UInt ct blockchain;
-  typecheck gamma (AritOp(Plus(Val(VUInt 2),Val(VUInt 2)))) UInt ct blockchain;
+  let ct = add_contract_to_contract_table (bank_contract()) ct in 
+  bank_example ct vars blockchain sigma;
+  print_blockchain blockchain vars;
+
   (* typecheck gamma (MsgSender) (Address None) ct blockchain;
   typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
   (* let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
   typecheck gamma e1 UInt ct blockchain; *)
  
-
-  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
+  (* let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in *)
   (* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
   Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
   Hashtbl.add ct "Bank" (bank_contract()); *)
   (* Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
   Format.eprintf "=========================================";
   Format.eprintf "%s"(Pprinters.contract_to_string (bank_contract()));  *)
-  typecheck_contract gamma (Hashtbl.find ct "Example") ct blockchain;
+  (* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain; *)
   (* Hashtbl.add ct "Bank" (bank_contract()); *)
   (* typecheck_contract gamma (bank_contract()) ct blockchain; *)
   with Parser.Error ->

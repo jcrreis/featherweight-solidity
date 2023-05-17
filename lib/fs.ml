@@ -7,6 +7,37 @@ open Utils
 open C3 
 open Pprinters
 
+let add_contract_to_contract_table contract ct = 
+  let linearization: string list = match c3_linearization contract with 
+    | Ok v -> v 
+    | _ -> assert false  
+  in 
+  List.iter (fun s -> Format.eprintf "%s" s) linearization;
+  let contracts_hierarchy = (List.map (fun cname -> 
+      if cname = contract.name then contract else 
+        Hashtbl.find ct cname) linearization) in
+  let method_table = Hashtbl.create 64 in 
+  let method_table = List.fold_left (fun tbl (c_def: contract_def) -> 
+      let functions = c_def.functions in 
+      let tbl = List.fold_left (fun tbl (f: fun_def) -> 
+          if Hashtbl.mem tbl f.name then tbl else (Hashtbl.add tbl f.name f;tbl)
+        ) tbl functions
+      in 
+      tbl 
+    ) method_table contracts_hierarchy
+  in 
+  let contract: contract_def = {
+    name = contract.name;
+    super_contracts = contract.super_contracts;
+    super_constructors_args = contract.super_constructors_args;  
+    state = contract.state; 
+    constructor = contract.constructor;
+    functions = contract.functions;
+    function_lookup_table = method_table;
+  }
+  in 
+  Hashtbl.add ct contract.name contract ; ct 
+
 let eval_arit_expr (e: arit_ops) : expr = match e with
   | Plus (e1, e2) -> begin match e1, e2 with
       | Val (VUInt n1), Val (VUInt n2) -> Val (VUInt(n1 + n2))
@@ -753,6 +784,7 @@ let rec eval_expr
       | _ -> assert false
     end 
   | CallTopLevel (e1, s, e2, e3, le) ->
+    Format.eprintf "AQU";
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
         let (contracts, _accounts) = blockchain in 
@@ -861,7 +893,7 @@ let rec eval_expr
       if List.mem "fb" fun_names || List.mem "receive" fun_names
       then 
         begin
-          Hashtbl.add ct cdef.name cdef; (blockchain, blockchain', sigma, Val(VUnit))
+          let ct = add_contract_to_contract_table cdef ct in eval_expr ct vars (blockchain, blockchain', sigma, Val(VUnit))
         end
       else 
         (blockchain, blockchain', sigma, Revert)
