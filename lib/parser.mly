@@ -262,7 +262,21 @@ fun_def:
   }
   ;
 
-fun_body: 
+if_with_return:
+   | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); e3 = return_expr RBRACE ;ELSE; LBRACE; e4 = option(statement); e5 = return_expr ;RBRACE { 
+    match e2, e4 with 
+      | None, None -> Types.If(e1, Seq(Val(VUnit), e3), Seq(Val(VUnit), e5))
+      | None, Some e4 -> Types.If(e1, Seq(Val(VUnit), e3), Seq(e4, e5)) 
+      | Some e2, None -> Types.If(e1, Seq(e2, e3), Seq(Val(VUnit), e5))  
+      | Some e2, Some e4 -> Types.If(e1, Seq(e2, e3), Seq(e4, e5))          
+    }
+  | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); e3 = return_expr RBRACE {
+    match e2 with
+      | None -> Types.If(e1, Seq(Val(VUnit), e3), Val(VUnit))
+      | Some e2 ->  Types.If(e1, Seq(e2, e3), Val(VUnit))
+  }
+
+fun_body:  
   | e1 = option(statement) ; e2 = option(return_expr) { 
     match e1, e2 with
       | None, None -> Seq(Val(VUnit), Val(VUnit))
@@ -270,6 +284,8 @@ fun_body:
       | Some e1, None -> Seq(e1, Val(VUnit))  
       | Some e1, Some e2 -> Seq(e1, e2)   
   }
+ 
+  | e = if_with_return { e }
   ;
 
 typ:

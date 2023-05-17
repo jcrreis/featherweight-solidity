@@ -270,8 +270,8 @@ let () =
   (* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
   Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
   Hashtbl.add ct "Bank" (bank_contract()); *)
-  Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Wallet"));
-  typecheck_contract gamma (Hashtbl.find ct "Wallet") ct blockchain;
+  Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
+  typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
   (* Hashtbl.add ct "Bank" (bank_contract()); *)
   (* typecheck_contract gamma (bank_contract()) ct blockchain; *)
   with Parser.Error ->

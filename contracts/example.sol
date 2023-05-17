@@ -1,13 +1,17 @@
 contract Example {
+
     constructor () {
+        
+    }
+
+    function fb () {
 
     }
 
-    function fb() {
-
-    }
-
-    function arit(bool amount, bool a) returns (uint) {
-        return 1+1*2/3**2%1
+    function teste (uint amount) returns (uint){
+        if (true) {
+            return amount * amount;
+        }
+        else {return amount;}
     }
 }

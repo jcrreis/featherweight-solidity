@@ -15,7 +15,7 @@ contract Bank {
         this.balances[msgsender] = this.balances[msgsender] + msgvalue;
     }
 
-    function getBalance() returns (bool) {
+    function getBalance() returns (uint) {
         return this.balances[msgsender];
     }
 
@@ -24,6 +24,10 @@ contract Bank {
             this.balances[msgsender] = this.balances[msgsender] - amount;
             this.balances[to] = this.balances[msgsender] + amount;
         }
+        else 
+         {
+
+         }
     }
 
     function withdraw(uint amount) {
@@ -31,5 +35,8 @@ contract Bank {
             this.balances[msgsender] = this.balances[msgsender] - amount;
             msgsender.transfer(amount);
         }   
+        else {
+
+        }
     }
 }
