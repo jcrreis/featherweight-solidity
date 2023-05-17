@@ -24,10 +24,6 @@ contract Bank {
             this.balances[msgsender] = this.balances[msgsender] - amount;
             this.balances[to] = this.balances[msgsender] + amount;
         }
-        else 
-         {
-
-         }
     }
 
     function withdraw(uint amount) {
@@ -35,8 +31,5 @@ contract Bank {
             this.balances[msgsender] = this.balances[msgsender] - amount;
             msgsender.transfer(amount);
         }   
-        else {
-
-        }
     }
 }

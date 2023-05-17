@@ -1,4 +1,6 @@
 contract Example {
+        mapping(address => uint) balances;
+
 
     constructor () {
         
@@ -7,11 +9,13 @@ contract Example {
     function fb () {
 
     }
-
     function teste (uint amount) returns (uint){
-        if (true) {
-            return amount * amount;
-        }
-        else {return amount;}
+       if(balances[msgsender] && amount) {
+           return amount;
+       }
+       else {
+           return 0;
+       }
+      
     }
 }

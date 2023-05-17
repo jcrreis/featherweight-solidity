@@ -92,32 +92,23 @@ prog :
   | e = contract ; EOF { e }
   ;
 
-contract:
-  | CONTRACT contract_name = ID LBRACE state_variables = list(state_var_def);
-      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN LBRACE; e1 = fun_body ;RBRACE
-      le2 = list(fun_def) RBRACE {
-                          Types.AddContract({
-                                  name = contract_name;
-                                  super_contracts = Class(contract_name, []);
-                                  super_constructors_args = [];
-                                  state = state_variables;
-                                  constructor = (le1, e1);
-                                  functions = le2;
-                                  function_lookup_table = Hashtbl.create 64;
-                          })
-                          }
-  | c1 = contract; c2 = contract; { Seq (c1, c2) }
+typ:
+  | UINT { Types.UInt }
+  | ADDRESS { Types.Address (Some CTop)}
+  | BOOL { Types.Bool }
+  | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
+    { Types.Map (key, value) }
   ;
 
-return_expr:
-  | RETURN e = expr SEMICOLON { Types.Return (e) }
-  ;
-
-
-statement:
-  | e = expr SEMICOLON { e }
-  | e = if_statement { e }
-  | e1 = statement; e2 = statement { Types.Seq(e1, e2) }
+values: 
+  | i = INT { Val(VUInt i) }
+  | s = ID { Var s }
+  | TRUE {  Val(VBool True) }
+  | FALSE { Val(VBool False) }
+  | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
+  | MSGSENDER { Types.MsgSender }
+  | MSGVALUE { Types.MsgValue }   
+  // | MSG DOT "value" { Types.MsgSender }                       
   ;
 
 
@@ -140,16 +131,58 @@ bool_expr:
   | e1 = expr; AND; e2 = expr { BoolOp(Conj(e1, e2)) }
   | e1 = expr; OR; e2 = expr { BoolOp(Disj(e1, e2)) }
   ;
-values: 
-  | i = INT { Val(VUInt i) }
-  | s = ID { Var s }
-  | TRUE {  Val(VBool True) }
-  | FALSE { Val(VBool False) }
-  | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
-  | MSGSENDER { Types.MsgSender }
-  | MSGVALUE { Types.MsgValue }   
-  // | MSG DOT "value" { Types.MsgSender }                       
+
+map_read_write:
+  | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
+  | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Types.MapWrite (e1, e2, e3) }
   ;
+
+this_statements:
+  | THIS { Types.This None }
+  ;
+
+declare_variable:
+  | t_e = typ s = ID { (t_e, s) }
+  ;
+
+variables:
+  | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
+    let (t_e, s) = v in 
+    Let(t_e, s, e1, e2) 
+  }
+  | e = expr; DOT s = ID { StateRead (e, s) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "AQUII STATE ASSIGN"; Types.StateAssign (e1, s, e2) }
+  ;
+
+expr:
+  | vars = variables { vars }
+  | v = values { v }
+  | a = arit_expr { a }   
+  | b = bool_expr { b }
+  | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
+  | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
+  | t = this_statements { t }
+  | m = map_read_write { m }
+  | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
+  | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
+  | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
+  // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
+  | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
+  
+  ;
+
+
+return_expr:
+  | RETURN e = expr SEMICOLON { Types.Return (e) }
+  ;
+
+
+statement:
+  | e = expr SEMICOLON { e }
+  | e = if_statement { e }
+  | e1 = statement; e2 = statement { Types.Seq(e1, e2) }
+  ;
+
 
 if_statement:
   | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); RBRACE ;ELSE; LBRACE; e3 = option(statement); RBRACE { 
@@ -166,9 +199,19 @@ if_statement:
   }
   ;
 
-deploy_new_contract:
-  | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
-  ;
+if_with_return:
+   | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); e3 = return_expr RBRACE ;ELSE; LBRACE; e4 = option(statement); e5 = return_expr ;RBRACE { 
+    match e2, e4 with 
+      | None, None -> Types.If(e1, Seq(Val(VUnit), e3), Seq(Val(VUnit), e5))
+      | None, Some e4 -> Types.If(e1, Seq(Val(VUnit), e3), Seq(e4, e5)) 
+      | Some e2, None -> Types.If(e1, Seq(e2, e3), Seq(Val(VUnit), e5))  
+      | Some e2, Some e4 -> Types.If(e1, Seq(e2, e3), Seq(e4, e5))          
+    }
+  | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); e3 = return_expr RBRACE {
+    match e2 with
+      | None -> Types.If(e1, Seq(Val(VUnit), e3), Val(VUnit))
+      | Some e2 ->  Types.If(e1, Seq(e2, e3), Val(VUnit))
+  }
 
 fun_msg_value:
   | LBRACE VALUE COLON e = expr RBRACE { e }
@@ -194,51 +237,7 @@ solidity_special_functions:
   | e = expr; DOT BALANCE { Types.Balance (e) }
   ;
 
-this_statements:
-  | THIS { Types.This None }
-  ;
 
-variables:
-  | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
-    let (t_e, s) = v in 
-    Let(t_e, s, e1, e2) 
-  }
-  | e = expr; DOT s = ID { StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (e1, s, e2) }
-  ;
-
-map_read_write:
-  | e1 = expr; LBRACKET; e2 = expr; RBRACKET { MapRead (e1, e2) }
-  | e1 = expr; LBRACKET; e2 = expr; RBRACKET ASSIGN ; e3 = expr { Types.MapWrite (e1, e2, e3) }
-  ;
-
-
-expr:
-  | vars = variables { vars }
-  | v = values { v }
-  | a = arit_expr { a }   
-  | b = bool_expr { b }
-  | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
-  | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
-  | t = this_statements { t }
-  | m = map_read_write { m }
-  | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
-  | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
-  | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
-  // // // x = 1 
-  // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
-  | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
-  
-  ;
-
-
-declare_variable:
-  | t_e = typ s = ID { (t_e, s) }
-  ;
-
-state_var_def:
-  | e = declare_variable SEMICOLON { e }
-  ;
 
 fun_type_return_declaration: 
   | RETURNS LPAREN t = typ RPAREN { t }
@@ -262,19 +261,7 @@ fun_def:
   }
   ;
 
-if_with_return:
-   | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); e3 = return_expr RBRACE ;ELSE; LBRACE; e4 = option(statement); e5 = return_expr ;RBRACE { 
-    match e2, e4 with 
-      | None, None -> Types.If(e1, Seq(Val(VUnit), e3), Seq(Val(VUnit), e5))
-      | None, Some e4 -> Types.If(e1, Seq(Val(VUnit), e3), Seq(e4, e5)) 
-      | Some e2, None -> Types.If(e1, Seq(e2, e3), Seq(Val(VUnit), e5))  
-      | Some e2, Some e4 -> Types.If(e1, Seq(e2, e3), Seq(e4, e5))          
-    }
-  | IF LPAREN; e1 = expr; RPAREN; LBRACE; e2 = option(statement); e3 = return_expr RBRACE {
-    match e2 with
-      | None -> Types.If(e1, Seq(Val(VUnit), e3), Val(VUnit))
-      | Some e2 ->  Types.If(e1, Seq(e2, e3), Val(VUnit))
-  }
+
 
 fun_body:  
   | e1 = option(statement) ; e2 = option(return_expr) { 
@@ -288,10 +275,30 @@ fun_body:
   | e = if_with_return { e }
   ;
 
-typ:
-  | UINT { Types.UInt }
-  | ADDRESS { Types.Address (Some CTop)}
-  | BOOL { Types.Bool }
-  | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
-    { Types.Map (key, value) }
+// CONTRACTS
+
+deploy_new_contract:
+  | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
+  ;
+
+
+state_var_def:
+  | e = declare_variable SEMICOLON { e }
+  ;
+
+contract:
+  | CONTRACT contract_name = ID LBRACE state_variables = list(state_var_def);
+      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN LBRACE; e1 = fun_body ;RBRACE
+      le2 = list(fun_def) RBRACE {
+                          Types.AddContract({
+                                  name = contract_name;
+                                  super_contracts = Class(contract_name, []);
+                                  super_constructors_args = [];
+                                  state = state_variables;
+                                  constructor = (le1, e1);
+                                  functions = le2;
+                                  function_lookup_table = Hashtbl.create 64;
+                          })
+                          }
+  | c1 = contract; c2 = contract; { Seq (c1, c2) }
   ;
