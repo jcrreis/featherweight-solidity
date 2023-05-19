@@ -537,7 +537,8 @@ let rec eval_expr
     end
   | MsgSender -> (blockchain, blockchain', sigma, Hashtbl.find vars "msg.sender")
   | MsgValue -> (blockchain, blockchain', sigma, Hashtbl.find vars "msg.value")
-  | Balance e1 -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
+  | Balance e1 ->
+    begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VAddress a)) ->
         let (contracts, accounts) = blockchain in 
         let c = get_contract_by_address contracts (VAddress a) in
@@ -784,7 +785,6 @@ let rec eval_expr
       | _ -> assert false
     end 
   | CallTopLevel (e1, s, e2, e3, le) ->
-    Format.eprintf "AQU";
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VContract c)) ->
         let (contracts, _accounts) = blockchain in 

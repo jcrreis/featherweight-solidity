@@ -76,7 +76,7 @@ let deposit ct vars b b' s n sender contract =
   eval_expr ct vars conf 
 
 let transfer ct vars b b' s n sender receiver contract = 
-  let conf = (b, b', s,  CallTopLevel(contract, "transfer", Val(VUInt 0), Val(sender), [Val(receiver);Val(VUInt n)])) in 
+  let conf = (b, b', s,  CallTopLevel(contract, "transferTo", Val(VUInt 0), Val(sender), [Val(receiver);Val(VUInt n)])) in 
   eval_expr ct vars conf 
 
 let withdraw ct vars b b' s n sender contract = 
@@ -138,7 +138,7 @@ let bank_example ct vars blockchain sigma =
             | _ -> Format.eprintf "Result get balance A1: %s@." (expr_to_string res);
               let (blockchain, _blockchain', _sigma, res) = get_liquidity ct vars blockchain blockchain' sigma a2 contract in
               match res with 
-              | Revert -> Format.eprintf "Revert@.";
+              | Revert -> Format.eprintf "Revert13231@.";
               | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
                 print_blockchain blockchain vars
   
@@ -216,7 +216,7 @@ let () =
       bank_example ct vars blockchain sigma; *)
   if false then 
     wallet_example ct vars blockchain sigma;
-  let ct = add_contract_to_contract_table (bank_contract()) ct in 
+  (* let ct = add_contract_to_contract_table (bank_contract()) ct in  *)
   bank_example ct vars blockchain sigma;
   print_blockchain blockchain vars;
 

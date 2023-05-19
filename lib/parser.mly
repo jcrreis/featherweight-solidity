@@ -23,15 +23,7 @@
 %token DIV
 %token MOD
 %token EXP
-// Format.eprintf "%s" (Pprinters.contract_to_string ({
-                          //         name = contract_name;
-                          //         super_contracts = Class(contract_name, []);
-                          //         super_constructors_args = [];
-                          //         state = state_variables;
-                          //         constructor = (le1, e1);
-                          //         functions = le2;
-                          //         function_lookup_table = Hashtbl.create 64;
-                          // }));
+
 
 // BOOLEAN OPERATORS
 %token EQ
@@ -151,7 +143,7 @@ variables:
     Let(t_e, s, e1, e2) 
   }
   | e = expr; DOT s = ID { StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "AQUII STATE ASSIGN"; Types.StateAssign (e1, s, e2) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (StateRead(e1, s), s, e2) }
   ;
 
 expr:
@@ -159,15 +151,15 @@ expr:
   | v = values { v }
   | a = arit_expr { a }   
   | b = bool_expr { b }
-  | f = function_calls { Format.eprintf "PASSEI NO f @.";f }
-  | ssf = solidity_special_functions { Format.eprintf "PASSEI NO ssf @.";ssf }
+  | f = function_calls { f }
+  | ssf = solidity_special_functions { ssf }
   | t = this_statements { t }
   | m = map_read_write { m }
-  | s = ID LPAREN; e = expr; RPAREN { Format.eprintf "PASSEI NO Cons @.";Cons (s, e) }
-  | s = ID ; ASSIGN ; e = expr { Format.eprintf "PASSEI NO ASSIGN @.";Assign (s, e) }
-  | REVERT { Format.eprintf "PASSEI NO revert @.";Revert }
+  | s = ID LPAREN; e = expr; RPAREN { Cons (s, e) }
+  | s = ID ; ASSIGN ; e = expr { Assign (s, e) }
+  | REVERT { Revert }
   // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
-  | e = if_statement { Format.eprintf "PASSEI NO if_statement @.";e }
+  | e = if_statement { e }
   
   ;
 
@@ -234,7 +226,7 @@ function_calls:
 solidity_special_functions:
   | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Types. Transfer (e1, e2) }
   | ADDRESS LPAREN; e = expr ;RPAREN{ Types.Address (e) }
-  | e = expr; DOT BALANCE { Types.Balance (e) }
+  | BALANCE LPAREN e = expr; RPAREN { Types.Balance (e) }
   ;
 
 
