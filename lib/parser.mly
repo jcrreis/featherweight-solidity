@@ -143,7 +143,7 @@ variables:
     Let(t_e, s, e1, e2) 
   }
   | e = expr; DOT s = ID { StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (StateRead(e1, s), s, e2) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (e1, s, e2) }
   ;
 
 expr:
