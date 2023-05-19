@@ -201,7 +201,16 @@ let () =
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
     let _p: program = (ct, blockchain, e) in
     let _ = eval_expr ct vars conf in 
-
+    let cname = match e with 
+      | AddContract cdef -> cdef.name
+      | _ -> assert false 
+    in
+    if cname = "Bank" then  
+      (bank_example ct vars blockchain sigma;
+      print_blockchain blockchain vars)
+    else
+      (wallet_example ct vars blockchain sigma;
+      print_blockchain blockchain vars)
     (* ADD CONTRACTS TO CONTRACT TABLE *)
     (* Hashtbl.add ct "Bank" (bank_contract());
        Hashtbl.add ct "BloodBank" (blood_bank_contract());
@@ -214,11 +223,11 @@ let () =
     test_fail_mro; Ver porque não retorna erro *)
     (* if false then 
       bank_example ct vars blockchain sigma; *)
-  if false then 
-    wallet_example ct vars blockchain sigma;
+  (* if false then 
+    wallet_example ct vars blockchain sigma; *)
   (* let ct = add_contract_to_contract_table (bank_contract()) ct in  *)
-  bank_example ct vars blockchain sigma;
-  print_blockchain blockchain vars;
+  (* bank_example ct vars blockchain sigma; *)
+  
 
   (* typecheck gamma (MsgSender) (Address None) ct blockchain;
   typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)

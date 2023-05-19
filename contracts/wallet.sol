@@ -1,4 +1,5 @@
 contract Wallet {
+
     uint balance;
     address owner;
 
