@@ -134,23 +134,22 @@ this_statements:
   ;
 
 declare_variable:
-  | t_e = typ s = ID { (t_e, s) }
+  | t_e = typ s = ID { Format.eprintf "AQUIII"; (t_e, s) }
   ;
 
-variables:
-  | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
+state_vars:
+  //state read/write
+   | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
     let (t_e, s) = v in 
     Let(t_e, s, e1, e2) 
   }
-  //state read/write
-
   | e = expr; DOT s = ID { StateRead (e, s) }
   | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "AQUIIII";Types.StateAssign (e1, s, e2) }
   ;
 
 
 expr:
-  | vars = variables { vars }
+  | s_vars = state_vars { s_vars }
   | v = values { v }
   | a = arit_expr { a }   
   | b = bool_expr { b }

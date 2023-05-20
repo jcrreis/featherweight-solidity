@@ -9,18 +9,11 @@ https://www.researchgate.net/publication/228386147_Testing_Formal_Semantics_with
 
 https://www.fc.up.pt/dcc/Pubs/TReports/TR13/dcc-2013-06.pdf 
 
-Pontos feitos:
+Pontos a rever:
 
-- Construtores (New) Feito e validado com sucesso
-- Contrato bank com dois subcontratos banks validados
-- Contrato Wallet testado e validado com sucesso 
- - pontos importantes feitos/melhorados:
-    - Executar fallback function quando se recebe ether > 0 em CallTopLevel e Call 
-    - Nos mapas quando o valor é alterado para o default value remover da tabela
-    - Por default todas as funções/ variáveis de estado são passíveis de ser overrided pelo contrato pai 
-    - Funcionalidades testadas: NEW, SEQ, StateAssign, StateRead, CallTopLevel, Transfer, MsgSender, MsgValue, Balance(a), Call, Const, this.f, Address(C), Revert, If
-    - Por testar: Let, Assign  
-
+- Parse da expressão Let (declaração de variáveis em métodos)
+- State Assign com map read/write (construção da AST, não inclui state assgin na root)
+- parenthesis para dar prioridade a operações
 
 TODO: PLANO DISSERTAÇÃO ATÉ JULHO
 

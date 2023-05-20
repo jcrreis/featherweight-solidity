@@ -2,7 +2,7 @@ open Featherweightsolidity
 open Fs 
 open Types
 open Pprinters
-open Contracts
+(* open Contracts *)
 open Typechecker 
 open Utils
 open C3 
@@ -146,7 +146,6 @@ let bank_example ct vars blockchain sigma =
 
 
 let wallet_example ct vars blockchain sigma = 
-  let ct = add_contract_to_contract_table (wallet_contract()) ct in 
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in  
   let (_contracts, accounts) = blockchain in  
