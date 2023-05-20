@@ -13,7 +13,6 @@ Pontos a rever:
 
 - Parse da expressão Let (declaração de variáveis em métodos)
 - State Assign com map read/write (construção da AST, não inclui state assgin na root)
-- parenthesis para dar prioridade a operações
 
 TODO: PLANO DISSERTAÇÃO ATÉ JULHO
 

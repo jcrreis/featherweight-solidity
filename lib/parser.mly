@@ -134,7 +134,7 @@ this_statements:
   ;
 
 declare_variable:
-  | t_e = typ s = ID { Format.eprintf "AQUIII"; (t_e, s) }
+  | t_e = typ s = ID {(t_e, s) }
   ;
 
 state_vars:
@@ -143,8 +143,8 @@ state_vars:
     let (t_e, s) = v in 
     Let(t_e, s, e1, e2) 
   }
-  | e = expr; DOT s = ID { StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "AQUIIII";Types.StateAssign (e1, s, e2) }
+  | e = expr; DOT s = ID { Format.eprintf "AQUIIII";StateRead (e, s) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (e1, s, e2) }
   ;
 
 
@@ -162,7 +162,7 @@ expr:
   | REVERT { Revert }
   // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
   | e = if_statement { e }
-  
+  | LPAREN e = expr RPAREN { e }
   ;
 
 

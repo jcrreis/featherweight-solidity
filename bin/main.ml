@@ -202,10 +202,11 @@ let () =
     let _p: program = (ct, blockchain, e) in
     let _ = eval_expr ct vars conf in 
     let cname = match e with 
-      | AddContract cdef -> cdef.name
+      | AddContract cdef -> Format.eprintf "%s" (contract_to_string cdef);cdef.name
       | _ -> assert false 
     in
     typecheck_contract gamma (Hashtbl.find ct cname) ct blockchain;
+
     if cname = "Bank" then  
       (
       bank_example ct vars blockchain sigma;

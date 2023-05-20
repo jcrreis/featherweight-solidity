@@ -1,21 +1,20 @@
-contract Example {
-        mapping(address => uint) balances;
+contract Bank {
 
+    mapping(address => uint) balances;
 
-    constructor () {
-        
-    }
-
-    function fb () {
+    constructor() {
+     
 
     }
-    function teste (uint amount) {
-       if(balances[msgsender] == amount) {
-            
-       }
-       else {
 
-       }
-      
+    function fb() {
+
     }
+
+    function deposit() {
+        this.balances[msgsender] = this.balances[msgsender] + msgvalue;
+
+    }
+    
+    
 }

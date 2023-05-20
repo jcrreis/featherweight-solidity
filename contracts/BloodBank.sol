@@ -32,13 +32,14 @@ contract BloodBank{
 
     function donate(uint amount) {
         uint donorBlood = Donor(msgsender).getBlood();
-        if (this.healty[msgsender] && donorBlood > 3000 && donorBlood - amount > 0){
+        if (this.healty[msgsender] && (donorBlood > 3000) && (donorBlood - amount > 0)){
             this.blood = this.blood + amount;
         }
         else {
             revert;
         }         
     }
+    
 
     function getDoctor() returns (address) {
         return this.doctor;
