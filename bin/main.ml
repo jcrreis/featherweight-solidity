@@ -3,7 +3,7 @@ open Fs
 open Types
 open Pprinters
 open Contracts
-(* open Typechecker  *)
+open Typechecker 
 open Utils
 open C3 
 
@@ -199,15 +199,19 @@ let () =
     let sigma: values Stack.t = Stack.create() in
     let conf: conf = (blockchain, blockchain, sigma, e) in
     let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
+    let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
     let _p: program = (ct, blockchain, e) in
     let _ = eval_expr ct vars conf in 
     let cname = match e with 
       | AddContract cdef -> cdef.name
       | _ -> assert false 
     in
+    typecheck_contract gamma (Hashtbl.find ct cname) ct blockchain;
     if cname = "Bank" then  
-      (bank_example ct vars blockchain sigma;
-      print_blockchain blockchain vars)
+      (
+      bank_example ct vars blockchain sigma;
+      print_blockchain blockchain vars
+      )
     else
       (wallet_example ct vars blockchain sigma;
       print_blockchain blockchain vars)

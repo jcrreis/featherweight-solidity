@@ -1,10 +1,10 @@
 contract Wallet {
 
-    uint balance;
+    uint bal;
     address owner;
 
     constructor() {
-        this.balance = msgvalue;
+        this.bal = msgvalue;
         this.owner = msgsender;
     }
 
@@ -17,24 +17,24 @@ contract Wallet {
     }
 
     function deposit() {
-        this.balance = this.balance + msgvalue;
+        this.bal = this.bal + msgvalue;
     }
 
     function withdraw(uint amount) {
         if(this.onlyOwner()){
             msgsender.transfer(amount);
-            this.balance = this.balance - amount;
+            this.bal = this.bal - amount;
         }
     }
 
     function getBalance() returns (uint){
-        return this.balance;
+        return this.bal;
     }
 
     function transferTo(address walletTo, uint amount) {
         if(this.onlyOwner()){
             Wallet(walletTo).deposit{value: amount}();
-            this.balance = this.balance - amount;
+            this.bal = this.bal - amount;
         }
     }
 

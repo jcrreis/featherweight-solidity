@@ -14,7 +14,7 @@ contract Bank {
     function deposit() {
         this.balances[msgsender] = this.balances[msgsender] + msgvalue;
     }
-
+    
     function getBalance() returns (uint) {
         return this.balances[msgsender];
     }
@@ -33,7 +33,8 @@ contract Bank {
         }   
     }
 
-    function getLiquidity() {
-        return balance(address(this));
+    function getLiquidity() returns (uint){
+        return address(this).balance;
     }
+    
 }

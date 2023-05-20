@@ -105,7 +105,7 @@ values:
 
 
 arit_expr: 
-  | e1 = expr; PLUS; e2 = expr { Format.eprintf "AQUIII"; AritOp(Plus(e1, e2)) }
+  | e1 = expr; PLUS; e2 = expr { AritOp(Plus(e1, e2)) }
   | e1 = expr; DIV; e2 = expr { AritOp(Div(e1, e2)) }
   | e1 = expr; TIMES; e2 = expr { AritOp(Times(e1, e2)) }
   | e1 = expr; MINUS; e2 = expr { AritOp(Minus(e1, e2)) }
@@ -142,9 +142,12 @@ variables:
     let (t_e, s) = v in 
     Let(t_e, s, e1, e2) 
   }
+  //state read/write
+
   | e = expr; DOT s = ID { StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (e1, s, e2) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "AQUIIII";Types.StateAssign (e1, s, e2) }
   ;
+
 
 expr:
   | vars = variables { vars }
@@ -226,7 +229,7 @@ function_calls:
 solidity_special_functions:
   | e1 = expr; DOT TRANSFER LPAREN; e2 = expr ;RPAREN{ Types. Transfer (e1, e2) }
   | ADDRESS LPAREN; e = expr ;RPAREN{ Types.Address (e) }
-  | BALANCE LPAREN e = expr; RPAREN { Types.Balance (e) }
+  |   e = expr; DOT BALANCE  { Types.Balance (e) }
   ;
 
 
