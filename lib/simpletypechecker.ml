@@ -335,7 +335,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     | AddContract _ -> assert false *)
   | _ -> assert false
 
-let rec typechecker (gamma: gamma) (e: expr) (t: t_exp) (_ct: contract_table) : unit = 
+let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = 
   let typecheck_axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = 
     let t_e = axioms gamma e in 
       begin match t_e with 
@@ -343,12 +343,113 @@ let rec typechecker (gamma: gamma) (e: expr) (t: t_exp) (_ct: contract_table) : 
         | Error(s) -> raise (Failure s)
       end
   in 
+  let typecheck_arit_op (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table): unit =
+    match e with 
+      | AritOp a -> 
+        begin match a with 
+          | Plus (e1, e2) -> 
+            if t <> UInt then 
+              raise (TypeMismatch (UInt, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | Div (e1, e2) -> 
+            if t <> UInt then 
+              raise (TypeMismatch (UInt, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | Times (e1, e2) -> 
+            if t <> UInt then 
+              raise (TypeMismatch (UInt, t));
+            typecheck gamma e1 UInt ct ;
+            typecheck gamma e2 UInt ct
+          | Minus (e1, e2) -> 
+            if t <> UInt then 
+              raise (TypeMismatch (UInt, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | Exp (e1, e2) -> 
+            if t <> UInt then 
+              raise (TypeMismatch (UInt, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | Mod (e1, e2) -> 
+            if t <> UInt then 
+              raise (TypeMismatch (UInt, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+        end
+      | _ -> assert false 
+    
+  in
+  let typecheck_bool_op (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table): unit =
+    match e with 
+      | BoolOp b -> 
+        begin match b with 
+          | Neg e1 -> 
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 Bool ct
+          | Conj (e1, e2) -> 
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 Bool ct;
+            typecheck gamma e2 Bool ct
+          | Disj (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 Bool ct;
+            typecheck gamma e2 Bool ct
+          | Equals (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            begin 
+              try 
+                typecheck gamma e1 UInt ct;
+                typecheck gamma e2 UInt ct
+              with TypeMismatch _ -> 
+                begin 
+                  typecheck gamma e1 (Address None) ct;
+                  typecheck gamma e2 (Address None) ct
+                end 
+            end
+          | Greater (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | GreaterOrEquals (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | Lesser (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | LesserOrEquals (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+          | Inequals (e1, e2) ->
+            if t <> Bool then 
+              raise (TypeMismatch (Bool, t));
+            typecheck gamma e1 UInt ct;
+            typecheck gamma e2 UInt ct
+        end
+      | _ -> assert false 
+      
+  in
   match e with 
     | Val _ -> typecheck_axioms gamma e t 
     | Var _ -> typecheck_axioms gamma e t 
     | Revert -> typecheck_axioms gamma e t 
     | MsgSender -> typecheck_axioms gamma e t  
     | MsgValue -> typecheck_axioms gamma e t 
+    | AritOp _ -> typecheck_arit_op gamma e t ct
+    | BoolOp _ -> typecheck_bool_op gamma e t ct 
+    
     (* | Val (VMapping (m, t_exp)) -> 
       begin match t with 
         | Map (t1, t2) -> 
