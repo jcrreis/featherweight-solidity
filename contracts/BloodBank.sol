@@ -15,7 +15,7 @@ contract BloodBank{
 
     function setHealth(address donor, bool isHealty) {
         if (msgsender == this.doctor) {
-            this.healty[donor] = isHealty;
+            this.healty = (this.healty[donor] = isHealty);
         }
         else {
             revert;

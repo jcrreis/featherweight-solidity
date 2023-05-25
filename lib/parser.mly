@@ -140,11 +140,17 @@ declare_variable:
 state_vars:
   //state read/write
    | v = declare_variable; ASSIGN; e1 = expr; SEMICOLON; e2 = expr; { 
+    Format.eprintf "AQUIII";
     let (t_e, s) = v in 
     Let(t_e, s, e1, e2) 
   }
-  | e = expr; DOT s = ID { Format.eprintf "AQUIIII";StateRead (e, s) }
-  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Types.StateAssign (e1, s, e2) }
+  //special case shortener for maps
+  
+  | e = expr; DOT s = ID { StateRead (e, s) }
+  | e1 = expr; DOT s = ID ; ASSIGN ; e2 = expr { Format.eprintf "AQUIIIIssasasd";Types.StateAssign (e1, s, e2) }
+  // | e = expr; DOT s = ID LBRACKET e1 = expr RBRACKET ASSIGN e2 = expr {
+  //   Types.StateAssign(e, s , MapWrite(StateRead(e, s), e1, e2))
+  // }
   ;
 
 
@@ -174,6 +180,7 @@ return_expr:
 statement:
   | e = expr SEMICOLON { e }
   | e = if_statement { e }
+  | RETURN e = expr SEMICOLON { e }
   | e1 = statement; e2 = statement { Types.Seq(e1, e2) }
   ;
 

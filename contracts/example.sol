@@ -1,6 +1,6 @@
 contract Bank {
 
-    mapping(address => uint) balances;
+mapping(address => uint) balances;
 
     constructor() {
      
@@ -13,8 +13,8 @@ contract Bank {
 
     function deposit() {
         this.balances[msgsender] = this.balances[msgsender] + msgvalue;
-
     }
+    
     
     
 }

@@ -72,7 +72,6 @@ let axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = mat
     end 
   | _ -> assert false
 
-
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (blockchain: blockchain) : unit = 
   match e with 
     | Val (VBool _) -> axioms gamma e t ct
@@ -191,6 +190,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       end 
     | Return e1 -> typecheck gamma e1 t ct blockchain 
     | Seq (e1, e2) ->
+      (* inferencia *)
       typecheck gamma e1 Unit ct blockchain;
       typecheck gamma e2 t ct blockchain
     | MsgSender -> 
@@ -286,6 +286,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         with Not_found -> raise (UnboundVariable s)
       end
     | Transfer (e1, e2) ->
+      (* ver this gamma : c, porque está na regra*)
       if t <> Unit then 
         raise (TypeMismatch (Unit, t));
       typecheck gamma e2 UInt ct blockchain;
@@ -299,26 +300,36 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
       let (args, _) = c_def.constructor in 
       let ts = List.map (fun (t_e, _) -> t_e) args in
       List.iter2 (fun t_cx e_cx -> typecheck gamma e_cx t_cx ct blockchain ) ts le;
-    | Cons (_s, e1) -> 
-      (* e1 is always an address, however it can be a Val (Address a) || MsgSender || Var x || this.sv *)
-      (* we need to make sure that s == cname, thus we need to access the contract stored in the blockchain*)
-      typecheck gamma e1 (Address (Some (CTop))) ct blockchain;
-      (* get_contract_by_address blockchain a*)
-      (* typecheck gamma e (C(-1)) ct blockchain *)
+    | Cons (s, e1) -> 
+        (* typecheck gamma e1 (Address (Some (CTop))) ct blockchain; *)
+        typecheck gamma e1 (Address (Some(C s))) ct blockchain;
     | CallTopLevel (e1, _s, e2, e3, _le) -> 
+        begin
+          typecheck gamma e1 CTop ct blockchain;
+          typecheck gamma e2 UInt ct blockchain;
+          typecheck gamma e3 (Address None) ct blockchain; 
+          match e1 with 
+            | This None -> ()
+            | Cons (_s, _e1) -> ()
+            | _ -> assert false 
+          end
+    | Call (e1, _s, e2, _le) -> 
+      (*TODO*)
+      begin
         typecheck gamma e1 CTop ct blockchain;
         typecheck gamma e2 UInt ct blockchain;
-        typecheck gamma e3 (Address None) ct blockchain; 
-    | Call (e1, _s, _e2, _le) -> 
-      (*TODO*)
-      typecheck gamma e1 CTop ct blockchain;
-
+        match e1 with 
+            | This None -> ()
+            | Cons (_s, _e1) -> ()
+            | New (_s, _e, _le) -> ()
+            | _ -> assert false 
+      end
     | Let (t_e, s, e1, e2) -> 
       let (gamma_vars, _, _) = gamma in 
       typecheck gamma e1 t_e ct blockchain;
       Hashtbl.add gamma_vars s t_e;
-      typecheck gamma e2 t ct blockchain;
-    | _ -> assert false
+      typecheck gamma e2 t ct blockchain
+    | AddContract _ -> assert false
 
 
 let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) (b: blockchain) : unit = 
