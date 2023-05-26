@@ -4,6 +4,13 @@ open Utils
 open Pprinters 
 
 
+
+let ctypes name ct = 
+  let c_def: contract_def = Hashtbl.find ct name in
+  let (args, _) = c_def.constructor in 
+  let ts = List.map (fun (t_e, _) -> t_e) args in
+  ts
+
 let get_var_type_from_gamma (s: string) (gamma: gamma) : t_exp = 
   try 
     let (gamma_vars, _, _) = gamma in 
@@ -145,6 +152,15 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       else 
         Error(type_infer_error Bool)
     in 
+  let verify_function_params t_es le rettype =  
+    List.iter2 (fun t_e e' -> 
+      let t_e' = infer_type gamma e' ct in
+      match t_e' with 
+        | Ok(t_e') -> if t_e <> t_e' then raise (TypeMismatch (t_e', t_e)) else ()
+        | Error s -> raise (Failure s)
+    ) t_es le;
+    Ok(rettype)
+  in
   match e with
   | Val _ -> axioms gamma e  
   | AritOp a -> infer_arit gamma a ct 
@@ -202,13 +218,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
         begin 
           let ftype = function_type name s ct in 
           let (t_es, rettype) = ftype in 
-          List.iter2 (fun t_e e' -> 
-            let t_e' = infer_type gamma e' ct in
-            match t_e' with 
-              | Ok(t_e') -> if t_e <> t_e' then raise (TypeMismatch (t_e', t_e)) else ()
-              | Error s -> raise (Failure s)
-          ) t_es le;
-          Ok(rettype)
+          verify_function_params t_es le rettype
         end
       | _ -> Error ("Invalid type for this")
     end
@@ -248,9 +258,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       let t_e1 = infer_type gamma e1 ct in 
       if t_e1 <> Ok(UInt) then raise (Failure "Invalid operation")
       else 
-        let c_def: contract_def = Hashtbl.find ct s in
-        let (args, _) = c_def.constructor in 
-        let ts = List.map (fun (t_e, _) -> t_e) args in
+        let ts = ctypes s ct in 
         List.iter2 (fun t_e e' -> 
           let t_e' = infer_type gamma e' ct in
           match t_e' with 
@@ -269,13 +277,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
               begin 
                 let ftype = function_type name s ct in 
                 let (t_es, rettype) = ftype in 
-                List.iter2 (fun t_e e' -> 
-                  let t_e' = infer_type gamma e' ct in
-                  match t_e' with 
-                    | Ok(t_e') -> if t_e <> t_e' then raise (TypeMismatch (t_e', t_e)) else ()
-                    | Error s -> raise (Failure s)
-                ) t_es le;
-                Ok(rettype)
+                verify_function_params t_es le rettype
               end
             | Error s -> raise (Failure s)
             | _ -> raise (Failure "Invalid operation")
@@ -434,4 +436,38 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
         raise (TypeMismatch (Unit, t));
       typecheck gamma e1 (Address None) ct;
       typecheck gamma e2 UInt ct
+    | StateAssign(_e1, s, e2) -> 
+      let t_s = get_var_type_from_gamma s gamma in 
+      typecheck gamma e2 t_s ct
+    | MapWrite(e1, e2, e3) -> 
+      begin match t with 
+        | Map(t1, t2) ->
+          typecheck gamma e1 t ct;
+          typecheck gamma e2 t1 ct;
+          typecheck gamma e3 t2 ct
+        | _ -> raise (TypeMismatch (t, Map(TRevert, TRevert)))
+      end
+    | MapRead(e1, e2) -> 
+      let t_e1 = infer_type gamma e1 ct in 
+      begin match t_e1 with 
+        | Ok(Map(t1, t2)) -> 
+          let t_e2 = infer_type gamma e2 ct in 
+          begin match t_e2 with 
+            | Ok(t_e2) -> 
+              if t_e2 = t1 then () else raise (TypeMismatch (t_e2, t2))
+            | Error s -> raise (Failure s)
+          end
+        | Ok(t1) -> raise (TypeMismatch (t1, Map(TRevert, TRevert)))
+        | Error s -> raise (Failure s)
+      end
+    | New (s, e1, le) ->
+      if t <> (C s) then raise (TypeMismatch (C s, t))
+      else
+        typecheck gamma e1 UInt ct;
+        let ts = ctypes s ct in 
+        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct) ts le;
+    | Cons (s, e1) -> 
+      if t <> (C s) then raise (TypeMismatch (C s, t)) 
+      else 
+        typecheck gamma e1 (Address (Some (C s))) ct;
     | _ -> assert false
