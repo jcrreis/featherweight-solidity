@@ -470,4 +470,25 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
       if t <> (C s) then raise (TypeMismatch (C s, t)) 
       else 
         typecheck gamma e1 (Address (Some (C s))) ct;
+    | CallTopLevel (e1, _s, e2, e3, _le) -> 
+      begin
+        typecheck gamma e1 CTop ct;
+        typecheck gamma e2 UInt ct;
+        typecheck gamma e3 (Address None) ct; 
+        match e1 with 
+          | This None -> ()
+          | Cons (_s, _e1) -> ()
+          | _ -> assert false 
+        end
+    | Call (e1, _s, e2, _le) -> 
+      (*TODO*)
+      begin
+        typecheck gamma e1 CTop ct;
+        typecheck gamma e2 UInt ct;
+        match e1 with 
+            | This None -> ()
+            | Cons (_s, _e1) -> ()
+            | New (_s, _e, _le) -> ()
+            | _ -> assert false 
+      end
     | _ -> assert false
