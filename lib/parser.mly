@@ -86,7 +86,7 @@ prog :
 
 typ:
   | UINT { Types.UInt }
-  | ADDRESS { Types.Address (Some CTop)}
+  | ADDRESS { Types.Address (None)}
   | BOOL { Types.Bool }
   | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
     { Types.Map (key, value) }

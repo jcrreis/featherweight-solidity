@@ -55,7 +55,7 @@ let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with
 
 
 let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, string) result = 
-  let type_infer_error t_exp : string = "Couldn't infer type " ^ (t_exp_to_string t_exp) in 
+  let type_infer_error e : string = "Couldn't infer type of expr: " ^ (expr_to_string e) in 
   let check_if_operands_uint (e1: expr) (e2: expr) (gamma: gamma) (ct: contract_table) : bool =
     let t_e1 = infer_type gamma e1 ct in 
     let t_e2 = infer_type gamma e2 ct in 
@@ -75,32 +75,32 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(UInt)
       else 
-        Error(type_infer_error UInt)
+        Error(type_infer_error e)
     | Div (e1, e2) -> 
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(UInt)
       else 
-        Error(type_infer_error UInt)
+        Error(type_infer_error e)
     | Times (e1, e2) -> 
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(UInt)
       else 
-        Error(type_infer_error UInt)
+        Error(type_infer_error e)
     | Minus (e1, e2) -> 
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(UInt)
       else 
-        Error(type_infer_error UInt)
+        Error(type_infer_error e)
     | Exp (e1, e2) -> 
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(UInt)
       else 
-        Error(type_infer_error UInt)
+        Error(type_infer_error e)
     | Mod (e1, e2) -> 
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(UInt)
       else 
-        Error(type_infer_error UInt)
+        Error(type_infer_error e)
   in
   let infer_bool (gamma: gamma) (b: bool_ops) (ct: contract_table) : (t_exp, string) result = match b with 
     | Neg e1 -> 
@@ -110,12 +110,12 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       if check_if_operands_bool e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     | Disj (e1, e2) ->
       if check_if_operands_bool e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     | Equals (e1, e2) ->
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(Bool)
@@ -125,32 +125,32 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
         if t_e1 = Ok(Address None) && t_e2 = Ok(Address None) then 
           Ok(Bool) 
         else 
-          Error(type_infer_error Bool)
+          Error(type_infer_error e)
     | Greater (e1, e2) ->
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     | GreaterOrEquals (e1, e2) ->
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     | Lesser (e1, e2) ->
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     | LesserOrEquals (e1, e2) ->
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     | Inequals (e1, e2) ->
       if check_if_operands_uint e1 e2 gamma ct then 
         Ok(Bool)
       else 
-        Error(type_infer_error Bool)
+        Error(type_infer_error e)
     in 
   let verify_function_params t_es le rettype =  
     List.iter2 (fun t_e e' -> 
@@ -171,7 +171,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     begin match t_e1 with 
       | Ok(Address _) -> Ok(UInt)
       | Ok(C _) -> Ok(UInt)
-      | _ -> Error(type_infer_error (Address None))
+      | _ -> Error(type_infer_error (e))
     end
   | Address e1 -> 
     let t_e1 = infer_type gamma e1 ct in 
@@ -180,7 +180,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       | Ok(CTop) -> Ok(Address (Some(CTop)))
       | Ok(C i) -> Ok(Address (Some((C i))))
       | Ok(Address _) -> Ok(Address None)
-      | _ -> Error(type_infer_error (Address None))
+      | _ -> Error(type_infer_error (e))
     end
   | Return e1 -> 
     let t_e1 = infer_type gamma e1 ct in
@@ -225,10 +225,10 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     | MapRead (e1, e2) ->  
       let t_e1 = infer_type gamma e1 ct in 
       begin match t_e1 with 
-        | Ok(Map(t1, t2)) ->
+        | Ok(Map(t1, rettype)) ->
           let t_e2 = infer_type gamma e2 ct in 
           begin match t_e2 with 
-            | Ok(t_e2) -> if t_e2 = t1 then Ok(t2) else Error ("Invalid operation")
+            | Ok(t2) -> if t2 = t1 then Ok(rettype) else Error ("Invalid operation")
             | Error s -> raise (Failure s)
           end
         | Error s -> raise (Failure s)
@@ -237,7 +237,11 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     | MapWrite (e1, e2, e3) ->
       let t_e2 = infer_type gamma (MapRead(e1, e2)) ct in 
       let t_e3 = infer_type gamma e3 ct in 
-      if t_e2 = t_e3 then Ok(Unit) else raise (Failure "Unexpected operation")
+      begin match t_e2, t_e3 with 
+        | Ok(t2), Ok(t3) -> if t2 = t3 then infer_type gamma e1 ct else raise (Failure "Unexpected operation")
+        | Error s, _ -> Format.eprintf "%s" s; raise (Failure s)
+        | _, Error s -> Format.eprintf "%s" s; raise (Failure s)
+      end
     | StateRead(e1, s) ->
       let t_e1 = infer_type gamma e1 ct in 
       begin match t_e1 with 
@@ -491,4 +495,31 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
             | New (_s, _e, _le) -> ()
             | _ -> assert false 
       end
+    | This Some(_s, _le) -> assert false
+    | StateRead(_, s) -> 
+      let t_s = get_var_type_from_gamma s gamma in 
+      if t_s = t then () else raise (TypeMismatch (t_s, t))
+    | Address e1 -> typecheck gamma e1 CTop ct
     | _ -> assert false
+
+let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit = 
+  let typecheck_constructor (g: gamma) (constructor: (t_exp * string) list * expr) (ct: contract_table): unit = 
+    let (gv, ga, gc) = g in
+    let (args, body) = constructor in 
+    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (args);
+    typecheck (gv, ga, gc) body Unit ct; 
+  in 
+  let typecheck_function (g: gamma) (f: fun_def) (ct: contract_table): unit =
+    let (gv, ga, gc) = g in 
+    let rettype: t_exp = f.rettype in 
+    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
+    typecheck (gv, ga, gc) (f.body) rettype ct;
+  in 
+  let (gv, ga, gc) = g in 
+  Hashtbl.add gv "this" (C c.name);
+  Hashtbl.add gv "msg.sender" (Address None);
+  Hashtbl.add gv "msg.value" (UInt);
+  List.iter (fun (t_e, s) -> Format.eprintf "%s ---> %s" s (t_exp_to_string t_e); Hashtbl.add gv s t_e;) (c.state);
+  typecheck_constructor (gv, ga, gc) c.constructor ct;     
+  List.iter (fun (f_def: fun_def) -> typecheck_function (gv, ga, gc) f_def ct) (c.functions);
+  Format.eprintf "\nContrato Validado com Sucesso!!\n"
