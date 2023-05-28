@@ -163,6 +163,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
   in
   match e with
   | Val _ -> axioms gamma e  
+  | Var _ -> axioms gamma e
   | AritOp a -> infer_arit gamma a ct 
   | BoolOp b -> infer_bool gamma b ct 
   | Revert -> axioms gamma e 
@@ -200,11 +201,11 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     begin 
       let t_e1 = infer_type gamma e1 ct in 
       if t_e1 <> Ok(Bool) then 
-        Error("Malformed If expression")
+        Error("Malformed If expression: condition must be a bool")
       else
         let t_e2 = infer_type gamma e2 ct in 
         let t_e3 = infer_type gamma e3 ct in 
-        if t_e2 = t_e3 then t_e2 else Error("Malformed If expression")
+        if t_e2 = t_e3 then t_e2 else Error("Malformed If expression: it should return same type")
     end
   | Assign (s, e1) ->
     let t_s = get_var_type_from_gamma s gamma in  
@@ -287,7 +288,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
             | _ -> raise (Failure "Invalid operation")
           end
       end
-  | _ -> assert false
+  | _ -> (Format.eprintf "missing infer case for: %s" (expr_to_string e)) ;assert false
 
 let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = 
   let typecheck_axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = 
@@ -441,6 +442,8 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
       typecheck gamma e1 (Address None) ct;
       typecheck gamma e2 UInt ct
     | StateAssign(_e1, s, e2) -> 
+      if t <> Unit then 
+        raise (TypeMismatch (Unit, t));
       let t_s = get_var_type_from_gamma s gamma in 
       typecheck gamma e2 t_s ct
     | MapWrite(e1, e2, e3) -> 
@@ -497,7 +500,8 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
       end
     | This Some(_s, _le) -> assert false
     | StateRead(_, s) -> 
-      let t_s = get_var_type_from_gamma s gamma in 
+      let t_s = get_var_type_from_gamma s gamma in
+      Format.eprintf "%s" (t_exp_to_string t); 
       if t_s = t then () else raise (TypeMismatch (t_s, t))
     | Address e1 -> typecheck gamma e1 CTop ct
     | _ -> assert false

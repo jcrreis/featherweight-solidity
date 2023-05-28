@@ -188,7 +188,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) (bloc
         | Address (Some (C i)) -> typecheck gamma e1 (C i) ct blockchain
         | _ -> raise (TypeMismatch (Address (Some CTop), t))
       end 
-    | Return e1 -> typecheck gamma e1 t ct blockchain 
+    | Return e1 -> Format.eprintf "%s" (t_exp_to_string t);typecheck gamma e1 t ct blockchain 
     | Seq (e1, e2) ->
       (* inferencia *)
       typecheck gamma e1 Unit ct blockchain;

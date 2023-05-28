@@ -180,7 +180,7 @@ return_expr:
 statement:
   | e = expr SEMICOLON { e }
   | e = if_statement { e }
-  | RETURN e = expr SEMICOLON { e }
+  // | RETURN e = expr SEMICOLON { e }
   | e1 = statement; e2 = statement { Types.Seq(e1, e2) }
   ;
 
