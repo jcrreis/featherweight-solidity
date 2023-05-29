@@ -294,7 +294,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
   let typecheck_axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = 
     let t_e = axioms gamma e in 
       begin match t_e with 
-        | Ok(t_e) -> if t_e = t then () else raise (TypeMismatch (t_e, t))
+        | Ok(t_e) -> if (t_e = t || t_e = TRevert) then () else raise (TypeMismatch (t_e, t))
         | Error(s) -> raise (Failure s)
       end
   in 
@@ -395,6 +395,14 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
         end
       | _ -> assert false 
       
+  in
+  let fun_check cname fun_name le ct t = 
+    let ftype = function_type cname fun_name ct in 
+    let (t_es, rettype) = ftype in 
+    if t = rettype then 
+      List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le
+    else 
+      raise (TypeMismatch (rettype, t))
   in
   match e with 
     | Val (VMapping (m, t_exp)) -> 
@@ -498,12 +506,21 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
             | New (_s, _e, _le) -> ()
             | _ -> assert false 
       end
-    | This Some(_s, _le) -> assert false
+    | This Some(s, le) -> 
+      let (gamma_vars, _, _) = gamma in 
+      let t_this = Hashtbl.find gamma_vars "this" in 
+      begin match t_this with 
+        | C name -> fun_check name s le ct t;
+        | _ -> raise (TypeMismatch (t_this, CTop))
+      end
     | StateRead(_, s) -> 
       let t_s = get_var_type_from_gamma s gamma in
-      Format.eprintf "%s" (t_exp_to_string t); 
       if t_s = t then () else raise (TypeMismatch (t_s, t))
-    | Address e1 -> typecheck gamma e1 CTop ct
+    | Address e1 -> 
+      if t <> (Address None) then 
+        raise (TypeMismatch (Address None, t))
+      else
+        typecheck gamma e1 CTop ct
     | _ -> assert false
 
 let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit = 
