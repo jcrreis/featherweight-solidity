@@ -205,7 +205,9 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       else
         let t_e2 = infer_type gamma e2 ct in 
         let t_e3 = infer_type gamma e3 ct in 
-        if t_e2 = t_e3 then t_e2 else Error("Malformed If expression: it should return same type")
+        match t_e2, t_e3 with 
+          | Ok(t_e2), Ok(t_e3) -> (Format.eprintf "%s -----> %s" (t_exp_to_string t_e2) (t_exp_to_string t_e3); if t_e2 = t_e3 then Ok(t_e2) else Error("Malformed If expression: it should return same type"))
+          | _ -> raise (Failure "AQUIIIII")
     end
   | Assign (s, e1) ->
     let t_s = get_var_type_from_gamma s gamma in  
@@ -294,7 +296,11 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
   let typecheck_axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = 
     let t_e = axioms gamma e in 
       begin match t_e with 
-        | Ok(t_e) -> if (t_e = t || t_e = TRevert) then () else raise (TypeMismatch (t_e, t))
+        | Ok(t_e) -> 
+          begin match t_e with 
+            | TRevert -> () 
+            | _ -> if t_e = t then () else raise (TypeMismatch (t_e, t))
+          end
         | Error(s) -> raise (Failure s)
       end
   in 
@@ -485,26 +491,28 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
       if t <> (C s) then raise (TypeMismatch (C s, t)) 
       else 
         typecheck gamma e1 (Address (Some (C s))) ct;
-    | CallTopLevel (e1, _s, e2, e3, _le) -> 
+    | CallTopLevel (e1, s, e2, e3, le) -> 
       begin
-        typecheck gamma e1 CTop ct;
-        typecheck gamma e2 UInt ct;
-        typecheck gamma e3 (Address None) ct; 
-        match e1 with 
-          | This None -> ()
-          | Cons (_s, _e1) -> ()
-          | _ -> assert false 
-        end
-    | Call (e1, _s, e2, _le) -> 
-      (*TODO*)
+        let t_e1 = infer_type gamma e1 ct in  
+        match t_e1 with 
+          | Ok(C name) -> 
+            typecheck gamma e3 (Address None) ct;
+            typecheck gamma e2 UInt ct;
+            fun_check name s le ct t;
+          | Ok(CTop) -> raise (Failure "Can't reference a top class")
+          | Ok(t_e1) -> raise (TypeMismatch (t_e1, CTop))
+          | Error s -> raise (Failure s) 
+      end
+    | Call (e1, s, e2, le) -> 
       begin
-        typecheck gamma e1 CTop ct;
-        typecheck gamma e2 UInt ct;
-        match e1 with 
-            | This None -> ()
-            | Cons (_s, _e1) -> ()
-            | New (_s, _e, _le) -> ()
-            | _ -> assert false 
+        let t_e1 = infer_type gamma e1 ct in  
+        match t_e1 with 
+          | Ok(C name) -> 
+            typecheck gamma e2 UInt ct;
+            fun_check name s le ct t;
+          | Ok(CTop) -> raise (Failure "Can't reference a top class")
+          | Ok(t_e1) -> raise (TypeMismatch (t_e1, CTop))
+          | Error s -> raise (Failure s) 
       end
     | This Some(s, le) -> 
       let (gamma_vars, _, _) = gamma in 
@@ -517,10 +525,16 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
       let t_s = get_var_type_from_gamma s gamma in
       if t_s = t then () else raise (TypeMismatch (t_s, t))
     | Address e1 -> 
-      if t <> (Address None) then 
-        raise (TypeMismatch (Address None, t))
+      if t <> (Address (Some CTop)) then 
+        raise (TypeMismatch (Address (Some CTop), t))
       else
-        typecheck gamma e1 CTop ct
+        let t_e1 = infer_type gamma e1 ct in 
+        begin match t_e1 with 
+          | Ok(C _) -> ()
+          | Ok(CTop) -> ()
+          | Ok(t_e1) -> raise (TypeMismatch (t_e1, CTop))
+          | Error s -> raise (Failure s)
+        end
     | _ -> assert false
 
 let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit = 

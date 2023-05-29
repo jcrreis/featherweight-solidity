@@ -19,6 +19,7 @@ contract If {
 
     function if2(uint amount) returns (uint){
         if ((msgsender == owner) && (amount > 0)){
+            this.owner = msgsender;
             return amount;
         }
         else {
@@ -30,6 +31,10 @@ contract If {
         if(msgsender == owner) {
             this.b = this.b + 1;
         }
+    }
+
+    function getLiquidity() returns (uint){
+        return address(this).balance;
     }
     
 }
