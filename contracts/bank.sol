@@ -15,9 +15,7 @@ contract Bank {
         this.balances = (this.balances[msgsender] = this.balances[msgsender] + msgvalue);
     }
     
-    function getBalance() returns (uint) {
-        return this.balances[msgsender];
-    }
+    
 
     function transferTo(address to, uint amount) {
         if(this.balances[msgsender] >= amount) {
@@ -29,7 +27,7 @@ contract Bank {
     function withdraw(uint amount) {
         if(this.balances[msgsender] >= amount) {
             this.balances = (this.balances[msgsender] = this.balances[msgsender] - amount);
-                        msgsender.transfer(amount);
+            msgsender.transfer(amount);
 
         }   
     }
@@ -38,5 +36,7 @@ contract Bank {
     function getLiquidity() returns (uint){
         return address(this).balance;
     }
+
+    
     
 }

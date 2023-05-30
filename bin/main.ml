@@ -206,8 +206,9 @@ let () =
       | _ -> assert false 
     in
     typecheck_contract gamma ((Hashtbl.find ct cname)) ct;
-
-    if cname = "Bank" then  
+    if true then 
+      ()
+    else if cname = "Bank" then  
       (
       bank_example ct vars blockchain sigma;
       print_blockchain blockchain vars

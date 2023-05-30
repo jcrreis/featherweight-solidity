@@ -33,8 +33,6 @@ contract If {
         }
     }
 
-    function getLiquidity() returns (uint){
-        return address(this).balance;
-    }
+    
     
 }
