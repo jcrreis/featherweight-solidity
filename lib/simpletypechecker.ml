@@ -205,6 +205,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       else
         let t_e2 = infer_type gamma e2 ct in 
         let t_e3 = infer_type gamma e3 ct in 
+        Format.eprintf "%s ------> %s" (expr_to_string e2) (expr_to_string e3);
         match t_e2, t_e3 with 
           | Ok(t_e2), Ok(t_e3) -> (Format.eprintf "%s -----> %s" (t_exp_to_string t_e2) (t_exp_to_string t_e3); if t_e2 = t_e3 then Ok(t_e2) else Error("Malformed If expression: it should return same type"))
           | _ -> raise (Failure "AQUIIIII")
@@ -259,7 +260,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     | Transfer (e1, e2) ->
       let t_e1 = infer_type gamma e1 ct in 
       let t_e2 = infer_type gamma e2 ct in 
-      if t_e1 = Ok(UInt) && t_e2 = Ok(Address None) then Ok(Unit) else raise (Failure "Invalid operation")
+      if t_e1 = Ok(Address None) && t_e2 = Ok(UInt) then Ok(Unit) else raise (Failure "Invalid operation")
     | New (s, e1, le) ->
       (* type check contract blockchain ...*)
       let t_e1 = infer_type gamma e1 ct in 
@@ -289,6 +290,13 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
             | Error s -> raise (Failure s)
             | _ -> raise (Failure "Invalid operation")
           end
+      end
+    | Cons(s, e1) -> 
+      let t_e1 = infer_type gamma e1 ct in 
+      begin match t_e1 with 
+        | Ok(Address _) -> Ok(C s) 
+        | Ok(_) -> raise (Failure "invalid type")
+        | Error s -> raise (Failure s)
       end
   | _ -> (Format.eprintf "missing infer case for: %s" (expr_to_string e)) ;assert false
 
