@@ -12,7 +12,7 @@ mapping(address => uint) balances;
     }
 
     function deposit() {
-        this.balances[msgsender] = this.balances[msgsender] + msgvalue;
+       this.balances = (this.balances[msgsender] = this.balances[msgsender] + msgvalue);
     }
     
     

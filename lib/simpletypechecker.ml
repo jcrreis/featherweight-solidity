@@ -17,6 +17,7 @@ let get_var_type_from_gamma (s: string) (gamma: gamma) : t_exp =
     let t_x = Hashtbl.find gamma_vars s in
     t_x
   with Not_found -> raise (UnboundVariable s)
+
 let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with 
   | Val (VBool _) -> Ok(Bool)  
   | Val (VUInt n) -> if n >= 0 then Ok(UInt) else Error("Invalid integer")
@@ -205,10 +206,10 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       else
         let t_e2 = infer_type gamma e2 ct in 
         let t_e3 = infer_type gamma e3 ct in 
-        Format.eprintf "%s ------> %s" (expr_to_string e2) (expr_to_string e3);
         match t_e2, t_e3 with 
-          | Ok(t_e2), Ok(t_e3) -> (Format.eprintf "%s -----> %s" (t_exp_to_string t_e2) (t_exp_to_string t_e3); if t_e2 = t_e3 then Ok(t_e2) else Error("Malformed If expression: it should return same type"))
-          | _ -> raise (Failure "AQUIIIII")
+          | Ok(t_e2), Ok(t_e3) -> if t_e2 = t_e3 then Ok(t_e2) else Error("Malformed If expression: it should return same type")
+          | Error s, _ -> raise (Failure s)
+          | _, Error s -> raise (Failure s)
     end
   | Assign (s, e1) ->
     let t_s = get_var_type_from_gamma s gamma in  
@@ -458,7 +459,6 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
       typecheck gamma (Var s) t ct;
       typecheck gamma e1 t ct
     | Transfer (e1, e2) ->
-      (* ver this gamma : c, porque está na regra*)
       if t <> Unit then 
         raise (TypeMismatch (Unit, t));
       typecheck gamma e1 (Address None) ct;
@@ -466,6 +466,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
     | StateAssign(_e1, s, e2) -> 
       if t <> Unit then 
         raise (TypeMismatch (Unit, t));
+      (* e1 should be THIS NONE!*)
       let t_s = get_var_type_from_gamma s gamma in 
       typecheck gamma e2 t_s ct
     | MapWrite(e1, e2, e3) -> 
