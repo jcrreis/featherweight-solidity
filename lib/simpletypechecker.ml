@@ -248,6 +248,7 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
         | Ok(t_e) -> 
           begin match t_e with 
             | TRevert -> () 
+            | C _ -> if (t = CTop) || (t_e = t) then () else raise (TypeMismatch (t_e, t))
             | _ -> if t_e = t then () else raise (TypeMismatch (t_e, t))
           end
         | Error(s) -> raise (Failure s)
