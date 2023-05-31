@@ -18,9 +18,10 @@ contract BloodBank{
             this.healty = (this.healty[donor] = isHealty);
         }
         else {
-            revert;
+            return revert;
         }       
     }
+    
     function isHealty(address donor) returns (bool) {
         if(msgsender == this.doctor) {
             return this.healty[donor];
