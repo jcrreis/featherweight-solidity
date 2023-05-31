@@ -37,6 +37,9 @@ contract Bank {
         return address(this).balance;
     }
 
+    function getBalance() returns (uint) {
+        return this.balances[msgsender];
+    }
     
     
 }

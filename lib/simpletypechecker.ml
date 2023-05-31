@@ -368,13 +368,10 @@ let rec typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : uni
     | MapRead(e1, e2) -> 
       let t_e1 = infer_type gamma e1 ct in 
       begin match t_e1 with 
-        | Ok(Map(t1, _)) -> typecheck gamma e2 t1 ct;
-          (* let t_e2 = infer_type gamma e2 ct in 
-          begin match t_e2 with 
-            | Ok(t_e2) -> 
-              if t_e2 = t1 then () else raise (TypeMismatch (t_e2, t2))
-            | Error s -> raise (Failure s)
-          end *)
+        | Ok(Map(t1, t2)) -> 
+          if t2 <> t then 
+            raise (TypeMismatch (t, t2));
+          typecheck gamma e2 t1 ct;
         | Ok(t1) -> raise (TypeMismatch (t1, Map(TRevert, TRevert)))
         | Error s -> raise (Failure s)
       end

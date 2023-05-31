@@ -12,7 +12,7 @@ contract Bank {
     }
 
     function getBalance() returns (uint){
-        return true;
+        return this.balances[true];
     }
     
     
