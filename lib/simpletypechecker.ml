@@ -55,20 +55,6 @@ let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with
 
 let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, string) result = 
   let type_infer_error e : string = "Couldn't infer type of expr: " ^ (expr_to_string e) in 
-  (* let check_if_operands_uint (e1: expr) (e2: expr) (gamma: gamma) (ct: contract_table) : bool =
-    let t_e1 = infer_type gamma e1 ct in 
-    let t_e2 = infer_type gamma e2 ct in 
-    match t_e1, t_e2 with 
-      | Ok(t_e1), Ok(t_e2) -> if t_e1 = UInt && t_e2 = UInt then true else false 
-      | _-> false  
-  in 
-  let check_if_operands_bool (e1: expr) (e2: expr) (gamma: gamma) (ct: contract_table) : bool =
-    let t_e1 = infer_type gamma e1 ct in 
-    let t_e2 = infer_type gamma e2 ct in 
-    match t_e1, t_e2 with 
-      | Ok(t_e1), Ok(t_e2) -> if t_e1 = Bool && t_e2 = Bool then true else false 
-      | _-> false 
-  in *)
   let infer_arit (gamma: gamma) (a: arit_ops) (ct: contract_table) : (t_exp, string) result = match a with 
     | Plus _ | Div _ | Times _ | Minus _ | Exp _ | Mod _ -> 
       try 
@@ -83,30 +69,6 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
         Ok(Bool)
       with TypeMismatch _-> Error(type_infer_error e)
   in
-    (* | Neg e1 -> 
-      let t_e1 = infer_type gamma e1 ct in 
-      t_e1
-    | Conj (e1, e2) | Disj (e1, e2) -> 
-      if check_if_operands_bool e1 e2 gamma ct then 
-        Ok(Bool)
-      else 
-        Error(type_infer_error e)
-    | Equals (e1, e2) ->
-      if check_if_operands_uint e1 e2 gamma ct then 
-        Ok(Bool)
-      else
-        let t_e1 = infer_type gamma e1 ct in 
-        let t_e2 = infer_type gamma e2 ct in 
-        if t_e1 = Ok(Address None) && t_e2 = Ok(Address None) then 
-          Ok(Bool) 
-        else 
-          Error(type_infer_error e)
-    | Greater (e1, e2) | GreaterOrEquals (e1, e2) | Lesser (e1, e2) | LesserOrEquals (e1, e2) | Inequals (e1, e2) ->
-      if check_if_operands_uint e1 e2 gamma ct then 
-        Ok(Bool)
-      else 
-        Error(type_infer_error e)
-    in  *)
   let verify_function_params t_es le rettype =  
     List.iter2 (fun t_e e' -> 
       let t_e' = infer_type gamma e' ct in
