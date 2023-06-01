@@ -1,9 +1,27 @@
 open Types 
-(* open C3  *)
+open C3 
 open Utils
 open Pprinters 
 
 
+let rec _subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
+  match t1, t2 with 
+  | CTop, CTop -> true
+  | CTop, C _ -> false 
+  | C _, CTop -> true
+  | C name1, C name2 -> 
+    let contract_def: contract_def = Hashtbl.find ct name1 in
+    let contract_hierarchy: string list = match c3_linearization contract_def with 
+      | Ok v -> v
+      | _ -> assert false 
+    in
+    if List.mem name2 contract_hierarchy then true else false
+  | Address (Some _), Address None -> true 
+  | Address None, Address (Some _) -> false  
+  | Address (Some _), Address (Some CTop) -> true 
+  | Address (Some CTop), Address (Some _) -> false 
+  | Address (Some c1), Address Some c2 -> _subtyping c1 c2 ct
+  | _ -> t1 = t2
 
 let ctypes name ct = 
   let c_def: contract_def = Hashtbl.find ct name in
@@ -83,12 +101,26 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
   | AritOp a -> infer_arit gamma a ct 
   | BoolOp b -> infer_bool gamma b ct 
   | Balance e1 -> 
-    let t_e1 = infer_type gamma e1 ct in 
+    begin try
+      typecheck gamma (Balance(e1)) UInt ct; 
+      Ok(UInt)
+    with TypeMismatch _ -> Error (type_infer_error (e))
+    end
+    (* let t_e1 = infer_type gamma e1 ct in 
     begin match t_e1 with 
       | Ok(Address _) -> Ok(UInt)
       | Ok(C _) -> Ok(UInt)
       | _ -> Error(type_infer_error (e))
+    end *)
+  | Assign (s, e1) ->
+    begin try 
+      typecheck gamma (Assign(s, e1)) Unit ct;
+      Ok(Unit)
+    with TypeMismatch _ -> Error (type_infer_error (e))
     end
+    (* let t_s =  get_var_type_from_gamma s gamma in  
+    let t_e1 = infer_type gamma e1 ct in 
+    if Ok(t_s) = t_e1 then Ok(Unit) else Error("Malformed Assign") *)
   | Address e1 -> 
     let t_e1 = infer_type gamma e1 ct in 
     begin
@@ -96,17 +128,24 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       | Ok(CTop) -> Ok(Address (Some(CTop)))
       | Ok(C i) -> Ok(Address (Some((C i))))
       | Ok(Address _) -> Ok(Address None)
-      | _ -> Error(type_infer_error (e))
+      | _ -> Error(type_infer_error e)
     end
   | Return e1 -> 
     let t_e1 = infer_type gamma e1 ct in
     t_e1
   | Seq (e1, e2) ->
-    let t_e1 = infer_type gamma e1 ct in 
+    begin try 
+      let t_e2 = infer_type gamma e2 ct in 
+      match t_e2 with 
+        | Ok(t_e2) -> typecheck gamma (Seq(e1, e2)) t_e2 ct; Ok(t_e2)
+        | Error s -> raise (Failure s)
+    with TypeMismatch _ -> Error(type_infer_error e)
+    end 
+    (* let t_e1 = infer_type gamma e1 ct in 
     begin match t_e1 with 
       | Ok _ ->  infer_type gamma e2 ct
       | Error s -> Error s
-    end  
+    end   *)
   | If (e1, e2, e3) ->
     begin 
       let t_e1 = infer_type gamma e1 ct in 
@@ -120,10 +159,6 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
           | Error s, _ -> raise (Failure s)
           | _, Error s -> raise (Failure s)
     end
-  | Assign (s, e1) ->
-    let t_s = get_var_type_from_gamma s gamma in  
-    let t_e1 = infer_type gamma e1 ct in 
-    if Ok(t_s) = t_e1 then Ok(Unit) else Error("Malformed Assign")
   | This Some (s, le) -> 
     let t_this = get_var_type_from_gamma "this" gamma in 
     begin match t_this with 
