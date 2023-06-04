@@ -16,7 +16,7 @@ contract Assign {
 
     function assign2() returns (uint) {
         uint x = 3;
-        x = x * true;
+        x = x * 3;
         return x;
     }
     function assign3() {

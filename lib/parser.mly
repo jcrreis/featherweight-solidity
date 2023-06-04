@@ -1,6 +1,7 @@
 //VALUES
 %token <int> INT
 %token <string> ID
+// %token <path> PATH
 %token TRUE
 %token FALSE
 %token MAPPING
@@ -62,9 +63,11 @@
 %token COMMA
 %token EOF
 %token SEMICOLON
+%token QUOTE
 
 //SYNTAX
 %token RETURNS
+%token IMPORT 
 
 %nonassoc SEMICOLON  
 %right ASSIGN
@@ -74,15 +77,18 @@
 %nonassoc LBRACKET
 %left DOT
 
-%start <Types.expr> prog
+%start <(string list * Types.expr)> prog
 
 %%
 
 
 prog :
-  | e = expr; EOF { e }
-  | e = contract ; EOF { e }
+  |  e = expr; EOF { ([], e) }
+  | li = list(import_statement) ; e = contract ; EOF { (li, e) }
   ;
+
+import_statement : 
+ | IMPORT QUOTE path = ID QUOTE SEMICOLON { path }
 
 typ:
   | UINT { Types.UInt }

@@ -35,6 +35,7 @@ let () =
       ("msg", MSG);
       ("returns", RETURNS);
       ("balance", BALANCE);
+      ("import". IMPORT)
     ]
 
 
@@ -52,6 +53,7 @@ let alpha = ['a'-'z' 'A'-'Z']
 let int = '-'? digit+
 let id = (alpha) (alpha|digit|'_')*
 
+let path = [(alpha) (digit) '_''.' '/']*
 
 rule read =
     parse
@@ -89,8 +91,9 @@ rule read =
     | "]" { RBRACKET }
     | "," { COMMA }
     | ":" { COLON }
-
+    | '"' { QUOTE }
     | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | (id as s) { find_keyword s }
+    | (path as p) { p }
 
     | eof { EOF }

@@ -7,12 +7,7 @@ open Simpletypechecker
 open Utils
 open C3 
 
-let fname = Sys.argv.(1)
 
-let print_position lexbuf =
-  let pos = lexbuf.Lexing.lex_curr_p in
-  Format.eprintf "%s:%d:%d" pos.pos_fname
-    pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
 let _wikipedia_example_c3_linearization ct = 
   (*https://en.wikipedia.org/wiki/C3_linearization*)
@@ -189,10 +184,16 @@ let wallet_example ct vars blockchain sigma =
 
 
 let () =
+  let fname = Sys.argv.(1) in 
+  let print_position lexbuf =
+    let pos = lexbuf.Lexing.lex_curr_p in
+    Format.eprintf "%s:%d:%d" pos.pos_fname
+      pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+  in
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
   try
-    let e: expr = Parser.prog Lexer.read lexbuf in
+    let (_imports, e) : (string list * expr) = Parser.prog Lexer.read lexbuf in
     let ct: contract_table = Hashtbl.create 64 in
     let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
     let sigma: values Stack.t = Stack.create() in

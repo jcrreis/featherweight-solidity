@@ -37,9 +37,10 @@ contract BloodBank{
             this.blood = this.blood + amount;
         }
         else {
-            revert;
+            return revert;
         }         
     }
+    
     
 
     function getDoctor() returns (address) {
