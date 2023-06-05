@@ -1,3 +1,5 @@
+import "./Donor.sol";
+
 contract BloodBank{
 
     mapping(address => bool) healty;

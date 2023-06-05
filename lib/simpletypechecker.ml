@@ -150,20 +150,6 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
         | Ok(t_e1) -> typecheck gamma (MapWrite (e1, e2, e3)) t_e1 ct; Ok(t_e1)
         | Error s -> raise (Failure s)
       end
-      (* begin match t_e1 with 
-        | Ok(Map(_, rettype)) ->
-          typecheck gamma (MapRead (e1, e2)) rettype ct;
-          Ok(rettype)
-        | Error s -> raise (Failure s)
-        | _ -> raise (Failure "Unexpected operation")
-      end *)
-      (* let t_e2 = infer_type gamma (MapRead(e1, e2)) ct in 
-      let t_e3 = infer_type gamma e3 ct in 
-      begin match t_e2, t_e3 with 
-        | Ok(t2), Ok(t3) -> if t2 = t3 then infer_type gamma e1 ct else raise (Failure "Unexpected operation")
-        | Error s, _ -> Format.eprintf "%s" s; raise (Failure s)
-        | _, Error s -> Format.eprintf "%s" s; raise (Failure s)
-      end *)
     | StateRead(e1, s) ->
       let t_s = get_var_type_from_gamma s gamma in
       typecheck gamma (StateRead(e1, s)) t_s ct;
@@ -176,7 +162,6 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       typecheck gamma (Transfer (e1, e2)) Unit ct;
       Ok(Unit)
     | New (s, e1, le) ->
-      (* type check contract blockchain ...*)
       typecheck gamma (New (s, e1, le)) (C s) ct;
       Ok(C s)
     | Call (e1, s, e2, le) -> 
