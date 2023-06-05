@@ -202,7 +202,7 @@ let rec parse_file fname ct blockchain blockchain' sigma vars =
           let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, e) in
           if e = (Val(VUnit)) then 
             let msg = "\nContrato " ^ cdef.name ^ " adicionado com sucesso!" in 
-            Format.eprintf "%s" msg;
+            Format.eprintf "\n\n%s\n\n" msg;
             (ct, blockchain, blockchain', sigma, vars)
           else
             raise (Failure "Invalid contract!") 
@@ -236,6 +236,7 @@ let () =
       | _ -> assert false 
     in *)
     let (ct, blockchain, _, sigma, vars) = parse_file fname ct blockchain blockchain sigma vars in 
+    Hashtbl.iter (fun _ v -> Format.eprintf "%s" (contract_to_string v)) ct;
     (* typecheck_contract gamma ((Hashtbl.find ct cname)) ct; *)
     
     
