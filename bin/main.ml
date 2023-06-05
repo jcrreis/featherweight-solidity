@@ -193,7 +193,9 @@ let () =
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
   try
-    let (_imports, e) : (string list * expr) = Parser.prog Lexer.read lexbuf in
+    (* let (_imports, e) : (string list * expr) = Parser.prog Lexer.read lexbuf in *)
+    let e : expr = Parser.prog Lexer.read lexbuf in
+
     let ct: contract_table = Hashtbl.create 64 in
     let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
     let sigma: values Stack.t = Stack.create() in

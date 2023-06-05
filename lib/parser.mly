@@ -1,7 +1,7 @@
 //VALUES
 %token <int> INT
 %token <string> ID
-// %token <path> PATH
+// %token <string> PATH
 %token TRUE
 %token FALSE
 %token MAPPING
@@ -40,7 +40,7 @@
 // OPERATORS
 %token MSGSENDER
 %token MSGVALUE
-%token MSG
+// %token MSG
 %token BALANCE
 %token ADDRESS
 %token THIS
@@ -63,11 +63,11 @@
 %token COMMA
 %token EOF
 %token SEMICOLON
-%token QUOTE
+// %token QUOTE
 
 //SYNTAX
 %token RETURNS
-%token IMPORT 
+// %token IMPORT 
 
 %nonassoc SEMICOLON  
 %right ASSIGN
@@ -77,18 +77,26 @@
 %nonassoc LBRACKET
 %left DOT
 
-%start <(string list * Types.expr)> prog
+// %start <(string list * Types.expr)> prog
+
+%start <Types.expr> prog
+
 
 %%
 
 
+// prog :
+//   |  e = expr; EOF { ([], e) }
+//   | li = list(import_statement) ; e = contract ; EOF { (li, e) }
+//   ;
+
 prog :
-  |  e = expr; EOF { ([], e) }
-  | li = list(import_statement) ; e = contract ; EOF { (li, e) }
+  |  e = expr; EOF { e }
+  |  e = contract ; EOF { e }
   ;
 
-import_statement : 
- | IMPORT QUOTE path = ID QUOTE SEMICOLON { path }
+// import_statement : 
+//  | IMPORT QUOTE path = PATH QUOTE SEMICOLON { path }
 
 typ:
   | UINT { Types.UInt }
