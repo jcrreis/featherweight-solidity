@@ -3,26 +3,29 @@ open C3
 open Utils
 open Pprinters 
 
+let issc (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
+  t2 = CTop ||   
+  (
+    match t1, t2 with 
+      | C name1, C name2 -> let contract_def: contract_def = Hashtbl.find ct name1 in
+        let contract_hierarchy: string list = match c3_linearization contract_def with 
+          | Ok v -> v
+          | Error s -> raise (Failure s)
+        in
+      (List.mem name2 contract_hierarchy)
+      | _ -> raise (Failure "unexpected values!")
+  )
+  
 
-let rec _subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
-  (* t1 is subtype t2 *)
-  match t1, t2 with 
-  (* | CTop, CTop -> true *)
-  | CTop, C _ -> false 
-  | C _, CTop -> true
-  | C name1, C name2 -> 
-    let contract_def: contract_def = Hashtbl.find ct name1 in
-    let contract_hierarchy: string list = match c3_linearization contract_def with 
-      | Ok v -> v
-      | _ -> assert false 
-    in
-    if List.mem name2 contract_hierarchy then true else false
-  | Address (Some _), Address None -> true 
-  | Address None, Address (Some _) -> false  
-  | Address (Some CTop), Address (Some _) -> false 
-  | Address (Some _), Address (Some CTop) -> true 
-  | Address (Some c1), Address (Some c2) -> _subtyping c1 c2 ct
-  | _ -> t1 = t2
+let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
+  match t1, t2 with
+    | CTop, CTop | C _, CTop | C _, C _ -> issc t1 t2 ct 
+    | CTop, C _ -> false 
+    | Address (Some _), Address None -> true 
+    | Address None,  Address (Some _) -> false 
+    | Address (Some t1), Address (Some t2) ->  subtyping t1 t2 ct 
+    | _ -> t1 = t2
+
 
 let ctypes name ct = 
   let c_def: contract_def = Hashtbl.find ct name in
@@ -402,3 +405,4 @@ let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit 
   typecheck_constructor (gv, ga, gc) c.constructor ct;     
   List.iter (fun (f_def: fun_def) -> typecheck_function (gv, ga, gc) f_def ct) (c.functions);
   Format.eprintf "\nContrato Validado com Sucesso!!\n"
+

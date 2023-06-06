@@ -239,7 +239,6 @@ let () =
     Hashtbl.iter (fun _ v -> Format.eprintf "%s" (contract_to_string v)) ct;
     (* typecheck_contract gamma ((Hashtbl.find ct cname)) ct; *)
     
-    
     if true then 
       ()
     else if false then  
