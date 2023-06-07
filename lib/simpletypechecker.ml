@@ -20,9 +20,9 @@ let issc (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
 let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with
     | CTop, CTop | C _, CTop | C _, C _ -> issc t1 t2 ct 
-    | CTop, C _ -> false 
+    (* | CTop, C _ -> false  *)
     | Address (Some _), Address None -> true 
-    | Address None,  Address (Some _) -> false 
+    (* | Address None,  Address (Some _) -> false  *)
     | Address (Some t1), Address (Some t2) ->  subtyping t1 t2 ct 
     | _ -> t1 = t2
 

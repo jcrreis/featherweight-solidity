@@ -3,6 +3,7 @@ open Featherweightsolidity
 open Fs 
 open Types
 open Pprinters
+open Simpletypechecker 
 
 (* 
 We use QuickCheck to define generators for random expressions
@@ -18,7 +19,7 @@ let gen_string =
 
 let leafgen_type = Gen.oneofl[Bool; UInt; Address (Some CTop); Map (Address (Some CTop), UInt); Map (UInt, Address (Some CTop))]
 
-let leafgen_int = Gen.oneof[ Gen.map (fun i -> Val(VUInt i)) Gen.int]
+let leafgen_int = Gen.oneof[ Gen.map (fun i -> if i > 0 then Val(VUInt i) else Val(VUInt 0)) Gen.int]
 
 let leafgen_bool = Gen.oneof[ Gen.map (fun b -> if b then Val(VBool True) else Val(VBool False)) Gen.bool]
 
@@ -617,7 +618,7 @@ let test_stateread = Test.make ~name:"test state read"
        end
     ) 
 
-let test_statewrite= Test.make ~name:"test state write"
+let test_statewrite = Test.make ~name:"test state write"
     (set_shrink tshrink arb_tree_arit)
     (fun (n) -> 
        begin 
@@ -694,8 +695,32 @@ let test_statewrite= Test.make ~name:"test state write"
    end
    )  *)
 
+let test_typecheck_arit = Test.make ~name:"test state write"
+  (set_shrink tshrink arb_tree_arit)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
+      try 
+        typecheck gamma e UInt ct;
+        true
+      with TypeMismatch _ -> false
+    end
+  )  
 
-
+let test_typecheck_bool = Test.make ~name:"test state write"
+  (set_shrink tshrink arb_tree_bool)
+  (fun (e) -> 
+    begin 
+      let ct = Hashtbl.create 64 in 
+      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
+      try 
+        typecheck gamma e Bool ct;
+        true
+      with TypeMismatch _ -> false
+    end
+  )  
+  
 
 let test_suite = [
   test_division_by_zero; 
@@ -713,7 +738,9 @@ let test_suite = [
   test_balance;
   test_address;
   test_stateread;
-  test_statewrite
+  test_statewrite;
+  test_typecheck_arit;
+  test_typecheck_bool
 ] 
 
 let () =
