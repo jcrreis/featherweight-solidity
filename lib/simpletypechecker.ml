@@ -187,14 +187,14 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     | _ -> (Format.eprintf "missing infer case for: %s" (expr_to_string e)) ;assert false
 
 and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit = 
-  let typecheck_axioms (gamma: gamma) (e: expr) (t: t_exp) : unit = 
+  let typecheck_axioms (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table): unit = 
     let t_e = axioms gamma e in 
       begin match t_e with 
         | Ok(t_e) -> 
           begin match t_e with 
             | TRevert -> () 
-            | C _ -> if (t = CTop) || (t_e = t) then () else raise (TypeMismatch (t_e, t))
-            | _ -> if t_e = t then () else raise (TypeMismatch (t_e, t))
+            | _-> if subtyping t_e t ct then () else raise (TypeMismatch (t_e, t))
+            (* | _ -> if t_e = t then () else raise (TypeMismatch (t_e, t)) *)
           end
         | Error(s) -> raise (Failure s)
       end
@@ -249,7 +249,8 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
   in
   let fun_check cname fun_name le ct t = 
     let ftype = function_type cname fun_name ct in 
-    let (t_es, rettype) = ftype in 
+    let (t_es, rettype) = ftype in
+    (* SUBTYPING NEEDED! *) 
     if t = rettype then 
       List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le
     else 
@@ -265,7 +266,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
           if t_exp = t2 then () else raise (TypeMismatch (t_exp, t2))
         | _ -> raise (TypeMismatch (Map(UInt, t_exp), t))
       end
-    | Val _  | MsgValue | Var _ | MsgSender | Revert | This None -> typecheck_axioms gamma e t 
+    | Val _  | MsgValue | Var _ | MsgSender | Revert | This None -> typecheck_axioms gamma e t ct
     | AritOp _ -> typecheck_arit_op gamma e t ct
     | BoolOp _ -> typecheck_bool_op gamma e t ct 
     | Balance e1 -> 

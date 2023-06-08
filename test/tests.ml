@@ -695,7 +695,7 @@ let test_statewrite = Test.make ~name:"test state write"
    end
    )  *)
 
-let test_typecheck_arit = Test.make ~name:"test state write"
+let test_typecheck_arit = Test.make ~name:"test typecheck arithmetic operations"
   (set_shrink tshrink arb_tree_arit)
   (fun (e) -> 
     begin 
@@ -708,7 +708,7 @@ let test_typecheck_arit = Test.make ~name:"test state write"
     end
   )  
 
-let test_typecheck_bool = Test.make ~name:"test state write"
+let test_typecheck_bool = Test.make ~name:"test typecheck boolean operations"
   (set_shrink tshrink arb_tree_bool)
   (fun (e) -> 
     begin 
@@ -722,7 +722,7 @@ let test_typecheck_bool = Test.make ~name:"test state write"
   )  
   
 
-let test_suite = [
+let test_suite_semantics = [
   test_division_by_zero; 
   test_arit_op; 
   test_bool_op;
@@ -741,7 +741,8 @@ let test_suite = [
   test_statewrite;
   test_typecheck_arit;
   test_typecheck_bool
-] 
+]
+
 
 let () =
 
@@ -752,7 +753,7 @@ let () =
 
   let suite =
     List.map QCheck_alcotest.to_alcotest
-      test_suite
+    test_suite_semantics
   in
   Alcotest.run "FS Operational Semantics Tests" [
     "suite", suite
