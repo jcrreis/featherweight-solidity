@@ -165,9 +165,9 @@ let rec eval_expr
             | _ -> assert false
           end
         | _ -> assert false
-        
+
       end 
-    
+
   in
   let get_default_for_type (t_e: t_exp) : (expr) = match t_e with 
     | C _ -> Val(VContract(0))
@@ -422,8 +422,8 @@ let rec eval_expr
             let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
             if e2' = Revert then 
               (blockchain, blockchain', sigma, Revert) 
-          else 
-            eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (Val (VAddress a), e2')))
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Equals (Val (VAddress a), e2')))
           | e1, e2 -> 
             let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
             if e1' = Revert then 
@@ -765,8 +765,8 @@ let rec eval_expr
                           begin
                             let res = update_balance ct (a) (VUInt (n)) vars conf in
                             match res with 
-                              | Ok blockchain -> (blockchain, blockchain', sigma, e) 
-                              | Error _ -> (blockchain, blockchain', sigma, Revert) 
+                            | Ok blockchain -> (blockchain, blockchain', sigma, e) 
+                            | Error _ -> (blockchain, blockchain', sigma, Revert) 
                           end
                         else 
                           (blockchain, blockchain', sigma, e)
@@ -816,8 +816,8 @@ let rec eval_expr
                           begin
                             let res = update_balance ct (a) (VUInt (n)) vars conf in
                             match res with 
-                              | Ok blockchain -> (blockchain, blockchain', sigma, e) 
-                              | Error _ -> (blockchain, blockchain', sigma, Revert) 
+                            | Ok blockchain -> (blockchain, blockchain', sigma, e) 
+                            | Error _ -> (blockchain, blockchain', sigma, Revert) 
                           end
                         else 
                           (blockchain, blockchain', sigma, e)
@@ -877,13 +877,33 @@ let rec eval_expr
       (blockchain, blockchain', sigma, e1')
     else
       (blockchain, blockchain', sigma, e1')
-  | AddContract cdef -> 
+  | AddContract (cdef, lc) -> 
     begin 
       let fun_names = (List.map (fun (f_def: fun_def) -> f_def.name) cdef.functions) in
       if List.mem "fb" fun_names || List.mem "receive" fun_names
       then 
         begin
-          let ct = add_contract_to_contract_table cdef ct in eval_expr ct vars (blockchain, blockchain', sigma, Val(VUnit))
+          try 
+            let sc = List.map (fun s -> 
+                let c = Hashtbl.find ct s in 
+                c.super_contracts
+              ) lc 
+            in 
+            let cdef = {
+              name = cdef.name;
+              super_contracts = Class(cdef.name, sc);
+              super_constructors_args = cdef.super_constructors_args;  
+              state  = cdef.state; 
+              constructor  = cdef.constructor;
+              functions  = cdef.functions;
+              function_lookup_table = cdef.function_lookup_table
+            }
+            in
+            let ct = add_contract_to_contract_table cdef ct in 
+            let msg = "\nContrato " ^ cdef.name ^ " adicionado com sucesso!" in 
+            Format.eprintf "\n\n%s\n\n" msg;
+            eval_expr ct vars (blockchain, blockchain', sigma, Val(VUnit))
+          with Not_found -> raise (Failure "Invalid contract inheritance!")
         end
       else 
         (blockchain, blockchain', sigma, Revert)

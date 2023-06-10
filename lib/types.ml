@@ -73,7 +73,7 @@ and expr =
   | Revert
   | If of expr * expr * expr
   | Return of expr
-  | AddContract of contract_def
+  | AddContract of contract_def * string list
 
 and fun_def = {
   name : string;

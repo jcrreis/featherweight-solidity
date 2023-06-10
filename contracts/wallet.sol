@@ -31,7 +31,7 @@ contract Wallet {
         return this.bal;
     }
 
-    function transferTo(address walletTo, uint amount) {
+    function transferTo(Wallet walletTo, uint amount) {
         if(this.onlyOwner()){
             Wallet(walletTo).deposit{value: amount}();
             this.bal = this.bal - amount;

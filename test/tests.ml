@@ -487,7 +487,7 @@ let test_add_contract_to_ct = Test.make ~name:"test add contract to contract tab
          let blockchain = (Hashtbl.create 64, Hashtbl.create 64) in  
          let sigma = Stack.create() in 
          let contract: contract_def = test_contract in 
-         let (_, _, _, res) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+         let (_, _, _, res) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract,[])) in 
          (
            (res = Val(VUnit)) && (Hashtbl.mem ct contract.name)
          )
@@ -508,7 +508,7 @@ let test_new_contract = Test.make ~name:"test new contract"
            | (_, _, _, Val(VUInt n)) -> VUInt n
            |_ -> VUInt 0  
          in
-         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract,[])) in 
          let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
            | (_, _, _, Val(res)) -> res
            | _ -> assert false
@@ -546,7 +546,7 @@ let test_balance = Test.make ~name:"test balance function"
            | (_, _, _, Val(VUInt n)) -> VUInt n 
            |_ -> VUInt 0  
          in
-         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract,[])) in 
          let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
            | (_, _, _, Val(res)) -> res
            | _ -> assert false
@@ -578,7 +578,7 @@ let test_address = Test.make ~name:"test address function"
            | (_, _, _, Val(VUInt n)) -> VUInt n 
            |_ -> VUInt 0  
          in
-         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract,[])) in 
          let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
            | (_, _, _, Val(res)) -> res
            | _ -> assert false
@@ -608,7 +608,7 @@ let test_stateread = Test.make ~name:"test state read"
            | (_, _, _, Val(VUInt n)) -> VUInt n 
            |_ -> VUInt 0  
          in
-         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract,[])) in 
          let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) in
          (
            let (_, _, _, sr1) = eval_expr ct vars (blockchain, blockchain, sigma, StateRead(res, "test_sv1")) in 
@@ -631,7 +631,7 @@ let test_statewrite = Test.make ~name:"test state write"
            | (_, _, _, Val(VUInt n)) -> VUInt n 
            |_ -> VUInt 0  
          in
-         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract)) in 
+         let (_, _, _, _) =  eval_expr ct vars (blockchain, blockchain, sigma, AddContract(contract,[])) in 
          let res = match eval_expr ct vars (blockchain, blockchain, sigma, New(contract.name, Val(n'), [Val(VAddress "0x0"); Val(n')])) with
            | (_, _, _, Val(res)) -> res
            | _ -> assert false

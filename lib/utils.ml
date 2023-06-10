@@ -215,18 +215,14 @@ let get_address_by_contract (contracts: contracts ) (contract: values) : values 
 let state_vars_contract (contract_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp * string) list =
   let contract : contract_def = Hashtbl.find ct contract_name in contract.state
 
-let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (string option) option = 
-  let contract_def: contract_def = Hashtbl.find ct contract_name in  
-  let functions_list: fun_def list = contract_def.functions in 
-  let rec find_function_def (f_list: fun_def list) (function_name: string) : (string option) option =
-    match f_list with 
-    | [] -> None 
-    | x :: xs -> 
-      if x.name = function_name then 
-        Some x.annotation 
-      else 
-        find_function_def xs function_name 
-  in
-  find_function_def functions_list function_name  
+let fsender (contract_name: string) (function_name: string) (ct: contract_table) : (t_exp, string) result = 
+  let contract_def: contract_def = Hashtbl.find ct contract_name in 
+  let lookup_table = contract_def.function_lookup_table in 
+  try
+    let f : fun_def = Hashtbl.find lookup_table function_name in 
+    match f.annotation with 
+      | None -> Ok(Address None)
+      | Some c -> Ok(Address (Some (C c)))
+  with Not_found -> Error("Function not found!")
 
 

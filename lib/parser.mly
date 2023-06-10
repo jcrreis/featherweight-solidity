@@ -64,10 +64,13 @@
 %token EOF
 %token SEMICOLON
 %token QUOTE
-
+%token LANGLE
+%token RANGLE
+%token ATSIGN
 //SYNTAX
 %token RETURNS
 %token IMPORT 
+%token IS
 
 %nonassoc SEMICOLON  
 %right ASSIGN
@@ -100,10 +103,12 @@ import_statement :
 
 typ:
   | UINT { Types.UInt }
+  | ADDRESS QUOTE c = ID QUOTE { Types.Address (Some (C c)) }
   | ADDRESS { Types.Address (None)}
   | BOOL { Types.Bool }
   | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
     { Types.Map (key, value) }
+  | c = ID { Types.C c }
   ;
 
 values: 
@@ -111,7 +116,7 @@ values:
   | s = ID { Var s }
   | TRUE {  Val(VBool True) }
   | FALSE { Val(VBool False) }
-  | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
+  // | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
   | MSGSENDER { Types.MsgSender }
   | MSGVALUE { Types.MsgValue }   
   // | MSG DOT "value" { Types.MsgSender }                       
@@ -252,8 +257,11 @@ fun_type_return_declaration:
   | RETURNS LPAREN t = typ RPAREN { t }
   ;
 
+fun_annotation:
+  | ATSIGN c = ID { c }
+
 fun_def:
-  | FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
+  | an = option(fun_annotation); FUNCTION fname = ID LPAREN; le = separated_list(COMMA, declare_variable);
     RPAREN t = option(fun_type_return_declaration) LBRACE; e = fun_body; RBRACE {
       begin 
         let return_type = match t with 
@@ -261,7 +269,7 @@ fun_def:
           | Some t -> t
         in 
         Types.{ name = fname;
-                annotation = None;
+                annotation = an;
                 rettype = return_type;
                 args = le;
                 body = e;
@@ -305,19 +313,28 @@ state_var_def:
   | e = declare_variable SEMICOLON { e }
   ;
 
+
+declare_super_contracts: 
+  | IS lc = separated_list(COMMA,ID) { lc }
+
 contract:
-  | CONTRACT contract_name = ID LBRACE state_variables = list(state_var_def);
+  | CONTRACT contract_name = ID lc = option(declare_super_contracts) LBRACE state_variables = list(state_var_def);
       CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
-                          Types.AddContract({
-                                  name = contract_name;
-                                  super_contracts = Class(contract_name, []);
-                                  super_constructors_args = [];
-                                  state = state_variables;
-                                  constructor = (le1, e1);
-                                  functions = le2;
-                                  function_lookup_table = Hashtbl.create 64;
-                          })
+                              let lc = match lc with 
+                                | None -> []
+                                | Some lc -> lc
+                              in
+                                Types.AddContract({
+                                        name = contract_name;
+                                        super_contracts = Class(contract_name, []);
+                                        super_constructors_args = [];
+                                        state = state_variables;
+                                        constructor = (le1, e1);
+                                        functions = le2;
+                                        function_lookup_table = Hashtbl.create 64;
+                                }, lc)
+                              
                           }
   | c1 = contract; c2 = contract; { Seq (c1, c2) }
   ;

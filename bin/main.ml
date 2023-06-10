@@ -3,7 +3,7 @@ open Fs
 open Types
 open Pprinters
 (* open Contracts *)
-(* open Simpletypechecker   *)
+open Simpletypechecker  
 open Utils
 open C3 
 
@@ -50,20 +50,20 @@ let _test_python_mro_example ct =
 
 
 (* let _test_fail_mro = 
-  (*https://www.python.org/download/releases/2.3/mro/*)
-  let ct: contract_table = Hashtbl.create 64 in
-  Hashtbl.replace ct "C" {name="C"; super_contracts=Class("C", [Class("A",[]); Class("B", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.replace ct "B" {name="B"; super_contracts=Class("B", [Class("A",[]);Class("C",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
-  Hashtbl.replace ct "A" {name="A"; super_contracts=Class("A", [Class("C",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+   (*https://www.python.org/download/releases/2.3/mro/*)
+   let ct: contract_table = Hashtbl.create 64 in
+   Hashtbl.replace ct "C" {name="C"; super_contracts=Class("C", [Class("A",[]); Class("B", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+   Hashtbl.replace ct "B" {name="B"; super_contracts=Class("B", [Class("A",[]);Class("C",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
+   Hashtbl.replace ct "A" {name="A"; super_contracts=Class("A", [Class("C",[])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
 
 
-  let l = match c3_linearization (Hashtbl.find ct "C") with 
+   let l = match c3_linearization (Hashtbl.find ct "C") with 
     | Ok v -> v
     | Error s -> raise (NoLinearization s)
-  in 
-  Format.eprintf "$[";
-  List.iter (fun x -> Format.eprintf "%s," x) l;
-  Format.eprintf "]$\n" *)
+   in 
+   Format.eprintf "$[";
+   List.iter (fun x -> Format.eprintf "%s," x) l;
+   Format.eprintf "]$\n" *)
 
 
 let deposit ct vars b b' s n sender contract = 
@@ -97,7 +97,7 @@ let bank_example ct vars blockchain sigma =
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in  
   let (_contracts, accounts) = blockchain in  
-  Hashtbl.add accounts a1 (VUInt 100000); 
+  Hashtbl.add accounts a1 (VUInt 10000); 
   Hashtbl.add accounts a2 (VUInt 100000);  
   print_blockchain blockchain vars;
   let e = New("Bank", Val(VUInt 0), []) in 
@@ -136,7 +136,7 @@ let bank_example ct vars blockchain sigma =
               | Revert -> Format.eprintf "Revert13231@.";
               | _ -> Format.eprintf "Result Liquidity: %s@." (expr_to_string res);
                 print_blockchain blockchain vars
-  
+
 
 
 
@@ -187,7 +187,7 @@ let rec parse_file fname ct blockchain blockchain' sigma vars =
     Format.eprintf "%s:%d:%d" pos.pos_fname
       pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
   in
-  
+
   let cin = open_in fname in
   let lexbuf = Lexing.from_channel cin in
   try
@@ -196,92 +196,86 @@ let rec parse_file fname ct blockchain blockchain' sigma vars =
     let r = Str.regexp "." in 
     let imports = List.map (fun x -> (Str.replace_first r (Filename.dirname fname) x) ) imports in 
     let (ct, blockchain, blockchain', sigma, vars) = List.fold_left 
-      (fun (ct, blockchain, blockchain', sigma, vars) x -> parse_file x ct blockchain blockchain' sigma vars) (ct, blockchain, blockchain', sigma, vars) imports in 
-    match e with 
-      | AddContract cdef -> 
-          let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, e) in
-          if e = (Val(VUnit)) then 
-            let msg = "\nContrato " ^ cdef.name ^ " adicionado com sucesso!" in 
-            Format.eprintf "\n\n%s\n\n" msg;
-            (ct, blockchain, blockchain', sigma, vars)
-          else
-            raise (Failure "Invalid contract!") 
-      | _ -> raise (Failure "unexpected error!")
+        (fun (ct, blockchain, blockchain', sigma, vars) x -> parse_file x ct blockchain blockchain' sigma vars) (ct, blockchain, blockchain', sigma, vars) imports in 
+    let (blockchain, blockchain', sigma, _) = eval_expr ct vars (blockchain, blockchain', sigma, e) in
+    (ct, blockchain, blockchain', sigma, vars)
   with Parser.Error ->
     Format.eprintf "Syntax error@.";
     print_position lexbuf;
     Format.eprintf "@.";
     (ct, blockchain, blockchain', sigma, vars)
-    
+
 
 let () =
   let fname = Sys.argv.(1) in 
-  
+
   (* let cin = open_in fname in
-  let lexbuf = Lexing.from_channel cin in *)
+     let lexbuf = Lexing.from_channel cin in *)
   (* let (_imports, e) : (string list * expr) = Parser.prog Lexer.read lexbuf in *)
   (* parse_file fname; *)
   (* let e : expr = Parser.prog Lexer.read lexbuf in *)
 
-    let ct: contract_table = Hashtbl.create 64 in
-    let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
-    let sigma: values Stack.t = Stack.create() in
-    (* let conf: conf = (blockchain, blockchain, sigma, e) in *)
-    let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-    (* let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in *)
-    (* let _p: program = (ct, blockchain, e) in
-    let _ = eval_expr ct vars conf in 
-    let cname = match e with 
-      | AddContract cdef -> Format.eprintf "%s" (contract_to_string cdef);cdef.name
-      | _ -> assert false 
-    in *)
-    let (ct, blockchain, _, sigma, vars) = parse_file fname ct blockchain blockchain sigma vars in 
-    Hashtbl.iter (fun _ v -> Format.eprintf "%s" (contract_to_string v)) ct;
-    (* typecheck_contract gamma ((Hashtbl.find ct cname)) ct; *)
-    
-    if true then 
-      ()
-    else if false then  
-      (
+  let ct: contract_table = Hashtbl.create 64 in
+  let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
+  let sigma: values Stack.t = Stack.create() in
+  (* let conf: conf = (blockchain, blockchain, sigma, e) in *)
+  let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
+  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
+  (* let _p: program = (ct, blockchain, e) in
+     let _ = eval_expr ct vars conf in 
+     let cname = match e with 
+     | AddContract cdef -> Format.eprintf "%s" (contract_to_string cdef);cdef.name
+     | _ -> assert false 
+     in *)
+  let (ct, _blockchain, _, _sigma, _vars) = parse_file fname ct blockchain blockchain sigma vars in 
+  (* Hashtbl.iter (fun _ v -> Format.eprintf "%s" (contract_to_string v)) ct; *)
+  (* typecheck_contract gamma ((Hashtbl.find ct cname)) ct; *)
+
+  if true then 
+    Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct
+    (* bank_example ct vars blockchain sigma;
+    print_blockchain blockchain vars) *)
+  else if false then  
+    (
       bank_example ct vars blockchain sigma;
       print_blockchain blockchain vars
-      )
-    else
-      (wallet_example ct vars blockchain sigma;
-      print_blockchain blockchain vars)
-    (* ADD CONTRACTS TO CONTRACT TABLE *)
-    (* Hashtbl.add ct "Bank" (bank_contract());
-       Hashtbl.add ct "BloodBank" (blood_bank_contract());
-       Hashtbl.add ct "Donor" (donor_contract());
-       Hashtbl.add ct "EOAContract" (eoa_contract()); *)
-    (* Hashtbl.add ct "Bank" (bank_contract()); *)
-    (*https://github.com/federicobond/c3-linearization*)
-    (* wikipedia_example_c3_linearization ct; 
-    test_python_mro_example ct;
-    test_fail_mro; Ver porque não retorna erro *)
-    (* if false then 
-      bank_example ct vars blockchain sigma; *)
-  (* if false then 
-    wallet_example ct vars blockchain sigma; *)
-  (* let ct = add_contract_to_contract_table (bank_contract()) ct in  *)
-  (* bank_example ct vars blockchain sigma; *)
-  
+    )
+  else
+    (wallet_example ct vars blockchain sigma;
+     print_blockchain blockchain vars)
+(* ADD CONTRACTS TO CONTRACT TABLE *)
+(* Hashtbl.add ct "Bank" (bank_contract());
+   Hashtbl.add ct "BloodBank" (blood_bank_contract());
+   Hashtbl.add ct "Donor" (donor_contract());
+   Hashtbl.add ct "EOAContract" (eoa_contract()); *)
+(* Hashtbl.add ct "Bank" (bank_contract()); *)
+(*https://github.com/federicobond/c3-linearization*)
+(* wikipedia_example_c3_linearization ct; 
+   test_python_mro_example ct;
+   test_fail_mro; Ver porque não retorna erro *)
+(* if false then 
+   bank_example ct vars blockchain sigma; *)
+(* if false then 
+   wallet_example ct vars blockchain sigma; *)
+(* let ct = add_contract_to_contract_table (bank_contract()) ct in  *)
+(* bank_example ct vars blockchain sigma; *)
 
-  (* typecheck gamma (MsgSender) (Address None) ct blockchain;
-  typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
-  (* let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
-  typecheck gamma e1 UInt ct blockchain; *)
- 
-  (* let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in *)
-  (* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
-  Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
-  Hashtbl.add ct "Bank" (bank_contract()); *)
-  (* Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
-  Format.eprintf "=========================================";
-  Format.eprintf "%s"(Pprinters.contract_to_string (bank_contract()));  *)
-  (* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain; *)
-  (* Hashtbl.add ct "Bank" (bank_contract()); *)
-  (* typecheck_contract gamma (bank_contract()) ct blockchain; *)
+
+(* typecheck gamma (MsgSender) (Address None) ct blockchain;
+   typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
+(* let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
+   typecheck gamma e1 UInt ct blockchain; *)
+
+(* let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in *)
+(* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
+   Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
+   Hashtbl.add ct "Bank" (bank_contract()); *)
+(* Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
+   Format.eprintf "=========================================";
+   Format.eprintf "%s"(Pprinters.contract_to_string (bank_contract()));  *)
+(* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain; *)
+(* Hashtbl.add ct "Bank" (bank_contract()); *)
+(* typecheck_contract gamma (bank_contract()) ct blockchain; *)
 
 (* let () =  (* let x: int = 10 ; x + x ;*)
    (* let e1 = (AritOp(Plus(Num(1),Times(Num(2),Num(3))))) in

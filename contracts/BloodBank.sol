@@ -1,4 +1,4 @@
-import "./Donor.sol";
+import "./imports/Donor.sol";
 
 contract BloodBank{
 
@@ -33,13 +33,15 @@ contract BloodBank{
         }
     }
 
-    function donate(uint amount) {
+    @Donor
+    function donatee(uint amount) returns (bool){
         uint donorBlood = Donor(msgsender).getBlood();
-        if (this.healty[msgsender] && (donorBlood > 3000) && (donorBlood - amount > 0)){
+        if ((this.healty[msgsender] && (donorBlood > 3000) && ((donorBlood - amount) > 0))){
             this.blood = this.blood + amount;
+            return true;
         }
         else {
-            return revert;
+            return false;
         }         
     }
     
