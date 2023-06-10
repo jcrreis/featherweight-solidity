@@ -34,7 +34,7 @@ contract BloodBank{
     }
 
     @Donor
-    function donatee(uint amount) returns (bool){
+    function donate(uint amount) returns (bool){
         uint donorBlood = Donor(msgsender).getBlood();
         if ((this.healty[msgsender] && (donorBlood > 3000) && ((donorBlood - amount) > 0))){
             this.blood = this.blood + amount;

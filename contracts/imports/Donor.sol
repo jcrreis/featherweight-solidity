@@ -12,10 +12,12 @@ contract Donor {
     }
 
     function donate(uint amount) {
-        bool cond = BloodBank(this.bank).donate(amount);
+        BloodBank b = BloodBank(this.bank);
+        bool cond = b.donate(amount);
         if(cond){
             this.blood = this.blood - amount;
         }
+        
     }
 
     function getBank() returns (address) {
