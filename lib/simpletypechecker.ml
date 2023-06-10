@@ -99,14 +99,8 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     typecheck gamma (Assign(s, e1)) Unit ct;
     Ok(Unit)
   | Address e1 -> 
-    let t_e1 = infer_type gamma e1 ct in 
-    begin
-      match t_e1 with 
-      | Ok(CTop) -> Ok(Address (Some(CTop)))
-      | Ok(C i) -> Ok(Address (Some((C i))))
-      | Ok(Address _) -> Ok(Address None)
-      | _ -> Error(type_infer_error e)
-    end
+    typecheck gamma (Address e1) (Address None) ct;
+    Ok(Address None)
   | Return e1 ->
     (* typecheck ??*) 
     let t_e1 = infer_type gamma e1 ct in
