@@ -3,7 +3,7 @@ open Fs
 open Types
 open Pprinters
 (* open Contracts *)
-open Simpletypechecker  
+open Typechecker  
 open Utils
 open C3 
 
@@ -220,7 +220,7 @@ let () =
   let sigma: values Stack.t = Stack.create() in
   (* let conf: conf = (blockchain, blockchain, sigma, e) in *)
   let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
+  let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
   (* let _p: program = (ct, blockchain, e) in
      let _ = eval_expr ct vars conf in 
      let cname = match e with 

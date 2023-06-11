@@ -9,7 +9,7 @@ contract Bool {
     }
 
     function bool1() returns (bool) {
-        return msgsender == owner;
+        return msgsender == this.owner;
     }
     function bool2(uint amount) returns (bool) {
         return (2 == amount) || (3 == 5) && (5 > 4);

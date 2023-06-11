@@ -12,7 +12,7 @@ contract Donor {
     }
 
     function donate(uint amount) {
-        if(BloodBank(this.bank).donate(amount){value: 0}()){
+        if(BloodBank(this.bank).donate{value: 0}(amount)){
             this.blood = this.blood - amount;
         }
         

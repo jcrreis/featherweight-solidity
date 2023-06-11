@@ -3,7 +3,7 @@ open Featherweightsolidity
 open Fs 
 open Types
 open Pprinters
-open Simpletypechecker 
+open Typechecker 
 
 (* 
 We use QuickCheck to define generators for random expressions
@@ -700,7 +700,7 @@ let test_typecheck_arit = Test.make ~name:"test typecheck arithmetic operations"
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
-      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
+      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
       try 
         typecheck gamma e UInt ct;
         true
@@ -713,7 +713,7 @@ let test_typecheck_bool = Test.make ~name:"test typecheck boolean operations"
   (fun (e) -> 
     begin 
       let ct = Hashtbl.create 64 in 
-      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
+      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
       try 
         typecheck gamma e Bool ct;
         true

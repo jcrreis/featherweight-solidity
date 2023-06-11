@@ -9,7 +9,7 @@ contract If {
     }
 
     function if1() returns (bool) {
-        if (msgsender == owner) {
+        if (msgsender == this.owner) {
             return true;
         }
         else {
@@ -18,7 +18,7 @@ contract If {
     }
 
     function if2(uint amount) returns (uint){
-        if ((msgsender == owner) && (amount > 0)){
+        if ((msgsender == this.owner) && (amount > 0)){
             this.owner = msgsender;
             return amount;
         }
@@ -29,7 +29,7 @@ contract If {
     
     
     function if3() {
-        if(msgsender == owner) {
+        if(msgsender == this.owner) {
             this.b = this.b + 1;
         }
     }
