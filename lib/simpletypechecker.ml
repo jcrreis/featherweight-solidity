@@ -338,7 +338,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
     else
       begin try 
           typecheck gamma e1 (C s) ct;
-        with TypeMismatch _ ->  typecheck gamma e1 (Address (Some (C s))) ct;
+        with TypeMismatch _ -> typecheck gamma e1 (Address (Some (C s))) ct;
       end
   | CallTopLevel (e1, s, e2, e3, le) -> 
     begin
@@ -354,7 +354,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
     end
   | Call (e1, s, e2, le) -> 
     begin
-      let t_e1 = infer_type gamma e1 ct in  
+      let t_e1 = infer_type gamma e1 ct in
       match t_e1 with 
       | Ok(C name) ->
         let (gv, _, _) = gamma in 
@@ -379,8 +379,8 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
   | StateRead(e1, s) -> 
     typecheck gamma e1 CTop ct;
     let t_s = get_var_type_from_gamma s gamma in
-    if t_s = t then () else raise (TypeMismatch (t_s, t))
-  | Address e1 -> 
+    if subtyping t_s t ct then () else raise (TypeMismatch (t_s, t))
+    | Address e1 -> 
     if t <> (Address None) then 
       raise (TypeMismatch (Address None, t))
     else

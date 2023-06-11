@@ -2,7 +2,7 @@ contract Donor {
     uint blood;
     address"BloodBank" bank;
 
-    constructor (uint blood, address bank) {
+    constructor (uint blood, address"BloodBank" bank) {
         this.blood = blood;
         this.bank = bank;
     }
@@ -12,9 +12,7 @@ contract Donor {
     }
 
     function donate(uint amount) {
-        BloodBank b = BloodBank(this.bank);
-        bool cond = b.donate(amount);
-        if(cond){
+        if(BloodBank(this.bank).donate(amount){value: 0}()){
             this.blood = this.blood - amount;
         }
         
