@@ -117,7 +117,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
         let t_e2 = infer_type gamma e2 ct in 
         match t_e2 with 
         | Ok(t_e2) -> typecheck gamma (Seq(e1, e2)) t_e2 ct; Ok(t_e2)
-        | Error s -> raise (Failure s)
+        | Error s -> Error s
       with TypeMismatch _ -> Error(type_infer_error e)
     end 
   | If (e1, e2, e3) ->
@@ -126,7 +126,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       let t_e2 = infer_type gamma e2 ct in 
       match t_e2 with 
       | Ok(t_e2) -> typecheck gamma e3 t_e2 ct; Ok(t_e2)
-      | Error s -> raise (Failure s)
+      | Error s -> Error s
     end
   | This Some (s, le) -> 
     let t_this = get_var_type_from_gamma "this" gamma in 
@@ -138,7 +138,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
           typecheck gamma (This (Some (s, le))) rettype ct;
           Ok(rettype)
         end
-      | _ -> Error ("Invalid type for this")
+      | _ -> Error ("Invalid type for this: this can only reference its contract!")
     end
   | MapRead (e1, e2) ->  
     let t_e1 = infer_type gamma e1 ct in 
@@ -146,14 +146,14 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
       | Ok(Map(_, rettype)) ->
         typecheck gamma (MapRead (e1, e2)) rettype ct;
         Ok(rettype)
-      | Error s -> raise (Failure s)
-      | _ -> raise (Failure "Unexpected operation")
+      | Error s -> Error s
+      | _ -> raise Error ("Expected a mapping(a' => b') type instead of " ^ (t_exp_to_string t_e1))
     end
   | MapWrite (e1, e2, e3) ->
     let t_e1 = infer_type gamma e1 ct in 
     begin match t_e1 with 
       | Ok(t_e1) -> typecheck gamma (MapWrite (e1, e2, e3)) t_e1 ct; Ok(t_e1)
-      | Error s -> raise (Failure s)
+      | Error s -> Error s
     end
   | StateRead(e1, s) ->
     let t_s = get_state_var_type_from_gamma s gamma in
@@ -180,8 +180,8 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
           typecheck gamma (Call (e1, s, e2, le)) rettype ct;
           Ok(rettype)
         end
-      | Error s -> raise (Failure s)
-      | _ -> raise (Failure "Invalid operation")
+      | Error s -> Error s
+      | _ -> Error ("Expected contract reference instead of " ^ (t_exp_to_string t_e1))
     end
   | Cons(s, e1) -> 
     typecheck gamma (Cons (s, e1)) (C s) ct;
