@@ -147,7 +147,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
         typecheck gamma (MapRead (e1, e2)) rettype ct;
         Ok(rettype)
       | Error s -> Error s
-      | _ -> raise Error ("Expected a mapping(a' => b') type instead of " ^ (t_exp_to_string t_e1))
+      | Ok(t_e1) -> Error ("Expected a mapping(a' => b') type instead of " ^ (t_exp_to_string t_e1))
     end
   | MapWrite (e1, e2, e3) ->
     let t_e1 = infer_type gamma e1 ct in 
@@ -181,7 +181,7 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
           Ok(rettype)
         end
       | Error s -> Error s
-      | _ -> Error ("Expected contract reference instead of " ^ (t_exp_to_string t_e1))
+      | Ok(t_e1) -> Error ("Expected contract reference instead of " ^ (t_exp_to_string t_e1))
     end
   | Cons(s, e1) -> 
     typecheck gamma (Cons (s, e1)) (C s) ct;
@@ -279,7 +279,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
   | Seq (e1, e2) -> 
     let t_e1 = infer_type gamma e1 ct in 
     begin match t_e1 with 
-      | Ok(_) -> (*typecheck gamma e1 t_e1 ct; *) typecheck gamma e2 t ct
+      | Ok(_) -> typecheck gamma e2 t ct
       | Error s -> raise (Failure s)
     end
   | Let(t_e, s, e1, e2) -> 
