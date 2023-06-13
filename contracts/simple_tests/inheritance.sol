@@ -1,7 +1,9 @@
 
 contract C {
-    constructor () {
+    uint counter;
 
+    constructor (uint init) {
+        this.counter = init;
     }
 
     function fb() {
@@ -9,8 +11,9 @@ contract C {
 
 }
 contract A {
-   constructor () {
-
+    address owner;
+   constructor (address owner) {
+    this.owner = owner;
     }
 
     function fb() {
@@ -18,7 +21,7 @@ contract A {
 
 }
 contract B is A,C{
-    constructor () {
+    constructor () A(msgsender) C(10){
 
     }
 
@@ -27,7 +30,7 @@ contract B is A,C{
 }
 
 contract EOAContract is B {
-    constructor () {
+    constructor () B(){
 
     }
 

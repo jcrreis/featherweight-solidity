@@ -389,17 +389,17 @@ let test_if = Test.make ~name:"test if operator"
            | _ -> assert false 
          in 
          (
-            eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool True), e2, e3)))
-            =
-            eval_expr ct vars (blockchain, blockchain, sigma, e2)
-          )
+           eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool True), e2, e3)))
+           =
+           eval_expr ct vars (blockchain, blockchain, sigma, e2)
+         )
          &&
-          (
-            eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool False), e2, e3)))
-            =
-            eval_expr ct vars (blockchain, blockchain, sigma, e3)
-          )
-          &&
+         (
+           eval_expr ct vars (blockchain, blockchain, sigma, (If(Val(VBool False), e2, e3)))
+           =
+           eval_expr ct vars (blockchain, blockchain, sigma, e3)
+         )
+         &&
          (
            eval_expr ct vars (blockchain, blockchain, sigma, (If(e1, e2, e3)))
            =
@@ -696,31 +696,31 @@ let test_statewrite = Test.make ~name:"test state write"
    )  *)
 
 let test_typecheck_arit = Test.make ~name:"test typecheck arithmetic operations"
-  (set_shrink tshrink arb_tree_arit)
-  (fun (e) -> 
-    begin 
-      let ct = Hashtbl.create 64 in 
-      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
-      try 
-        typecheck gamma e UInt ct;
-        true
-      with TypeMismatch _ -> false
-    end
-  )  
+    (set_shrink tshrink arb_tree_arit)
+    (fun (e) -> 
+       begin 
+         let ct = Hashtbl.create 64 in 
+         let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
+         try 
+           typecheck gamma e UInt ct;
+           true
+         with TypeMismatch _ -> false
+       end
+    )  
 
 let test_typecheck_bool = Test.make ~name:"test typecheck boolean operations"
-  (set_shrink tshrink arb_tree_bool)
-  (fun (e) -> 
-    begin 
-      let ct = Hashtbl.create 64 in 
-      let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
-      try 
-        typecheck gamma e Bool ct;
-        true
-      with TypeMismatch _ -> false
-    end
-  )  
-  
+    (set_shrink tshrink arb_tree_bool)
+    (fun (e) -> 
+       begin 
+         let ct = Hashtbl.create 64 in 
+         let gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in  
+         try 
+           typecheck gamma e Bool ct;
+           true
+         with TypeMismatch _ -> false
+       end
+    )  
+
 
 let test_suite_semantics = [
   test_division_by_zero; 
@@ -753,7 +753,7 @@ let () =
 
   let suite =
     List.map QCheck_alcotest.to_alcotest
-    test_suite_semantics
+      test_suite_semantics
   in
   Alcotest.run "FS Operational Semantics Tests" [
     "suite", suite

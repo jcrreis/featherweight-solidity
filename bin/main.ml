@@ -227,106 +227,23 @@ let () =
      | AddContract cdef -> Format.eprintf "%s" (contract_to_string cdef);cdef.name
      | _ -> assert false 
      in *)
-  let (ct, _blockchain, _, _sigma, _vars) = parse_file fname ct blockchain blockchain sigma vars in 
+
   (* Hashtbl.iter (fun _ v -> Format.eprintf "%s" (contract_to_string v)) ct; *)
   (* typecheck_contract gamma ((Hashtbl.find ct cname)) ct; *)
 
-  if true then 
-    Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct
-    (* bank_example ct vars blockchain sigma;
-    print_blockchain blockchain vars) *)
-  else if false then  
+  if fname = "bank_example" then 
     (
+      let (ct, blockchain, _, sigma, vars) = parse_file "contracts/bank.sol" ct blockchain blockchain sigma vars in
+      Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct;
       bank_example ct vars blockchain sigma;
       print_blockchain blockchain vars
     )
+  else if fname = "wallet_example" then  
+    (
+      let (ct, blockchain, _, sigma, vars) = parse_file "contracts/wallet.sol" ct blockchain blockchain sigma vars in
+      Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct;
+      wallet_example ct vars blockchain sigma;
+      print_blockchain blockchain vars)
   else
-    (wallet_example ct vars blockchain sigma;
-     print_blockchain blockchain vars)
-(* ADD CONTRACTS TO CONTRACT TABLE *)
-(* Hashtbl.add ct "Bank" (bank_contract());
-   Hashtbl.add ct "BloodBank" (blood_bank_contract());
-   Hashtbl.add ct "Donor" (donor_contract());
-   Hashtbl.add ct "EOAContract" (eoa_contract()); *)
-(* Hashtbl.add ct "Bank" (bank_contract()); *)
-(*https://github.com/federicobond/c3-linearization*)
-(* wikipedia_example_c3_linearization ct; 
-   test_python_mro_example ct;
-   test_fail_mro; Ver porque não retorna erro *)
-(* if false then 
-   bank_example ct vars blockchain sigma; *)
-(* if false then 
-   wallet_example ct vars blockchain sigma; *)
-(* let ct = add_contract_to_contract_table (bank_contract()) ct in  *)
-(* bank_example ct vars blockchain sigma; *)
-
-
-(* typecheck gamma (MsgSender) (Address None) ct blockchain;
-   typecheck gamma (MsgSender) (Address (Some (C "1"))) ct blockchain; *)
-(* let e1 : expr = Let(Address (Some (C "Bank")), "x", Val(VUInt 2), Val(VUInt 3)) in 
-   typecheck gamma e1 UInt ct blockchain; *)
-
-(* let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in *)
-(* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain;
-   Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
-   Hashtbl.add ct "Bank" (bank_contract()); *)
-(* Format.eprintf "%s" (Pprinters.contract_to_string (Hashtbl.find ct "Bank"));
-   Format.eprintf "=========================================";
-   Format.eprintf "%s"(Pprinters.contract_to_string (bank_contract()));  *)
-(* typecheck_contract gamma (Hashtbl.find ct "Bank") ct blockchain; *)
-(* Hashtbl.add ct "Bank" (bank_contract()); *)
-(* typecheck_contract gamma (bank_contract()) ct blockchain; *)
-
-(* let () =  (* let x: int = 10 ; x + x ;*)
-   (* let e1 = (AritOp(Plus(Num(1),Times(Num(2),Num(3))))) in
-   Format.eprintf "%s\n" (arit_op_to_string e1); *)
-   let ct: contract_table = Hashtbl.create 64 in
-   let blockchain: blockchain = Hashtbl.create 64 in
-   let sigma: values Stack.t = Stack.create() in
-   let conf: conf = (blockchain, blockchain, sigma, Val(VUInt(0))) in
-   let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
-   (* let p : program = (ct, blockchain, Val(VUInt(0))) in *)
-
-   let print_set s = FV.iter print_endline s in
-   let e2 = New("BloodBank", Val(VUInt(0)),[Val(VMapping(Hashtbl.create 64)); Val(VAddress("0x000x"));Val(VUInt(1111))]) in
-   let lst = free_addr_names e2 in
-   print_set lst;
-   (* let e1 = BoolOp(Equals((AritOp(Plus(Val (VUInt(1)),AritOp(Plus(Val(VUInt(10)),(Val(VUInt(1)))))))),Val(VUInt(13)))) in *)
-   (* let (_, _, _, Val(VBool(b))) = eval_expr ct vars (blockchain, blockchain, sigma, e1) in
-   match b with 
-   | True -> Format.eprintf "True";
-   | False -> Format.eprintf "False";
-   | _ -> (); *)
-   (* Format.eprintf "%d\n" i; *)
-   Hashtbl.add ct "Bank" (bank_contract());
-   Hashtbl.add ct "BloodBank" (blood_bank_contract());
-   Hashtbl.add ct "Donor" (donor_contract());
-   Hashtbl.add ct "EOAContract" (eoa_contract());
-   Hashtbl.add blockchain (VContract 0, VAddress "0x0000000000000000000000000000000000000000") ("EOAContract", StateVars.empty, VUInt(0));
-   Hashtbl.add blockchain (VContract 1, VAddress "0x00") ("EOAContract", StateVars.empty, VUInt(1000000000));
-   let res = state_vars_contract "Bank" ct in
-   let res2 = state_vars_contract "BloodBank" ct in
-   let res3 = state_vars_contract "Donor" ct in
-   (* let res4 = state_vars_contract "Error" ct in  *)
-   print_tuples res;
-   print_tuples res2;
-   print_tuples res3;
-   (* print_tuples res4; *)
-   let (res1, _) = function_body "Bank" "transfer" [Val(VUInt(1));Val(VUInt(1))] ct in
-   print_tuples res1;
-   (* print_tuples [(res, "transfer fun return_type")]; *)
-   let address = generate_new_ethereum_address() in 
-   Format.eprintf "\n%s" address;
-   Format.eprintf "\n%d\n" ((Bytes.length (Bytes.of_string address))*8);
-   Stack.push (VAddress "0x00") sigma;
-   let res = eval_expr ct vars (blockchain, blockchain, sigma, e2) in 
-   match res with 
-   | (_, _, _, Revert) -> Format.eprintf "\n%s" "REVERTED" ; 
-   | _ -> Format.eprintf "\n%s" "SUCESSO"; *)
-
-
-(* print_tuples [(res, "isHealty fun return_type")] *)
-
-(* match e2 with
-   | Val (VUInt(i)) -> Format.eprintf "%s\n" (Stdlib.string_of_int i);
-   | _ -> assert false *)
+    let (ct, _blockchain, _, _sigma, _vars) = parse_file fname ct blockchain blockchain sigma vars in
+    Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct

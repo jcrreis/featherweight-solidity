@@ -6,9 +6,9 @@ let rec t_exp_to_string (t_e: t_exp) : string = match t_e with
   | Unit -> "unit"
   | UInt -> "uint"
   | Address t -> begin match t with 
-    | None -> "address"
-    | Some t -> "address<" ^ t_exp_to_string t ^ ">"
-  end
+      | None -> "address"
+      | Some t -> "address<" ^ t_exp_to_string t ^ ">"
+    end
   | Map (t_e1, t_e2)-> "mapping(" ^ t_exp_to_string t_e1 ^ " => " ^ t_exp_to_string t_e2 ^ ")"
   | TRevert -> "revert"
   | Fun (lt_e, t_e) -> "Fun (" ^ (List.fold_left (fun s t_e -> s ^ t_exp_to_string t_e) "" lt_e) ^ ")" ^ " -> " ^ t_exp_to_string t_e
@@ -124,15 +124,15 @@ let print_blockchain (blockchain: blockchain) _tbl : unit =
         end
       | _ -> assert false
     ) contracts
-    ;
-    Hashtbl.iter (fun a n ->  match a, n with 
-        | VAddress _, VUInt _ -> 
-          begin
-            Format.eprintf "\nAccount: %s  ," (values_to_string a);
-            Format.eprintf "Balance: %s\n" (values_to_string n);
-          end
-        | _ -> assert false
-      ) accounts
+  ;
+  Hashtbl.iter (fun a n ->  match a, n with 
+      | VAddress _, VUInt _ -> 
+        begin
+          Format.eprintf "\nAccount: %s  ," (values_to_string a);
+          Format.eprintf "Balance: %s\n" (values_to_string n);
+        end
+      | _ -> assert false
+    ) accounts
 
 
 

@@ -317,9 +317,13 @@ state_var_def:
 declare_super_contracts: 
   | IS lc = separated_list(COMMA,ID) { lc }
 
+declare_super_contracts_constructors: 
+  | ID LPAREN le = separated_list(COMMA,expr) RPAREN  { le }
+
 contract:
   | CONTRACT contract_name = ID lc = option(declare_super_contracts) LBRACE state_variables = list(state_var_def);
-      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN LBRACE; e1 = fun_body ;RBRACE
+      CONSTRUCTOR LPAREN; le1 = separated_list(COMMA, declare_variable); RPAREN lca = list(declare_super_contracts_constructors)
+      LBRACE; e1 = fun_body ;RBRACE
       le2 = list(fun_def) RBRACE {
                               let lc = match lc with 
                                 | None -> []
@@ -328,7 +332,7 @@ contract:
                                 Types.AddContract({
                                         name = contract_name;
                                         super_contracts = Class(contract_name, []);
-                                        super_constructors_args = [];
+                                        super_constructors_args = lca;
                                         state = state_variables;
                                         constructor = (le1, e1);
                                         functions = le2;

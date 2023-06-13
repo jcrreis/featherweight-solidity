@@ -252,12 +252,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
   let fun_check gamma cname fun_name le ct t = 
     let ftype = function_type cname fun_name ct in 
     let (t_es, rettype) = ftype in
-    (* let (gv, _, _) = gamma in 
-    match fsender cname fun_name ct with 
-      | Ok t_sender -> Hashtbl.add gv "msg.sender" t_sender;
-      | _ -> (); *)
     (* SUBTYPING NEEDED! *) 
-    Format.eprintf "%s" (t_exp_to_string rettype);
     if subtyping rettype t ct then 
       List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le
     else 
@@ -293,7 +288,6 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
     Hashtbl.add gamma_vars s t_e;
     typecheck gamma e2 t ct
   | If (e1, e2, e3) -> 
-    (Format.eprintf "%s" (expr_to_string e1));
     typecheck gamma e1 Bool ct;
     typecheck gamma e2 t ct;
     typecheck gamma e3 t ct
@@ -387,7 +381,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
     typecheck gamma e1 CTop ct;
     let t_s = get_state_var_type_from_gamma s gamma in
     if subtyping t_s t ct then () else raise (TypeMismatch (t_s, t))
-    | Address e1 -> 
+  | Address e1 -> 
     if t <> (Address None) then 
       raise (TypeMismatch (Address None, t))
     else
@@ -420,6 +414,6 @@ let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit 
   Hashtbl.add gv "msg.value" (UInt);
   List.iter (fun (t_e, s) -> Hashtbl.add gsv s t_e;) (c.state);
   typecheck_constructor (gv, gsv, ga, gc) c.constructor ct;     
-  List.iter (fun (f_def: fun_def) -> Format.eprintf "%s" ("\n FUN : " ^ f_def.name ^ "\n");typecheck_function (gv, gsv, ga, gc) f_def ct) (c.functions);
+  List.iter (fun (f_def: fun_def) -> typecheck_function (gv, gsv, ga, gc) f_def ct) (c.functions);
   Format.eprintf "\nContrato Validado com Sucesso!!\n"
 

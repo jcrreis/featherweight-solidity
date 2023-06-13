@@ -221,8 +221,8 @@ let fsender (contract_name: string) (function_name: string) (ct: contract_table)
   try
     let f : fun_def = Hashtbl.find lookup_table function_name in 
     match f.annotation with 
-      | None -> Ok(Address None)
-      | Some c -> Ok(Address (Some (C c)))
+    | None -> Ok(Address None)
+    | Some c -> Ok(Address (Some (C c)))
   with Not_found -> Error("Function not found!")
 
 
