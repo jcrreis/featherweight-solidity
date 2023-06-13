@@ -54,6 +54,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
+        <li><a href="#supported-features">Supported Features</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
@@ -78,7 +79,7 @@ This is a proof of concept (POC) inspired on featherweight-solidity formalizatio
 
 You can read more about their formalization <a href="https://link.springer.com/chapter/10.1007/978-3-030-43725-1_11">here</a>
 
-####Supported features:
+### Supported Features:
 
 - [x] Multiple Inheritance
 - [x] More safety type casting addresses to contracts
@@ -109,7 +110,6 @@ It relies on the following OCaml libraries:
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
 * OCaml/Opam
   ```sh
   $ bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
