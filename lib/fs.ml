@@ -626,12 +626,12 @@ let rec eval_expr
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
             begin match res with
               | Ok blockchain ->
-                let (state, lvars) = make_local_variables_and_state_variables c3_linearization_hierarchy ct vars le in                 
-                let sv = init_contract_state state in
-                Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
                 Hashtbl.add vars "this" (Val(VContract c));
                 Hashtbl.add vars "msg.sender" (Val (top conf));
                 Hashtbl.add vars "msg.value" (Val (VUInt n));
+                let (state, lvars) = make_local_variables_and_state_variables c3_linearization_hierarchy ct vars le in                 
+                let sv = init_contract_state state in
+                Hashtbl.add contracts (VContract c, VAddress a) (contract_def.name, sv, VUInt(n));
                 let (_, blockchain', sigma, e) = conf in 
                 (* execute super contracts ... *)
                 let (blockchain, blockchain', sigma, _) = List.fold_left (fun (conf: conf) (ctr_super: string) -> 

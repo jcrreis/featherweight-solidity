@@ -31,6 +31,7 @@ let _wikipedia_example_c3_linearization ct =
   Format.eprintf "[";
   List.iter (fun x -> Format.eprintf "%s," x) l;
   Format.eprintf "]\n"
+
 let _test_python_mro_example ct = 
   (*https://www.python.org/download/releases/2.3/mro/*)
   Hashtbl.add ct "C" {name="C"; super_contracts=Class("C", [Class("D",[]); Class("F", [])]); super_constructors_args=[]; state=[]; constructor=([], Val(VUnit)); functions=[]; function_lookup_table = Hashtbl.create 64;};
@@ -138,8 +139,6 @@ let bank_example ct vars blockchain sigma =
                 print_blockchain blockchain vars
 
 
-
-
 let wallet_example ct vars blockchain sigma = 
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in  
@@ -180,6 +179,18 @@ let wallet_example ct vars blockchain sigma =
             | _ -> Format.eprintf "%s@." (expr_to_string res);
               Format.eprintf "======================================";
               print_blockchain blockchain vars
+
+let inheritance_example ct vars blockchain sigma = 
+  let a1 = (VAddress (generate_new_ethereum_address())) in
+  let a2 = (VAddress (generate_new_ethereum_address())) in
+  let (_contracts, accounts) = blockchain in  
+  Hashtbl.add accounts a1 (VUInt 100000); 
+  Hashtbl.add accounts a2 (VUInt 100000);
+  Stack.push a1 sigma;
+  let e = New("B", Val(VUInt 10000), [Val(VUInt 10)]) in
+  let (blockchain, blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
+  let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain', sigma, CallTopLevel(contract, "getCounter", Val (VUInt 0), Val (a1), [])) in
+  Format.eprintf "%s@." (expr_to_string res)
 
 let rec parse_file fname ct blockchain blockchain' sigma vars =
   let print_position lexbuf =
@@ -243,6 +254,12 @@ let () =
       let (ct, blockchain, _, sigma, vars) = parse_file "contracts/wallet.sol" ct blockchain blockchain sigma vars in
       Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct;
       wallet_example ct vars blockchain sigma;
+      print_blockchain blockchain vars)
+  else if fname = "inheritance_example"  then  
+    (
+      let (ct, blockchain, _, sigma, vars) = parse_file "contracts/inheritance.sol" ct blockchain blockchain sigma vars in
+      Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct;
+      inheritance_example ct vars blockchain sigma;
       print_blockchain blockchain vars)
   else
     let (ct, _blockchain, _, _sigma, _vars) = parse_file fname ct blockchain blockchain sigma vars in
