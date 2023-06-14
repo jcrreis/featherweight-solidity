@@ -22,7 +22,7 @@ contract A {
 contract B is A,C{
     uint counter;
     uint b;
-    constructor(uint x) A(msgsender) C(msgsender){
+    constructor(uint x) A(200) C(10){
         this.counter = x;
         this.b = x;
     }

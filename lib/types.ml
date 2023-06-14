@@ -1,6 +1,6 @@
 module StateVars = Map.Make(String)
 type 'a hierarchy = Class of ('a * 'a hierarchy list)
-
+ 
 type t_exp =
   | C of string (*name of contract*)  (*string * string *)(* * hash_contract_code? *)
   | Bool

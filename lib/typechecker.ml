@@ -27,6 +27,17 @@ let ctypes name ct =
   let (args, _) = c_def.constructor in 
   let ts = List.map (fun (t_e, _) -> t_e) args in
   ts
+  (* super_contracts: string hierarchy;Class of ('a * 'a hierarchy list)
+  super_constructors_args: (expr list) list;  *)
+let super_contracts_ctypes name ct = 
+  let c_def: contract_def = Hashtbl.find ct name in
+  let sc : string hierarchy list = match c_def.super_contracts with 
+    | Class(_, sc) -> sc 
+  in
+  let sc_args : expr list list = c_def.super_constructors_args in 
+  let sc : t_exp list list = List.map (fun (Class(cname, _)) -> ctypes cname ct) sc in 
+  (sc, sc_args)
+   
 
 let get_var_type_from_gamma (s: string) (gamma: gamma) : t_exp = 
   try 
@@ -322,9 +333,13 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
   | New (s, e1, le) ->
     if (not (subtyping (C s) t ct)) then raise (TypeMismatch (C s, t))
     else
-      typecheck gamma e1 UInt ct;
-    let ts = ctypes s ct in 
-    List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct) ts le;
+      begin
+        typecheck gamma e1 UInt ct;
+        let ts = ctypes s ct in 
+        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct) ts le;
+        let (sc_ctypes, sc_args) = super_contracts_ctypes s ct in 
+        List.iter2 (fun t_es es -> List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct) t_es es;) sc_ctypes sc_args
+      end
   | Cons (s, e1) -> 
     if (not (subtyping (C s) t ct)) then raise (TypeMismatch (C s, t)) 
     else
