@@ -1,31 +1,5 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/jcrreis/featherweight-solidity/pull/73 -->
 <a name="readme-top"></a>
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Don't forget to give the project a star!
-*** Thanks again! Now go create something AMAZING! :D
--->
 
-
-
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-<!-- [![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url] -->
-
-
-<!-- PROJECT LOGO -->
 <br />
 <div align="center">
 
@@ -33,15 +7,6 @@
 
   <p align="center">
     A new formalization of <a href="https://soliditylang.org/">Solidity</a> in OCaml!
-    <!-- <br />
-    <a href="https://github.com/jcrreis/featherweight-solidity"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/jcrreis/featherweight-solidity">View Demo</a>
-    ·
-    <a href="https://github.com/jcrreis/featherweight-solidity/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/jcrreis/featherweight-solidity/issues">Request Feature</a> -->
   </p>
 </div>
 
@@ -175,8 +140,14 @@ https://www.researchgate.net/publication/228386147_Testing_Formal_Semantics_with
 
 https://www.fc.up.pt/dcc/Pubs/TReports/TR13/dcc-2013-06.pdf 
 
-Pontos a rever:
+Pontos a ver:
 
+- Parser agora incorpora novas features, anotação em funções, address< type >, imports, inicializacao de construtores 
+com super contratos 
+
+- main agora tem opção de correr com bank_example ou wallet_example e mostrar estes contratos a serem executados com semântica operacional 
+
+- muitos exemplos adicinados na pasta contracts/simple_tests, script run.py facilita a validação que todos os testes passam !
 
 TODO: PLANO DISSERTAÇÃO ATÉ JULHO
 

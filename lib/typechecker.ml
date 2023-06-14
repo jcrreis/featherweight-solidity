@@ -4,28 +4,22 @@ open Utils
 open Pprinters 
 
 
-let issc (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool =
-  t2 = CTop ||   
-  (
-    match t1, t2 with 
-    | C name1, C name2 -> let contract_def: contract_def = Hashtbl.find ct name1 in
-      let contract_hierarchy: string list = match c3_linearization contract_def with 
-        | Ok v -> v
-        | Error s -> raise (Failure s)
-      in
-      (List.mem name2 contract_hierarchy)
-    | _ -> raise (Failure "unexpected values!")
-  )
+let issc (name1: string) (name2: string) (ct: contract_table) : bool = 
+  let contract_def: contract_def = Hashtbl.find ct name1 in
+  let contract_hierarchy: string list = match c3_linearization contract_def with 
+          | Ok v -> v
+          | Error s -> raise (Failure s)
+  in
+  (List.mem name2 contract_hierarchy)
 
 
 let rec subtyping (t1: t_exp) (t2: t_exp) (ct: contract_table) : bool = 
   match t1, t2 with
-  | CTop, CTop | C _, CTop | C _, C _ -> issc t1 t2 ct 
-  (* | CTop, C _ -> false  *)
-  | Address (Some _), Address None -> true 
-  (* | Address None,  Address (Some _) -> false  *)
-  | Address (Some t1), Address (Some t2) ->  subtyping t1 t2 ct 
-  | _ -> t1 = t2
+    | (CTop | C _), CTop -> true
+    | C name1, C name2 -> issc name1 name2 ct 
+    | Address (Some _), Address None -> true 
+    | Address (Some t1), Address (Some t2) ->  subtyping t1 t2 ct 
+    | _ -> t1 = t2
 
 
 let ctypes name ct = 
@@ -67,7 +61,6 @@ let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with
         let (_, _, _, gamma_contracts) = gamma in 
         let c = Hashtbl.find gamma_contracts (VContract i) in 
         Ok(c)
-      (* if subtyping c t ct then () else raise (TypeMismatch (c, t)) *)
       with Not_found -> raise (UnboundVariable "")
     end 
   | MsgSender -> 
@@ -84,7 +77,6 @@ let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with
 
 
 let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, string) result = 
-  let type_infer_error e : string = "Couldn't infer type of expr: " ^ (expr_to_string e) in 
   let infer_arit (gamma: gamma) (a: arit_ops) (ct: contract_table) : (t_exp, string) result = match a with 
     | Plus _ | Div _ | Times _ | Minus _ | Exp _ | Mod _ -> 
       typecheck gamma (AritOp(a)) UInt ct;
@@ -113,12 +105,11 @@ let rec infer_type (gamma: gamma) (e: expr) (ct: contract_table) : (t_exp, strin
     let t_e1 = infer_type gamma e1 ct in
     t_e1
   | Seq (e1, e2) ->
-    begin try 
-        let t_e2 = infer_type gamma e2 ct in 
-        match t_e2 with 
-        | Ok(t_e2) -> typecheck gamma (Seq(e1, e2)) t_e2 ct; Ok(t_e2)
-        | Error s -> Error s
-      with TypeMismatch _ -> Error(type_infer_error e)
+    begin
+      let t_e2 = infer_type gamma e2 ct in 
+      match t_e2 with 
+      | Ok(t_e2) -> typecheck gamma (Seq(e1, e2)) t_e2 ct; Ok(t_e2)
+      | Error s -> Error s
     end 
   | If (e1, e2, e3) ->
     begin 
