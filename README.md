@@ -99,7 +99,9 @@ _In this section you have the instructions needed to install this project depede
    ```
 2. Install depedencies
    ```sh
-    opam install ./ --deps-only --with-test
+    opam install ./ --deps-only --with-test ; \
+    opam install  menhir qcheck-alcotest ppx_deriving_qcheck qcheck ppxlib  ; \ 
+    eval $(opam env)
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
