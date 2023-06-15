@@ -61,7 +61,7 @@ You can read more about their formalization <a href="https://link.springer.com/c
 
 ### Built With
 
-This project was built using OCaml and dune ecosystem!
+This project was built using OCaml and Dune ecosystem!
 It also relies on the following OCaml libraries:
 
 * <a href="https://gitlab.inria.fr/fpottier/menhir">Menhir/MenhirSDK</a>
