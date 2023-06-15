@@ -77,6 +77,7 @@ It relies on the following OCaml libraries:
 
 * OCaml/Opam
   ```sh
+  sudo apt install gcc build-essential curl bubblewrap unzip ; \
   bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" ; \
   opam init ; \
   opam switch create 4.14.0 ; \
