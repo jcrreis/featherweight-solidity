@@ -77,9 +77,9 @@ It relies on the following OCaml libraries:
 
 * OCaml/Opam
   ```sh
-  bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" ;
-  opam init ;
-  opam switch create 4.14.0 ;
+  bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)" ; \
+  opam init ; \
+  opam switch create 4.14.0 ; \
   eval $(opam env)
   ```
 
@@ -93,7 +93,7 @@ _In this section you have the instructions needed to install this project depede
 
 1. Clone the repo
    ```sh
-    git clone https://github.com/jcrreis/featherweight-solidity.git ; 
+    git clone https://github.com/jcrreis/featherweight-solidity.git ; \
     cd featherweight-solidity
    ```
 2. Install depedencies
