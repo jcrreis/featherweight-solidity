@@ -24,7 +24,7 @@ let add_contract_to_contract_table contract ct =
         ) tbl functions
       in 
       tbl 
-    ) method_table contracts_hierarchy
+    ) method_table (List.rev contracts_hierarchy)
   in 
   let contract: contract_def = {
     name = contract.name;
@@ -898,7 +898,7 @@ let rec eval_expr
               functions  = cdef.functions;
               function_lookup_table = cdef.function_lookup_table
             }
-            in
+            in            
             let ct = add_contract_to_contract_table cdef ct in 
             let msg = "\nContrato " ^ cdef.name ^ " adicionado com sucesso!" in 
             Format.eprintf "\n\n%s\n\n" msg;

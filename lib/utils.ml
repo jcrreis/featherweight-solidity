@@ -174,12 +174,12 @@ let generate_new_ethereum_address () : string =
 
 let function_type (contract_name: string) (function_name: string) (ct: (string, contract_def) Hashtbl.t) : (t_exp list * t_exp) =
   let contract : contract_def = Hashtbl.find ct contract_name in
-  let functions_def : fun_def list = contract.functions in
+  let lookup_table = contract.function_lookup_table in 
   try
-    let f = List.find (fun (x : fun_def) -> x.name = function_name) (functions_def) in
+    let f : fun_def = Hashtbl.find lookup_table function_name in     
     let t_es = List.map (fun (t_e, _) -> t_e) f.args in
     (t_es, f.rettype)
-  with Not_found -> ([], TRevert) (* maybe remove? *)
+  with Not_found -> raise (Failure (Printf.sprintf "Function %s not found" function_name))
 
 
 let function_body
@@ -196,7 +196,7 @@ let function_body
     then (f.args, f.body) 
     else 
       ([], Return Revert)
-  with Not_found -> ([], Return Revert)
+  with Not_found -> raise (Failure (Printf.sprintf "Function %s not found" function_name))
 
 
 let encode_contract (content: string) : string =

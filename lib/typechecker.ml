@@ -229,7 +229,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
             raise (TypeMismatch (Bool, t));
           typecheck gamma e1 Bool ct;
           typecheck gamma e2 Bool ct
-        | Equals (e1, e2) ->
+        | Equals (e1, e2) | Inequals (e1, e2) ->
           if t <> Bool then 
             raise (TypeMismatch (Bool, t));
           begin 
@@ -242,7 +242,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
                 typecheck gamma e2 (Address None) ct
               end 
           end
-        | Greater (e1, e2) | GreaterOrEquals (e1, e2) | Lesser (e1, e2) | LesserOrEquals (e1, e2) | Inequals (e1, e2)->
+        | Greater (e1, e2) | GreaterOrEquals (e1, e2) | Lesser (e1, e2) | LesserOrEquals (e1, e2) ->
           if t <> Bool then 
             raise (TypeMismatch (Bool, t));
           typecheck gamma e1 UInt ct;
@@ -256,7 +256,11 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
     let (t_es, rettype) = ftype in
     (* SUBTYPING NEEDED! *) 
     if subtyping rettype t ct then 
-      List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le
+      try
+        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le
+      with Invalid_argument _ -> 
+        List.iter (fun t_e -> Format.eprintf "%s" (t_exp_to_string t_e);) t_es;
+        List.iter (fun e' -> Format.eprintf "\n%s" (expr_to_string e');) le
     else 
       raise (TypeMismatch (rettype, t))
   in
@@ -408,10 +412,10 @@ let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit 
     typecheck (gv, gsv, ga, gc) body Unit ct; 
   in 
   let typecheck_function (g: gamma) (f: fun_def) (ct: contract_table): unit =
-    let (gv, gsv, ga, gc) = g in 
-    let rettype: t_exp = f.rettype in 
-    List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
-    typecheck (gv, gsv, ga, gc) (f.body) rettype ct;
+      let (gv, gsv, ga, gc) = g in 
+      let rettype: t_exp = f.rettype in 
+      List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (f.args);
+      typecheck (gv, gsv, ga, gc) (f.body) rettype ct;
   in 
   Format.eprintf "%s" ("\nChecking contract: " ^ c.name ^ "\n");
   let (gv, gsv, ga, gc) = g in 

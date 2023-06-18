@@ -233,6 +233,8 @@ let () =
   (* let conf: conf = (blockchain, blockchain, sigma, e) in *)
   let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
   let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
+  let (_, _, ga, _) = gamma in 
+  Hashtbl.add ga (VAddress("0x0000000000000000000000000000000000000000")) (Address None);
   (* let _p: program = (ct, blockchain, e) in
      let _ = eval_expr ct vars conf in 
      let cname = match e with 

@@ -1,8 +1,8 @@
 contract Donor {
     uint blood;
-    address"BloodBank" bank;
+    address<BloodBank> bank;
 
-    constructor (uint blood, address"BloodBank" bank) {
+    constructor (uint blood, address<BloodBank> bank) {
         this.blood = blood;
         this.bank = bank;
     }

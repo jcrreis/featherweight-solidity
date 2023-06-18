@@ -103,7 +103,7 @@ import_statement :
 
 typ:
   | UINT { Types.UInt }
-  | ADDRESS QUOTE c = ID QUOTE { Types.Address (Some (C c)) }
+  | ADDRESS LT c = ID GT { Types.Address (Some (C c)) }
   | ADDRESS { Types.Address (None)}
   | BOOL { Types.Bool }
   | MAPPING LPAREN key = typ; ASSIGN GT value = typ RPAREN
@@ -116,7 +116,10 @@ values:
   | s = ID { Var s }
   | TRUE {  Val(VBool True) }
   | FALSE { Val(VBool False) }
-  // | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }      
+  | ADDRESS LPAREN i = INT RPAREN {
+    if i = 0 then Val(VAddress("0x0000000000000000000000000000000000000000")) else Val(VAddress(string_of_int i))
+  }
+  // | MAPPING t_e = typ { Types.Val(VMapping(Hashtbl.create 64, t_e)) }  
   | MSGSENDER { Types.MsgSender }
   | MSGVALUE { Types.MsgValue }   
   // | MSG DOT "value" { Types.MsgSender }                       
