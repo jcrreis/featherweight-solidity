@@ -34,7 +34,7 @@ contract Cast is Aux {
         return c;
     }
 
-    function cast3(address"Aux" a) returns (Cast) {
+    function cast3(address<Aux> a) returns (Cast) {
         Cast c = Cast(a);
         return c;
     }

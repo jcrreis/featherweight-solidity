@@ -22,6 +22,8 @@ for path, currentDirectory, files in os.walk(root):
         fpath = os.path.join(path, file)
         if "imports" in fpath:
             continue
+        if "openzeppelin" in fpath:
+            continue
         print(f'Running OCaml exe with file: {fpath}')
         res = os.system(f'{ocaml_exe_path} {fpath}')
         if "neg" in file:
