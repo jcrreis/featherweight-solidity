@@ -64,8 +64,6 @@
 %token EOF
 %token SEMICOLON
 %token QUOTE
-%token LANGLE
-%token RANGLE
 %token ATSIGN
 //SYNTAX
 %token RETURNS

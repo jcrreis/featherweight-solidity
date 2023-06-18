@@ -93,8 +93,6 @@ rule read =
     | "," { COMMA }
     | ":" { COLON }
     | '"' { QUOTE }
-    | "<" { LANGLE }
-    | ">" { RANGLE }
     | "@" { ATSIGN }
     | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | (id as s) { find_keyword s }
