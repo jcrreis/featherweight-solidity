@@ -180,6 +180,7 @@ expr:
   // | e = deploy_new_contract { Format.eprintf "PASSEI NO deploy_new_contract @.";e }
   | e = if_statement { e }
   | LPAREN e = expr RPAREN { e }
+  | e = deploy_new_contract { e }
   ;
 
 
@@ -308,7 +309,7 @@ fun_body:
 // CONTRACTS
 
 deploy_new_contract:
-  | NEW; contract_name = ID; DOT VALUE LPAREN; e = expr; RPAREN LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
+  | NEW; contract_name = ID; LBRACE VALUE COLON e = expr RBRACE ; LPAREN;  le = separated_list(COMMA,expr); RPAREN { New (contract_name, e, le) }
   ;
 
 
