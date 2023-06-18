@@ -27,7 +27,7 @@ contract NFTStorage is Ownable, TinyERC721 {
 
     }
 
-    function buyNFT(address from, address to, uint tokenId) {
+    function buyNFT() {
         if(msgvalue >= this.price) {
             this.transferFrom(address(0), msgsender, this.lastUnsoldToken);
         }

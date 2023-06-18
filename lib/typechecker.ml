@@ -197,7 +197,7 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
       | Ok(t_e) -> 
         begin match t_e with 
           | TRevert -> () 
-          | _-> (if subtyping t_e t ct then () else raise (TypeMismatch (t_e, t)))
+          | _-> (if subtyping t_e t ct then () else (Format.eprintf "\n%s ----> %s\n" (t_exp_to_string t_e) (t_exp_to_string t);raise (TypeMismatch (t_e, t))))
           (* | _ -> if t_e = t then () else raise (TypeMismatch (t_e, t)) *)
         end
       | Error(s) -> raise (Failure s)
