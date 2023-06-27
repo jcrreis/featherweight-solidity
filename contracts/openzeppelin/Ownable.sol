@@ -13,7 +13,7 @@ contract Ownable is Context {
     }
     
     function checkOwner() {
-        if (this.owner == this.msgSender()) {
+        if (this.owner != this.msgSender()) {
             revert;
         }
     }

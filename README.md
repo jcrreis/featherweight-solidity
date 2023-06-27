@@ -152,16 +152,17 @@ com super contratos
 
 - muitos exemplos adicinados na pasta contracts/simple_tests, script run.py facilita a validação que todos os testes passam !
 
-TODO: PLANO DISSERTAÇÃO ATÉ JULHO
+TODO: PLANO ATUALIZADO
 
-
-- ultima semana de abril + maio -> escrever artiga // começar a escrever dissetação // ler artigos em detalhe relevantes // eventualmente encontrar novas ideias ? 
-- junho/julho/agosto -> continuar escrita de dissertação...
-- Setembro -> preparar entrega 
-
+- JULHO -> escrever dissertação / artigo ? 
+- Agosto -> continuar anterior
+- Setembro -> acabar a escrita com revisão dos professores e submeter
 
 
 notas:
 
+- o nosso gamma agora é um quadruplo, introduzi um gamma para as state vars apenas (pois existe colisão com as vars) (a abordagem teorica usual seria considerar o conjunto dos identificadores todos disjuntos, mas para facilitar o programador na escrita do código optei por separar em ambientes de tipificacao disjuntos)
+- falar dos exemplos em openzeppelin
+- melhor maneira de testar a implementação da semântica operacional e da expressão CallTopSender do typechecker é através de RPC, fazendo um mock da ethereum e manipulando esta rede através de invocações de New e CallTopSender
+- As regras do De Pirro de typechecking, são regras de inferencia de tipos e não typechecking?
 - c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
-
