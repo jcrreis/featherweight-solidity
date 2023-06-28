@@ -4,7 +4,7 @@ contract Ownable is Context {
     address owner;
 
 
-    constructor(address initialOwner) {
+    constructor(address initialOwner) Context() {
         this.owner = initialOwner;
     }
 

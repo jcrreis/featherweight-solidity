@@ -221,19 +221,20 @@ let rec eval_expr
             (contract_params, cname)
           ) (List.map (fun (Class(c, _)) -> c) sc) in 
         (* GET SUPER CONTRACTS CONSTRUCOR PARAMS *)
-
         (* MAP EACH CONSTRUCOR PARAMS WITH ARGUMENTS FROM THE SUPER CONTRACT  *)
-        let lvars =  List.fold_left2 (fun 
+
+        let lvars = List.fold_left2 (fun 
                                        (lvars: (string, (string * expr) list) Hashtbl.t) 
                                        (params: ((t_exp * string) list * string)) 
                                        (args: expr list) ->
                                        let (params, cname) = params in
+                                       Format.eprintf "%s\n" cname;
                                        let lst = List.fold_left2 (fun (lst: ((string * expr) list)) (param: (t_exp * string)) (arg: expr) ->
                                            let (_, s) = param in 
                                            let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
                                            lst @ [(s, e')]
                                          ) [] params args
-                                       in
+                                       in   
                                        Hashtbl.add lvars cname lst;
                                        lvars
                                      ) lvars super_contracts_params contract.super_constructors_args
@@ -566,6 +567,7 @@ let rec eval_expr
       | (_, _, _, Val(VContract c)) ->
         let (contracts, _accounts) = blockchain in 
         let a = get_address_by_contract contracts (VContract c) in
+        Format.eprintf "%s" (expr_to_string (Val (a)));
         let (_, sv, _) = Hashtbl.find contracts (VContract c,a) in
         begin try 
             let res = StateVars.find s sv in
@@ -626,6 +628,11 @@ let rec eval_expr
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
             begin match res with
               | Ok blockchain ->
+                let old_this_ref = if Hashtbl.mem vars "this" then 
+                  Hashtbl.find vars "this"
+                else
+                  Val(VContract c)
+                in
                 Hashtbl.add vars "this" (Val(VContract c));
                 Hashtbl.add vars "msg.sender" (Val (top conf));
                 Hashtbl.add vars "msg.value" (Val (VUInt n));
@@ -642,6 +649,7 @@ let rec eval_expr
                     end
                   ) (blockchain, blockchain', sigma, e) (List.rev c3_linearization_hierarchy) 
                 in
+                Hashtbl.replace vars "this" old_this_ref;
                 (blockchain, blockchain', sigma, Val(VContract c))
               | Error () -> (blockchain, blockchain', sigma, Revert)
             end

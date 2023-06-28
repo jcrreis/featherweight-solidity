@@ -7,7 +7,7 @@ contract TinyERC721 is Context {
     mapping(address => uint) balances;
 
 
-    constructor() {
+    constructor() Context(){
 
     }
 

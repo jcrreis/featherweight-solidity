@@ -193,6 +193,52 @@ let inheritance_example ct vars blockchain sigma gamma =
   let (_, _, _, res) = eval_expr ct vars (blockchain, blockchain', sigma, CallTopLevel(contract, "getCounter", Val (VUInt 0), Val (a1), [])) in
   Format.eprintf "%s@." (expr_to_string res)
 
+
+let game_example ct vars blockchain sigma gamma = 
+  let create_store sender contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "createStore", Val (VUInt 0), Val (sender), [])) in
+    res 
+  in 
+  let _add_external_store sender store contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "addExternalStore", Val (VUInt 0), Val (sender), [store])) in
+    res 
+  in 
+  (* let set_nft_price sender store price contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store, (Val (VUInt price))])) in
+    res 
+  in 
+  let create_nft sender store contract ct vars blockchain sigma _gamma =
+    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store])) in
+    res 
+  in 
+  let buy_nft sender store value contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "buyNFT", Val (VUInt value), Val (sender), [store])) in
+    res 
+  in 
+  let tranfer_nft sender store tokenid src dest contract ct vars blockchain sigma _gamma =
+    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "transferNFT", Val (VUInt 0), Val (sender), [store, (Val (VUInt tokenid)), src, dest])) in 
+    res 
+  let destroy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "destroyNFT", Val (VUInt 0), Val (sender), [store, (Val (VUInt tokenid))])) in 
+    res 
+  in  *)
+  let a1 = (VAddress (generate_new_ethereum_address())) in
+  let a2 = (VAddress (generate_new_ethereum_address())) in
+  let (_contracts, accounts) = blockchain in  
+  Hashtbl.add accounts a1 (VUInt 100000); 
+  Hashtbl.add accounts a2 (VUInt 100000);
+  Stack.push a1 sigma;
+  let e = New("Game", Val(VUInt 0), []) in
+  let (blockchain, _blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
+  print_blockchain blockchain vars;
+  let res = create_store a1 contract ct vars blockchain sigma gamma in 
+    match res with 
+      | (_, _ , _, Revert) -> assert false
+      | (_, _, _, res) -> Format.eprintf "%s" (expr_to_string res)
+  
+
+
+
 let rec parse_file fname ct blockchain blockchain' sigma vars =
   let print_position lexbuf =
     let pos = lexbuf.Lexing.lex_curr_p in
@@ -264,6 +310,13 @@ let () =
       Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct;
       inheritance_example ct vars blockchain sigma gamma;
       print_blockchain blockchain vars)
+  else if fname = "game" then 
+    (
+      let (ct, blockchain, _, sigma, vars) = parse_file "contracts/openzeppelin/Game.sol" ct blockchain blockchain sigma vars in
+      Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct;
+      game_example ct vars blockchain sigma gamma;
+      print_blockchain blockchain vars
+    )
   else
     let (ct, _blockchain, _, _sigma, _vars) = parse_file fname ct blockchain blockchain sigma vars in
     Hashtbl.iter (fun _ c -> typecheck_contract gamma c ct) ct
