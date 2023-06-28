@@ -240,9 +240,10 @@ let game_example ct vars blockchain sigma gamma =
   match res with 
     | (Revert) -> assert false
     | (res) -> Format.eprintf "%s" (expr_to_string res);
+  let vars = Hashtbl.create 64 in 
   let res = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
   match res with
-    | (_, _, _, Revert) -> Format.eprintf "Transação revertida!"
+    | (_, _, _, Revert) -> assert false
     | (_, _, _, res) -> Format.eprintf "%s" (expr_to_string res)
 
 

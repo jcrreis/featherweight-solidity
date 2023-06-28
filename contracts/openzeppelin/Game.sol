@@ -31,7 +31,7 @@ contract Game {
 
     function createNFT(address<NFTStorage> store, address to) {
         NFTStorage storeInstance = this.stores[store];
-        storeInstance.createNFT1{value: 0}(to);
+        storeInstance.createNFT{value: 0}(to);
     }
 
     function buyNFT(address<NFTStorage> store) {

@@ -828,7 +828,9 @@ let rec eval_expr
                     begin
                       try
                         List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
+                        Format.eprintf "\nexpressão : %s\n" (expr_to_string body);
                         let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+                        Format.eprintf "\nexpressão es: %s\n" (expr_to_string es);
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
                         Hashtbl.remove vars "msg.sender";
@@ -875,7 +877,7 @@ let rec eval_expr
       | (_, _, _, Val(VMapping(m, t_e))) ->
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         begin try
-            let res = Hashtbl.find m e2' in 
+            let res = Hashtbl.find m e2' in
             (blockchain, blockchain', sigma, res)
           with Not_found -> (blockchain, blockchain', sigma, (get_default_for_type t_e))
         end
