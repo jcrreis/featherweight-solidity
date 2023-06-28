@@ -734,6 +734,7 @@ let rec eval_expr
     Hashtbl.replace vars x e1';
     eval_expr ct vars (blockchain, blockchain', sigma, Val VUnit)
   | If (e1, e2, e3) -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
+    Format.eprintf "%s" (expr_to_string e1);
     begin match e1' with
       | Val (VBool b) -> begin match b with
           | True -> eval_expr ct vars (blockchain, blockchain', sigma, e2) 

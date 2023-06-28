@@ -35,7 +35,7 @@ let rec values_to_string (v: values) : string =
   | VMapping (e1, _t_e) -> 
     (Hashtbl.fold (fun k v s -> match k, v with
          | Val(v1), Val(v2) -> s ^ values_to_string v1 ^ " ---> " ^ values_to_string v2 ^ "\n"
-         | _ -> assert false) e1 "[ \n") ^ " ]"
+         | _ -> "erro") e1 "[ \n") ^ " ]"
   | VUnit -> ""
 
 let rec expr_to_string (e: expr) : string =

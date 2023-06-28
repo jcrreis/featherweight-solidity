@@ -18,12 +18,7 @@ contract TinyERC721 is Context {
     
     function ownerOf(uint tokenId) returns (address) {
         address owner = this.owners[tokenId];
-        if (owner == address(0)) {
-            revert;
-        }
-        else {
-            return owner;
-        }
+        return owner;
     }
 
     function balanceOf(address owner) returns (uint) {
