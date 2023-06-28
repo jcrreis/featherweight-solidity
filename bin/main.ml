@@ -203,10 +203,11 @@ let game_example ct vars blockchain sigma gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "addExternalStore", Val (VUInt 0), Val (sender), [store])) in
     res 
   in 
-  (* let set_nft_price sender store price contract ct vars blockchain sigma _gamma = 
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store, (Val (VUInt price))])) in
+  let set_nft_price sender store price contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store; (Val (VUInt price))])) in
     res 
   in 
+  (*
   let create_nft sender store contract ct vars blockchain sigma _gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store])) in
     res 
@@ -230,12 +231,15 @@ let game_example ct vars blockchain sigma gamma =
   Stack.push a1 sigma;
   let e = New("Game", Val(VUInt 0), []) in
   let (blockchain, _blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
-  print_blockchain blockchain vars;
-  let res = create_store a1 contract ct vars blockchain sigma gamma in 
-    match res with 
-      | (_, _ , _, Revert) -> assert false
-      | (_, _, _, res) -> Format.eprintf "%s" (expr_to_string res)
-  
+  let (blockchain, _blockchain', sigma, res) = create_store a1 contract ct vars blockchain sigma gamma in 
+  match res with 
+    | (Revert) -> assert false
+    | (res) -> Format.eprintf "%s" (expr_to_string res);
+  let res = set_nft_price a1 res 10 contract ct vars blockchain sigma gamma in 
+  match res with 
+    | (_, _, _, Revert) -> assert false
+    | (_, _, _, res) -> Format.eprintf "Result:  %s" (expr_to_string res)
+
 
 
 

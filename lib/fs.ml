@@ -114,7 +114,8 @@ let eval_bool_expr (e: bool_ops) : expr = match e with
       | _ -> assert false
     end
   | Inequals (e1, e2) -> begin match e1, e2 with
-      | Val (VUInt n1), Val (VUInt n2) -> if n1 != n2 then Val (VBool (True)) else Val (VBool (False))
+      | Val (VUInt n1), Val (VUInt n2) -> if n1 <> n2 then Val (VBool (True)) else Val (VBool (False))
+      | Val (VAddress a1), Val (VAddress a2) -> if a1 <> a2 then Val (VBool (True)) else Val (VBool (False))
       | _ -> assert false
     end
 
@@ -494,12 +495,19 @@ let rec eval_expr
         end
       | Inequals (e1, e2) -> begin match e1, e2 with
           | Val (VUInt(_)), Val (VUInt(_)) ->  (blockchain, blockchain', sigma, eval_bool_expr b1)
+          | Val (VAddress _), Val (VAddress _) -> (blockchain, blockchain', sigma, eval_bool_expr b1)
           | Val (VUInt i), e2 -> 
             let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
             if e2' = Revert then 
               (blockchain, blockchain', sigma, Revert) 
             else 
               eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Inequals (Val (VUInt i), e2')))
+          | Val (VAddress a), e2 ->
+            let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+            if e2' = Revert then 
+              (blockchain, blockchain', sigma, Revert) 
+            else 
+              eval_expr ct vars (blockchain, blockchain', sigma, BoolOp(Inequals (Val (VAddress a), e2'))) 
           | e1, e2 -> 
             let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
             if e1' = Revert then 
@@ -622,7 +630,7 @@ let rec eval_expr
         | Error _ -> assert false
       in
       let (t_es, _) = contract_def.constructor in
-      if (List.length t_es = List.length le) && ((top conf) != VUnit) then
+      if (List.length t_es = List.length le) && ((top conf) <> VUnit) then
         begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
           | (_, _, _, Val (VUInt n)) ->
             let res = update_balance ct (top conf) (VUInt (-n)) vars conf in
@@ -655,7 +663,7 @@ let rec eval_expr
             end
           | _ -> (blockchain, blockchain', sigma, Revert)
         end
-      else if (List.length t_es = List.length le) && ((top conf) == VUnit) then
+      else if (List.length t_es = List.length le) && ((top conf) = VUnit) then
         begin
           match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
           | (_, _, _, Val (VUInt n)) ->
@@ -762,7 +770,13 @@ let rec eval_expr
                     Stack.push (top conf) sigma;
                     begin   
                       try
-                        List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
+                        let le' = List.map (fun e -> 
+                          let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
+                            match e' with 
+                              | Revert -> assert false;
+                              | _ -> ();
+                            e') le in 
+                        List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le';
                         let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
@@ -839,7 +853,7 @@ let rec eval_expr
       | _ -> assert false
     end
   | Revert ->
-    if top conf != VUnit then
+    if top conf <> VUnit then
       let _ = Stack.pop sigma in
       (blockchain, blockchain', sigma, Revert)
     else
@@ -850,6 +864,7 @@ let rec eval_expr
         let (contracts, _accounts) = blockchain in 
         let a = get_address_by_contract contracts (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
+        Format.eprintf "e2' -----> %s" (expr_to_string e2');
         let (c_name, map, n) = Hashtbl.find contracts (VContract c, a) in
         let map' = StateVars.add s e2' map in
         Hashtbl.replace contracts (VContract(c),a) (c_name, map', n);
@@ -880,7 +895,7 @@ let rec eval_expr
       | _ -> assert false
     end
   | Return e1 -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-    if top conf != VUnit then
+    if top conf <> VUnit then
       let _ = Stack.pop sigma in
       (blockchain, blockchain', sigma, e1')
     else

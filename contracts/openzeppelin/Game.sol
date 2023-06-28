@@ -13,9 +13,10 @@ contract Game {
 
     }
 
-    function createStore() {
+    function createStore() returns (address) {
         NFTStorage store = new NFTStorage{value: 0}();
         this.stores = (this.stores[address(store)] = store);
+        return address(store);
     }
 
     function addExternalStore(address<NFTStorage> store) {
