@@ -20,11 +20,10 @@ contract NFTStorage is Ownable, TinyERC721 {
         this.price = val;
     }
 
-    function createNFT() {
+    function createNFT(address to) {
         this.onlyOwner();
-        this.mint(address(0), this.lastTokenId);
+        this.mint(to, this.lastTokenId);
         this.lastTokenId = this.lastTokenId + 1;
-
     }
 
     function buyNFT() {

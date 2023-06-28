@@ -207,11 +207,12 @@ let game_example ct vars blockchain sigma gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store; (Val (VUInt price))])) in
     res 
   in 
-  (*
-  let create_nft sender store contract ct vars blockchain sigma _gamma =
-    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store])) in
+  
+  let create_nft sender store dst contract ct vars blockchain sigma _gamma =
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store; Val (dst)])) in
     res 
   in 
+  (*
   let buy_nft sender store value contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "buyNFT", Val (VUInt value), Val (sender), [store])) in
     res 
@@ -231,14 +232,18 @@ let game_example ct vars blockchain sigma gamma =
   Stack.push a1 sigma;
   let e = New("Game", Val(VUInt 0), []) in
   let (blockchain, _blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
-  let (blockchain, _blockchain', sigma, res) = create_store a1 contract ct vars blockchain sigma gamma in 
+  let (blockchain, _blockchain', sigma, store) = create_store a1 contract ct vars blockchain sigma gamma in 
+  match store with 
+    | (Revert) -> assert false
+    | (store) -> Format.eprintf "%s" (expr_to_string store);
+  let (blockchain, _blockchain', sigma, res) = set_nft_price a1 store 322 contract ct vars blockchain sigma gamma in 
   match res with 
     | (Revert) -> assert false
     | (res) -> Format.eprintf "%s" (expr_to_string res);
-  let res = set_nft_price a1 res 10 contract ct vars blockchain sigma gamma in 
-  match res with 
-    | (_, _, _, Revert) -> assert false
-    | (_, _, _, res) -> Format.eprintf "Result:  %s" (expr_to_string res)
+  let res = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
+  match res with
+    | (_, _, _, Revert) -> Format.eprintf "Transação revertida!"
+    | (_, _, _, res) -> Format.eprintf "%s" (expr_to_string res)
 
 
 

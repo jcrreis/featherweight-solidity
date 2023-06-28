@@ -23,15 +23,15 @@ contract Game {
         this.stores = (this.stores[store] = NFTStorage(store));
     }
 
-    
+
     function setNFTPrice(address<NFTStorage> store, uint price) {
         NFTStorage storeInstance = this.stores[store];
         storeInstance.setNFTPrice{value: 0}(price);
     }
 
-    function createNFT(address<NFTStorage> store) {
+    function createNFT(address<NFTStorage> store, address to) {
         NFTStorage storeInstance = this.stores[store];
-        storeInstance.createNFT{value: 0}();
+        storeInstance.createNFT1{value: 0}(to);
     }
 
     function buyNFT(address<NFTStorage> store) {
