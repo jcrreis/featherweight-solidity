@@ -54,36 +54,34 @@ contract ERC20 is Context {
         if (currentAllowance < requestedDecrease) {
             revert;
         }
-        this.approve(owner, spender, currentAllowance - requestedDecrease);
-
-        return true;
+        else {
+            this.approve(owner, spender, currentAllowance - requestedDecrease);
+            return true;
+        }
     }
 
-     function transferTo(address to, uint amount) {
-        address from = this.msgSender();
-        if (from == address(0)) {
+     function transferTo(address from, address to, uint amount) {
+        if ((from == address(0)) || (to == address(0))) {
             revert;
         }
-        if (to == address(0)) {
-            revert;
+        else {
+             this.update(from, to, amount);
         }
-        this.update(from, to, amount);
-    }
-
-   
+        }
 
 
     function update(address from, address to, uint amount)  {
         if (from == address(0)) {
             this.totalSupply = this.totalSupply + amount;
-        } else {
+        } 
+        else {
             uint fromBalance = this.balances[from];
             if (fromBalance < amount) {
                 revert;
             }
             this.balances = (this.balances[from] = fromBalance - amount);
         }
-
+        
         if (to == address(0)) {
             this.totalSupply = this.totalSupply - amount;
         } else {
@@ -95,25 +93,28 @@ contract ERC20 is Context {
         if (account == address(0)) {
             revert;
         }
-        this.update(address(0), account, amount);
+        else {
+            this.update(address(0), account, amount);
+        }
     }
 
     function burn(address account, uint amount) {
         if (account == address(0)) {
             revert;
         }
-        this.update(account, address(0), amount);
+        else {
+            this.update(account, address(0), amount);
+        }
     }
 
      function approve(address owner, address spender, uint amount) {
-        if (owner == address(0)) {
+        if ((owner == address(0)) || (spender == address(0))) {
             revert;
+        } 
+        else {
+            mapping(address => uint) aux = this.allowances[owner];
+            this.allowances = (this.allowances[owner] = (aux[spender] =  amount));
         }
-        if (spender == address(0)) {
-            revert;
-        }
-        mapping(address => uint) aux = this.allowances[owner];
-        this.allowances = (this.allowances[owner] = (aux[spender] =  amount));
     }
 
 
@@ -122,9 +123,9 @@ contract ERC20 is Context {
         if (currentAllowance < amount) {
             revert ;
         }
-        this.approve(owner, spender, currentAllowance - amount);
-        
-
+        else {
+            this.approve(owner, spender, currentAllowance - amount);
+        }
     }
     
 

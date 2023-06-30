@@ -424,7 +424,11 @@ let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit 
   Hashtbl.add gv "msg.value" (UInt);
   List.iter (fun (t_e, s) -> Hashtbl.add gsv s t_e;) (c.state);
   typecheck_constructor (gv, gsv, ga, gc) c.constructor ct;     
-  List.iter (fun (f_def: fun_def) -> typecheck_function (gv, gsv, ga, gc) f_def ct) (c.functions);
+  List.iter (fun (f_def: fun_def) -> 
+    try 
+      typecheck_function (gv, gsv, ga, gc) f_def ct
+    with TypeMismatch _ -> raise (Failure ("couldn't type function: " ^ f_def.name) 
+    )) (c.functions);
   let msg = "\nContrato " ^c.name ^ " Validado com Sucesso!!\n" in 
   Format.eprintf "%s" msg;
 
