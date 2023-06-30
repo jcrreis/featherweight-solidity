@@ -46,6 +46,6 @@ contract Game {
 
     function destroyNFT(address<NFTStorage> store, uint tokenId) {
         NFTStorage storeInstance = this.stores[store];
-        storeInstance.destroyNFT{value: 0}(tokenId);
+        storeInstance.destroyNFT{value: 0}(msgsender, tokenId);
     }
 }

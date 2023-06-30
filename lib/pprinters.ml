@@ -35,10 +35,10 @@ let rec values_to_string (v: values) : string =
   | VMapping (e1, _t_e) -> 
     (Hashtbl.fold (fun k v s -> match k, v with
          | Val(v1), Val(v2) -> s ^ values_to_string v1 ^ " ---> " ^ values_to_string v2 ^ "\n"
-         | _ -> "erro") e1 "[ \n") ^ " ]"
+         | _ -> s ^ expr_to_string k ^ "---->" ^ expr_to_string v ) e1 "[ \n") ^ " ]"
   | VUnit -> ""
 
-let rec expr_to_string (e: expr) : string =
+and expr_to_string (e: expr) : string =
   match e with 
   | AritOp (a1) -> begin match a1 with 
       | Plus (e1, e2) -> "(" ^ expr_to_string e1 ^ "+" ^ expr_to_string e2 ^ ")"

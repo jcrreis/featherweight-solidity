@@ -212,18 +212,19 @@ let game_example ct vars blockchain sigma gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store; Val (dst)])) in
     res 
   in 
-  (*
-  let buy_nft sender store value contract ct vars blockchain sigma _gamma = 
+  
+  (* let buy_nft sender store value contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "buyNFT", Val (VUInt value), Val (sender), [store])) in
     res 
   in 
   let tranfer_nft sender store tokenid src dest contract ct vars blockchain sigma _gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "transferNFT", Val (VUInt 0), Val (sender), [store, (Val (VUInt tokenid)), src, dest])) in 
-    res 
+    res  *)
+  
   let destroy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
-    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "destroyNFT", Val (VUInt 0), Val (sender), [store, (Val (VUInt tokenid))])) in 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "destroyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
     res 
-  in  *)
+  in  
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in
   let (_contracts, accounts) = blockchain in  
@@ -241,10 +242,15 @@ let game_example ct vars blockchain sigma gamma =
     | (Revert) -> assert false
     | (res) -> Format.eprintf "%s" (expr_to_string res);
   let vars = Hashtbl.create 64 in 
-  let res = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
+  let (blockchain, _blockchain', sigma, res) = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
   match res with
+    | (Revert) -> assert false
+    | (res) -> Format.eprintf "%s" (expr_to_string res);
+  let vars = Hashtbl.create 64 in 
+  let res = destroy_nft a2 store 0 contract ct vars blockchain sigma gamma in 
+  match res with 
     | (_, _, _, Revert) -> assert false
-    | (_, _, _, res) -> Format.eprintf "%s" (expr_to_string res)
+    | (_, _, _, res) -> Format.eprintf "%s" (expr_to_string res) 
 
 
 
@@ -276,17 +282,9 @@ let rec parse_file fname ct blockchain blockchain' sigma vars =
 
 let () =
   let fname = Sys.argv.(1) in 
-
-  (* let cin = open_in fname in
-     let lexbuf = Lexing.from_channel cin in *)
-  (* let (_imports, e) : (string list * expr) = Parser.prog Lexer.read lexbuf in *)
-  (* parse_file fname; *)
-  (* let e : expr = Parser.prog Lexer.read lexbuf in *)
-
   let ct: contract_table = Hashtbl.create 64 in
   let blockchain: blockchain = (Hashtbl.create 64, Hashtbl.create 64) in
   let sigma: values Stack.t = Stack.create() in
-  (* let conf: conf = (blockchain, blockchain, sigma, e) in *)
   let vars: (string, expr) Hashtbl.t = Hashtbl.create 64 in
   let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
   let (_, _, ga, _) = gamma in 
@@ -297,9 +295,6 @@ let () =
      | AddContract cdef -> Format.eprintf "%s" (contract_to_string cdef);cdef.name
      | _ -> assert false 
      in *)
-
-  (* Hashtbl.iter (fun _ v -> Format.eprintf "%s" (contract_to_string v)) ct; *)
-  (* typecheck_contract gamma ((Hashtbl.find ct cname)) ct; *)
 
   if fname = "bank_example" then 
     (

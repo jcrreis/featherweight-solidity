@@ -229,7 +229,6 @@ let rec eval_expr
                                        (params: ((t_exp * string) list * string)) 
                                        (args: expr list) ->
                                        let (params, cname) = params in
-                                       Format.eprintf "%s\n" cname;
                                        let lst = List.fold_left2 (fun (lst: ((string * expr) list)) (param: (t_exp * string)) (arg: expr) ->
                                            let (_, s) = param in 
                                            let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, arg) in 
@@ -536,7 +535,13 @@ let rec eval_expr
           let (cname, _, _) = Hashtbl.find contracts (VContract c, a) in
           let (args, body) = function_body cname s le ct in
           try 
-            List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
+            let le' = List.map (fun e -> 
+              let (_, _, _, e') = eval_expr ct vars (blockchain, blockchain', sigma, e) in 
+              e'
+              ) le in
+            List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le';
+
+            (* List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le'; *)
             let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
             List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
             (blockchain, blockchain', sigma, es)
@@ -575,7 +580,6 @@ let rec eval_expr
       | (_, _, _, Val(VContract c)) ->
         let (contracts, _accounts) = blockchain in 
         let a = get_address_by_contract contracts (VContract c) in
-        Format.eprintf "%s" (expr_to_string (Val (a)));
         let (_, sv, _) = Hashtbl.find contracts (VContract c,a) in
         begin try 
             let res = StateVars.find s sv in
@@ -734,13 +738,12 @@ let rec eval_expr
     Hashtbl.replace vars x e1';
     eval_expr ct vars (blockchain, blockchain', sigma, Val VUnit)
   | If (e1, e2, e3) -> let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
-    Format.eprintf "%s" (expr_to_string e1);
     begin match e1' with
       | Val (VBool b) -> begin match b with
           | True -> eval_expr ct vars (blockchain, blockchain', sigma, e2) 
           | False -> eval_expr ct vars (blockchain, blockchain', sigma, e3)
         end
-      | _ -> assert false
+      | e1' -> Format.eprintf "%s" (expr_to_string e1'); assert false
     end
   | Call (e1, s, e2, le) ->
     begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
@@ -829,9 +832,7 @@ let rec eval_expr
                     begin
                       try
                         List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
-                        Format.eprintf "\nexpressão : %s\n" (expr_to_string body);
                         let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
-                        Format.eprintf "\nexpressão es: %s\n" (expr_to_string es);
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
                         Hashtbl.remove vars "msg.sender";
@@ -867,7 +868,6 @@ let rec eval_expr
         let (contracts, _accounts) = blockchain in 
         let a = get_address_by_contract contracts (VContract c) in
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
-        Format.eprintf "e2' -----> %s" (expr_to_string e2');
         let (c_name, map, n) = Hashtbl.find contracts (VContract c, a) in
         let map' = StateVars.add s e2' map in
         Hashtbl.replace contracts (VContract(c),a) (c_name, map', n);

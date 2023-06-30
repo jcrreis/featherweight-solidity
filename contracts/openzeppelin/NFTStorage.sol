@@ -44,8 +44,8 @@ contract NFTStorage is Ownable, TinyERC721 {
         }
     }
 
-    function destroyNFT(uint tokenId) {
-        if(msgsender == this.ownerOf(tokenId)) {
+    function destroyNFT(address owner, uint tokenId) {
+        if(owner == this.ownerOf(tokenId)) {
             this.burn(tokenId);
         }
         else {
