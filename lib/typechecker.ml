@@ -27,8 +27,7 @@ let ctypes name ct =
   let (args, _) = c_def.constructor in 
   let ts = List.map (fun (t_e, _) -> t_e) args in
   ts
-  (* super_contracts: string hierarchy;Class of ('a * 'a hierarchy list)
-  super_constructors_args: (expr list) list;  *)
+
 let super_contracts_ctypes name ct = 
   let c_def: contract_def = Hashtbl.find ct name in
   let sc : string hierarchy list = match c_def.super_contracts with 
@@ -405,12 +404,17 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
   | _ -> assert false
 
 let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit = 
-  let typecheck_constructor (g: gamma) (constructor: (t_exp * string) list * expr) (ct: contract_table): unit = 
+  let typecheck_constructor_body (g: gamma) (constructor: (t_exp * string) list * expr) (ct: contract_table): unit = 
     let (gv, gsv, ga, gc) = g in
     let (args, body) = constructor in 
     List.iter (fun (t_e, s) -> Hashtbl.add gv s t_e;) (args);
     typecheck (gv, gsv, ga, gc) body Unit ct; 
   in 
+  let typecheck_constructor (g: gamma) (c_def: contract_def) (ct: contract_table): unit = 
+    let (sc_ctypes, sc_args) = super_contracts_ctypes c_def.name ct in 
+    List.iter2 (fun t_es es -> List.iter2 (fun t_e e' -> typecheck g e' t_e ct) t_es es;) sc_ctypes sc_args;
+    typecheck_constructor_body g c_def.constructor ct 
+  in
   let typecheck_function (g: gamma) (f: fun_def) (ct: contract_table): unit =
       let (gv, gsv, ga, gc) = g in 
       let rettype: t_exp = f.rettype in 
@@ -423,7 +427,7 @@ let typecheck_contract (g: gamma) (c: contract_def) (ct: contract_table) : unit 
   Hashtbl.add gv "msg.sender" (Address None);
   Hashtbl.add gv "msg.value" (UInt);
   List.iter (fun (t_e, s) -> Hashtbl.add gsv s t_e;) (c.state);
-  typecheck_constructor (gv, gsv, ga, gc) c.constructor ct;     
+  typecheck_constructor (gv, gsv, ga, gc) c ct;     
   List.iter (fun (f_def: fun_def) -> 
     try 
       typecheck_function (gv, gsv, ga, gc) f_def ct

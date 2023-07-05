@@ -1,11 +1,11 @@
 import "./NFTStorage.sol";
 
-contract Game {
+contract Game is Context{
 
     mapping(address => NFTStorage) stores;
 
 
-    constructor() {
+    constructor() Context(){
 
     }
 
@@ -45,7 +45,9 @@ contract Game {
     }
 
     function destroyNFT(address<NFTStorage> store, uint tokenId) {
+        address snder = this.msgSender();
         NFTStorage storeInstance = this.stores[store];
-        storeInstance.destroyNFT{value: 0}(msgsender, tokenId);
+        storeInstance.destroyNFT{value: 0}(snder, tokenId);
     }
+
 }

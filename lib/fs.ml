@@ -728,7 +728,8 @@ let rec eval_expr
   | Let (_, x, e1, e2) ->
     begin if Hashtbl.mem vars x  (* verify if x está em vars, modificação à tese do pirro*)
       then 
-        (blockchain, blockchain', sigma, Revert) 
+        (
+      (blockchain, blockchain', sigma, Revert))
       else 
         let (_, _, _, e1') = eval_expr ct vars (blockchain, blockchain', sigma, e1) in
         Hashtbl.add vars x e1'; eval_expr ct vars (blockchain, blockchain', sigma, e2)
@@ -781,12 +782,13 @@ let rec eval_expr
                               | _ -> ();
                             e') le in 
                         List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le';
-                        let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+                        Format.eprintf "%s" (expr_to_string body);
+                        let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
                         Hashtbl.remove vars "msg.sender";
                         Hashtbl.remove vars "msg.value";
-                        let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, es) in 
+                        (* let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, es) in  *)
                         if e <> Revert then 
                           begin
                             let res = update_balance ct (a) (VUInt (n)) vars conf in
@@ -832,12 +834,13 @@ let rec eval_expr
                     begin
                       try
                         List.iter2 (fun arg value -> Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le;
-                        let (blockchain, blockchain', sigma, es) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+                        let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
+
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
                         Hashtbl.remove vars "msg.sender";
                         Hashtbl.remove vars "msg.value";
-                        let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, es) in 
+                        (* let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, es) in  *)
                         if e <> Revert then 
                           begin
                             let res = update_balance ct (a) (VUInt (n)) vars conf in
@@ -876,6 +879,7 @@ let rec eval_expr
     end
   | MapRead (e1, e2) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VMapping(m, t_e))) ->
+        Format.eprintf "%s[%s]" (expr_to_string e1) (expr_to_string e2);
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         begin try
             let res = Hashtbl.find m e2' in
