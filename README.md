@@ -166,3 +166,7 @@ notas:
 - melhor maneira de testar a implementação da semântica operacional e da expressão CallTopSender do typechecker é através de RPC, fazendo um mock da ethereum e manipulando esta rede através de invocações de New e CallTopSender
 - As regras do De Pirro de typechecking, são regras de inferencia de tipos e não typechecking?
 - c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
+
+- ver se argumentos passados no super constructor tem o tipo esperado
+- https://github.com/MPRI/M2-4-2/blob/master/Types%20and%20Programming%20Languages.pdf (caps 15, 16)
+- realçar que era interessante gastar tempo a arranjar/procurar vulnerabilidades que sejam detetadas pela nossa ferramenta

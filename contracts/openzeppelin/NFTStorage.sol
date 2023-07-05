@@ -7,7 +7,7 @@ contract NFTStorage is Ownable, TinyERC721 {
     uint lastTokenId; 
     uint price;
     
-    constructor() Ownable(msgsender) TinyERC721()  {
+    constructor() Ownable(0) TinyERC721()  {
 
     }
 

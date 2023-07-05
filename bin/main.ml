@@ -213,11 +213,6 @@ let game_example ct vars blockchain sigma gamma =
     res 
   in 
 
-  
-  (* let buy_nft sender store value contract ct vars blockchain sigma _gamma = 
-    let res = eval_expr ct vars (blockchain, blockchain, sigma CallTopLevel(contract, "buyNFT", Val (VUInt value), Val (sender), [store])) in
-    res 
-  in *)
   let _tranfer_nft sender store tokenid src dest contract ct vars blockchain sigma _gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "transferNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid)); src; dest])) in 
     res  
