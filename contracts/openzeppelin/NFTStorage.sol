@@ -36,7 +36,7 @@ contract NFTStorage is Ownable, TinyERC721 {
     }
 
     function transferNFT(uint tokenId, address from, address to) {
-        if(msgsender == this.ownerOf(tokenId)) {
+        if(from == this.ownerOf(tokenId)) {
             this.transferFrom(from, to, tokenId);
         }
         else {

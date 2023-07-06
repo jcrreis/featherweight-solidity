@@ -40,8 +40,9 @@ contract Game is Context{
     }
 
     function transferNFT(address<NFTStorage> store, uint tokenId, address from, address to) {
+        address snder = this.msgSender();
         NFTStorage storeInstance = this.stores[store];
-        storeInstance.transferNFT{value: 0}(tokenId, from, to);
+        storeInstance.transferNFT{value: 0}(tokenId, snder, to);
     }
 
     function destroyNFT(address<NFTStorage> store, uint tokenId) {

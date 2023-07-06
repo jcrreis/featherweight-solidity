@@ -213,11 +213,11 @@ let game_example ct vars blockchain sigma gamma =
     res 
   in 
 
-  let _tranfer_nft sender store tokenid src dest contract ct vars blockchain sigma _gamma =
+  let tranfer_nft sender store tokenid src dest contract ct vars blockchain sigma _gamma =
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "transferNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid)); src; dest])) in 
     res  
   in
-  let destroy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
+  let _destroy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "destroyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
     res 
   in  
@@ -252,10 +252,16 @@ let game_example ct vars blockchain sigma gamma =
     | (res) -> Format.eprintf "%s" (expr_to_string res);
     print_blockchain blockchain vars;
   Hashtbl.clear vars;
-  let (_blockchain, _blockchain', _sigma, res) = destroy_nft a2 store 3 contract ct vars blockchain sigma gamma in 
+  let (blockchain, _blockchain', _sigma, res) = tranfer_nft a2 store 0 (Val a2) (Val a1) contract ct vars blockchain sigma gamma in 
+  match res with
+    | (Revert) -> assert false
+    | (res) -> Format.eprintf "%s" (expr_to_string res);
+    print_blockchain blockchain vars;
+  Hashtbl.clear vars
+  (* let (_blockchain, _blockchain', _sigma, res) = destroy_nft a2 store 3 contract ct vars blockchain sigma gamma in 
   match res with 
     | (Revert) ->    assert false
-    | (res) -> Format.eprintf "RESULT:  %s" (expr_to_string res)
+    | (res) -> Format.eprintf "RESULT:  %s" (expr_to_string res) *)
 
     (*msg sender, is actually the GAMECONTRACT, instead of the msg sender*)
   (* let (blockchain, _blockchain', sigma, res) = create_nft a1 store a1 contract ct vars blockchain sigma gamma in 
