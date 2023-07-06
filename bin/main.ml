@@ -246,11 +246,16 @@ let game_example ct vars blockchain sigma gamma =
     | (res) -> Format.eprintf "%s" (expr_to_string res);
     print_blockchain blockchain vars;
   Hashtbl.clear vars;
-  let (_blockchain, _blockchain', _sigma, res) = destroy_nft a2 store 0 contract ct vars blockchain sigma gamma in 
+  let (blockchain, _blockchain', _sigma, res) = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
+  match res with
+    | (Revert) -> assert false
+    | (res) -> Format.eprintf "%s" (expr_to_string res);
+    print_blockchain blockchain vars;
+  Hashtbl.clear vars;
+  let (_blockchain, _blockchain', _sigma, res) = destroy_nft a2 store 3 contract ct vars blockchain sigma gamma in 
   match res with 
     | (Revert) ->    assert false
-    | (res) -> Format.eprintf "RESULT:  %s" (expr_to_string res);
-    print_blockchain blockchain vars
+    | (res) -> Format.eprintf "RESULT:  %s" (expr_to_string res)
 
     (*msg sender, is actually the GAMECONTRACT, instead of the msg sender*)
   (* let (blockchain, _blockchain', sigma, res) = create_nft a1 store a1 contract ct vars blockchain sigma gamma in 

@@ -165,6 +165,24 @@ notas:
 - falar dos exemplos em openzeppelin
 - melhor maneira de testar a implementação da semântica operacional e da expressão CallTopSender do typechecker é através de RPC, fazendo um mock da ethereum e manipulando esta rede através de invocações de New e CallTopSender
 - As regras do De Pirro de typechecking, são regras de inferencia de tipos e não typechecking?
+- O nosso interpretador funciona mal com clash de variveis em call stack de funções e.g 
+
+ a(){
+  uint x;
+  b()
+ }
+
+ b(){
+  uint x;
+ }
+
+ c(uint x) {
+  
+ }
+
+ clash de variavel x quando executamos a(), solução: usar sempre nomes diferentes
+
+
 - c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
 
 - ver se argumentos passados no super constructor tem o tipo esperado
