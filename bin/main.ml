@@ -220,6 +220,10 @@ let game_example ct vars blockchain sigma gamma =
   let _destroy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "destroyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
     res 
+  in
+  let buy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "buyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
+    res 
   in  
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in

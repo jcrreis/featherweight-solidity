@@ -40,19 +40,9 @@ contract TinyERC721 is Context {
     }
 
     function transferFrom(address from, address to, uint tokenId) {
-        address ownr = this.ownerOf(tokenId);
-        if ((ownr != from) || (to == address(0)) ) {
-            revert ;
-        }
-        else {
         this.balances = (this.balances[from] = this.balances[from] - 1);
-
         this.balances = ( this.balances[to] =  this.balances[to] + 1);
-
-        this.owners = (this.owners[tokenId] = to);
-        }
-
-       
+        this.owners = (this.owners[tokenId] = to);     
     }
 
 
