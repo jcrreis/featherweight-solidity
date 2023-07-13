@@ -196,7 +196,9 @@ let inheritance_example ct vars blockchain sigma gamma =
 
 let game_example ct vars blockchain sigma gamma = 
   let create_store sender contract ct vars blockchain sigma _gamma = 
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "createStore", Val (VUInt 0), Val (sender), [])) in
+    let e = CallTopLevel(contract, "createStore", Val (VUInt 0), Val (sender), []) in 
+    (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
     res 
   in 
   let _add_external_store sender store contract ct vars blockchain sigma _gamma = 
@@ -204,24 +206,30 @@ let game_example ct vars blockchain sigma gamma =
     res 
   in 
   let set_nft_price sender store price contract ct vars blockchain sigma _gamma = 
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store; (Val (VUInt price))])) in
+    let e = CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store; (Val (VUInt price))]) in 
+    (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
     res 
   in 
   
   let create_nft sender store dst contract ct vars blockchain sigma _gamma =
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store; Val (dst)])) in
+    let e = CallTopLevel(contract, "createNFT", Val (VUInt 0), Val (sender), [store; Val (dst)]) in 
+    (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
     res 
   in 
 
   let tranfer_nft sender store tokenid src dest contract ct vars blockchain sigma _gamma =
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "transferNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid)); src; dest])) in 
+    let e = CallTopLevel(contract, "transferNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid)); src; dest]) in 
+    (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
     res  
   in
   let _destroy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "destroyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
     res 
   in
-  let buy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
+  let _buy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "buyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
     res 
   in  
@@ -312,12 +320,7 @@ let () =
   let gamma: gamma = (Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64, Hashtbl.create 64) in
   let (_, _, ga, _) = gamma in 
   Hashtbl.add ga (VAddress("0x0000000000000000000000000000000000000000")) (Address None);
-  (* let _p: program = (ct, blockchain, e) in
-     let _ = eval_expr ct vars conf in 
-     let cname = match e with 
-     | AddContract cdef -> Format.eprintf "%s" (contract_to_string cdef);cdef.name
-     | _ -> assert false 
-     in *)
+ 
 
   if fname = "bank_example" then 
     (

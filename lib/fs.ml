@@ -12,7 +12,6 @@ let add_contract_to_contract_table contract ct =
     | Ok v -> v 
     | _ -> assert false  
   in 
-  List.iter (fun s -> Format.eprintf "%s" s) linearization;
   let contracts_hierarchy = (List.map (fun cname -> 
       if cname = contract.name then contract else 
         Hashtbl.find ct cname) linearization) in
@@ -782,7 +781,6 @@ let rec eval_expr
                               | _ -> ();
                             e') le in 
                         List.iter2 (fun arg value -> if Hashtbl.mem vars arg then () else Hashtbl.add vars arg value) (List.map (fun (_, v) -> v) args) le';
-                        Format.eprintf "%s" (expr_to_string body);
                         let (blockchain, blockchain', sigma, e) = eval_expr ct vars (blockchain, blockchain', sigma, body) in
                         List.iter (fun arg -> Hashtbl.remove vars arg) (List.map (fun (_, v) -> v) args);
                         Hashtbl.remove vars "this";
@@ -879,7 +877,6 @@ let rec eval_expr
     end
   | MapRead (e1, e2) -> begin match eval_expr ct vars (blockchain, blockchain', sigma, e1) with
       | (_, _, _, Val(VMapping(m, t_e))) ->
-        Format.eprintf "%s[%s]" (expr_to_string e1) (expr_to_string e2);
         let (_, _, _, e2') = eval_expr ct vars (blockchain, blockchain', sigma, e2) in
         begin try
             let res = Hashtbl.find m e2' in
@@ -931,7 +928,7 @@ let rec eval_expr
             in            
             let ct = add_contract_to_contract_table cdef ct in 
             let msg = "\nContrato " ^ cdef.name ^ " adicionado com sucesso!" in 
-            Format.eprintf "\n\n%s\n\n" msg;
+            Format.eprintf "%s\n" msg;
             eval_expr ct vars (blockchain, blockchain', sigma, Val(VUnit))
           with Not_found -> raise (Failure "Invalid contract inheritance!")
         end
