@@ -246,17 +246,19 @@ let game_example ct vars blockchain sigma gamma =
   match store with 
     | (Revert) -> assert false
     | (store) -> Format.eprintf "%s" (expr_to_string store);
+  print_blockchain blockchain vars;
   Hashtbl.clear vars;
   let (blockchain, _blockchain', sigma, res) = set_nft_price a1 store 322 contract ct vars blockchain sigma gamma in 
   match res with 
     | (Revert) -> assert false
     | (res) -> Format.eprintf "%s" (expr_to_string res);
+  print_blockchain blockchain vars;
   Hashtbl.clear vars;
   let (blockchain, _blockchain', _sigma, res) = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
   match res with
     | (Revert) -> assert false
     | (res) -> Format.eprintf "%s" (expr_to_string res);
-    print_blockchain blockchain vars;
+  print_blockchain blockchain vars;
   Hashtbl.clear vars;
   let (blockchain, _blockchain', _sigma, res) = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
   match res with
@@ -268,7 +270,7 @@ let game_example ct vars blockchain sigma gamma =
   match res with
     | (Revert) -> assert false
     | (res) -> Format.eprintf "%s" (expr_to_string res);
-    print_blockchain blockchain vars;
+  print_blockchain blockchain vars;
   Hashtbl.clear vars
   (* let (_blockchain, _blockchain', _sigma, res) = destroy_nft a2 store 3 contract ct vars blockchain sigma gamma in 
   match res with 
