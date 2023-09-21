@@ -143,29 +143,11 @@ https://www.researchgate.net/publication/228386147_Testing_Formal_Semantics_with
 
 https://www.fc.up.pt/dcc/Pubs/TReports/TR13/dcc-2013-06.pdf 
 
-Pontos a ver:
-
-- Parser agora incorpora novas features, anotação em funções, address< type >, imports, inicializacao de construtores 
-com super contratos 
-
-- main agora tem opção de correr com bank_example ou wallet_example e mostrar estes contratos a serem executados com semântica operacional 
-
-- muitos exemplos adicinados na pasta contracts/simple_tests, script run.py facilita a validação que todos os testes passam !
-
-TODO: PLANO ATUALIZADO
-
-- JULHO -> escrever dissertação / artigo ? 
-- Agosto -> continuar anterior
-- Setembro -> acabar a escrita com revisão dos professores e submeter
-
-
 notas:
 
-- o nosso gamma agora é um quadruplo, introduzi um gamma para as state vars apenas (pois existe colisão com as vars) (a abordagem teorica usual seria considerar o conjunto dos identificadores todos disjuntos, mas para facilitar o programador na escrita do código optei por separar em ambientes de tipificacao disjuntos)
-- falar dos exemplos em openzeppelin
+
 - melhor maneira de testar a implementação da semântica operacional e da expressão CallTopSender do typechecker é através de RPC, fazendo um mock da ethereum e manipulando esta rede através de invocações de New e CallTopSender
-- As regras do De Pirro de typechecking, são regras de inferencia de tipos e não typechecking?
-- O nosso interpretador funciona mal com clash de variveis em call stack de funções e.g 
+
 
  a(){
   uint x;
@@ -184,7 +166,4 @@ notas:
 
 
 - c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
-
-- ver se argumentos passados no super constructor tem o tipo esperado
-- https://github.com/MPRI/M2-4-2/blob/master/Types%20and%20Programming%20Languages.pdf (caps 15, 16)
 - realçar que era interessante gastar tempo a arranjar/procurar vulnerabilidades que sejam detetadas pela nossa ferramenta
