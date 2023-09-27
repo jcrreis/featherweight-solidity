@@ -132,38 +132,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 
 
-# featherweight-solidity
-
-* dune build @install --profile release
-* dune install
-
-https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
-
-https://www.researchgate.net/publication/228386147_Testing_Formal_Semantics_with_QuickCheck 
-
-https://www.fc.up.pt/dcc/Pubs/TReports/TR13/dcc-2013-06.pdf 
-
-notas:
-
-
-- melhor maneira de testar a implementação da semântica operacional e da expressão CallTopSender do typechecker é através de RPC, fazendo um mock da ethereum e manipulando esta rede através de invocações de New e CallTopSender
-
-
- a(){
-  uint x;
-  b()
- }
-
- b(){
-  uint x;
- }
-
- c(uint x) {
-  
- }
-
- clash de variavel x quando executamos a(), solução: usar sempre nomes diferentes
-
-
 - c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
 - realçar que era interessante gastar tempo a arranjar/procurar vulnerabilidades que sejam detetadas pela nossa ferramenta
