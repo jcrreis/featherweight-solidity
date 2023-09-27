@@ -129,8 +129,3 @@ _In this section you have the instructions needed to install this project depede
 Distributed under the MIT License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-- c++ uses virtual inheritance: https://stackoverflow.com/questions/110157/how-do-i-implement-a-lookup-table-in-c
-- realçar que era interessante gastar tempo a arranjar/procurar vulnerabilidades que sejam detetadas pela nossa ferramenta
