@@ -69,6 +69,7 @@ let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with
     begin 
       try 
         let (_, _, _, gamma_contracts) = gamma in 
+        Format.eprintf "%s" (expr_to_string (Val (VContract i)));
         let c = Hashtbl.find gamma_contracts (VContract i) in 
         Ok(c)
       with Not_found -> raise (UnboundVariable "")

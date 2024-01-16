@@ -18,7 +18,6 @@ type b_val =
   | True
   | False
 
-
 type values =
   | VBool of b_val
   | VUInt of int
