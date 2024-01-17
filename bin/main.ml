@@ -195,20 +195,7 @@ let inheritance_example ct vars blockchain sigma gamma =
 
 
 let game_example ct vars blockchain sigma gamma = 
-  let create_store sender contract ct vars blockchain sigma gamma = 
-    let e = CallTopLevel(contract, "createStore", Val (VUInt 0), Val (sender), []) in 
-    (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
-    typecheck gamma e (Address None) ct;
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
-    res 
-  in 
-  let add_external_store sender store contract ct vars blockchain sigma gamma = 
-    let e = CallTopLevel(contract, "addExternalStore", Val (VUInt 0), Val (sender), [store]) in 
-    typecheck gamma e (Unit) ct;
-    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
-    res 
-  in 
-  let set_nft_price sender store price contract ct vars blockchain sigma _gamma = 
+  (* let set_nft_price sender store price contract ct vars blockchain sigma _gamma = 
     let e = CallTopLevel(contract, "setNFTPrice", Val (VUInt 0), Val (sender), [store; (Val (VUInt price))]) in 
     (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
     let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
@@ -234,7 +221,21 @@ let game_example ct vars blockchain sigma gamma =
   let _buy_nft sender store tokenid contract ct vars blockchain sigma _gamma = 
     let res = eval_expr ct vars (blockchain, blockchain, sigma, CallTopLevel(contract, "buyNFT", Val (VUInt 0), Val (sender), [store; (Val (VUInt tokenid))])) in 
     res 
-  in  
+  in   *)
+  let create_store sender contract ct vars blockchain sigma gamma = 
+    let e = CallTopLevel(contract, "createStore", Val (VUInt 0), Val (sender), []) in 
+    (* Format.eprintf "Executing: %s\n" (expr_to_string e); *)
+    typecheck gamma e (Address None) ct;
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
+    res 
+  in 
+  let add_external_store sender store contract ct vars blockchain sigma gamma = 
+    let e = CallTopLevel(contract, "addExternalStore", Val (VUInt 0), Val (sender), [store]) in 
+    typecheck gamma e (Unit) ct;
+    let res = eval_expr ct vars (blockchain, blockchain, sigma, e) in
+    res 
+  in 
+  (* (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) *)
   let a1 = (VAddress (generate_new_ethereum_address())) in
   let a2 = (VAddress (generate_new_ethereum_address())) in
   let (_contracts, accounts) = blockchain in  
@@ -244,7 +245,6 @@ let game_example ct vars blockchain sigma gamma =
   let (gv, gsv, ga, gc) = gamma in 
   Hashtbl.add ga (a1) (Address None);
   Hashtbl.add ga (a2) (Address None);
-  (* typecheck gamma e (C "B") ct; *)
   Stack.push a1 sigma;
   let e = New("Game", Val(VUInt 0), []) in
   let (blockchain, _blockchain', sigma, contract) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
@@ -256,48 +256,25 @@ let game_example ct vars blockchain sigma gamma =
   in 
   Hashtbl.add gc (c) (C "Game");
   Hashtbl.add gv "this" (C "Game");
-  (* mapping(address => NFTStorage) *)
   Hashtbl.add gsv "stores" (Map(Address None, C "NFTStorage"));
-  let (blockchain, _blockchain', sigma, store) = create_store a1 contract ct vars blockchain sigma (gv, gsv, ga, gc) in 
-  let c = match store with 
-    | (Revert) -> assert false
-    | Val(c) -> c
-    | _ -> assert false;
-    (* Format.eprintf "%s" (expr_to_string (Val store)); *)
-  in
-  Hashtbl.add ga (c) (Address (Some(C "NFTStorage"))); 
+  let e = New("NFTStorage", Val(VUInt 0), []) in
+  let (blockchain, _blockchain', sigma, new_store) = eval_expr ct vars (blockchain, blockchain, sigma, e) in 
+  Hashtbl.clear vars;
+  let c = match new_store with 
+    | Revert -> raise (Failure ("ERROR"));
+    | Val(c) -> Format.eprintf "%s" (expr_to_string (Val c));c
+    | _ -> raise (Failure ("ERROR"));
+  in 
+  Hashtbl.add gc (c) (C "Game");  
+  let (contracts, _) = blockchain in 
+  let a = get_address_by_contract contracts c in
+  Hashtbl.add ga (a) (Address (Some (C "NFTStorage")));
   print_blockchain blockchain vars;
   Hashtbl.clear vars;
   let (blockchain, _blockchain', sigma, e) = add_external_store a1 (Val a1) contract ct vars blockchain sigma (gv, gsv, ga, gc) in 
   Format.eprintf "%s" (expr_to_string e);
   print_blockchain blockchain vars;
   Hashtbl.clear vars
-
-  
-  (* let (blockchain, _blockchain', sigma, res) = set_nft_price a1 store 322 contract ct vars blockchain sigma gamma in 
-  match res with 
-    | (Revert) -> assert false
-    | (res) -> Format.eprintf "%s" (expr_to_string res);
-  print_blockchain blockchain vars;
-  Hashtbl.clear vars;
-  let (blockchain, _blockchain', _sigma, res) = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
-  match res with
-    | (Revert) -> assert false
-    | (res) -> Format.eprintf "%s" (expr_to_string res);
-  print_blockchain blockchain vars;
-  Hashtbl.clear vars;
-  let (blockchain, _blockchain', _sigma, res) = create_nft a1 store a2 contract ct vars blockchain sigma gamma in 
-  match res with
-    | (Revert) -> assert false
-    | (res) -> Format.eprintf "%s" (expr_to_string res);
-    print_blockchain blockchain vars;
-  Hashtbl.clear vars;
-  let (blockchain, _blockchain', _sigma, res) = tranfer_nft a2 store 0 (Val a2) (Val a1) contract ct vars blockchain sigma gamma in 
-  match res with
-    | (Revert) -> assert false
-    | (res) -> Format.eprintf "%s" (expr_to_string res);
-  print_blockchain blockchain vars;
-  Hashtbl.clear vars *)
 
 let rec parse_file fname ct blockchain blockchain' sigma vars =
   let print_position lexbuf =
