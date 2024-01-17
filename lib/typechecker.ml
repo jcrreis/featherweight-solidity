@@ -69,7 +69,7 @@ let axioms (gamma: gamma) (e: expr) : (t_exp, string) result = match e with
     begin 
       try 
         let (_, _, _, gamma_contracts) = gamma in 
-        Format.eprintf "%s" (expr_to_string (Val (VContract i)));
+        Format.eprintf "%d" (Hashtbl.length gamma_contracts);
         let c = Hashtbl.find gamma_contracts (VContract i) in 
         Ok(c)
       with Not_found -> raise (UnboundVariable "")
@@ -257,12 +257,16 @@ and typecheck (gamma: gamma) (e: expr) (t: t_exp) (ct: contract_table) : unit =
     (* SUBTYPING NEEDED! *) 
     if subtyping rettype t ct then 
       try
-        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le
+        List.iter2 (fun t_e e' -> typecheck gamma e' t_e ct;) t_es le;
+        Format.eprintf "%s" (fun_name);
       with Invalid_argument _ -> 
         List.iter (fun t_e -> Format.eprintf "%s" (t_exp_to_string t_e);) t_es;
         List.iter (fun e' -> Format.eprintf "\n%s" (expr_to_string e');) le
     else 
-      raise (TypeMismatch (rettype, t))
+      begin 
+        Format.eprintf "%s -----> %s" (t_exp_to_string rettype) (t_exp_to_string t);
+        raise (TypeMismatch (rettype, t))
+      end
   in
   match e with 
   | Val (VMapping (m, t_exp)) -> 
