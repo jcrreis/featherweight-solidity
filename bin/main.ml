@@ -271,6 +271,10 @@ let game_example ct vars blockchain sigma gamma =
   Hashtbl.add ga (a) (Address (Some (C "NFTStorage")));
   print_blockchain blockchain vars;
   Hashtbl.clear vars;
+  let (blockchain, _blockchain', sigma, e) = add_external_store a1 (Val a) contract ct vars blockchain sigma (gv, gsv, ga, gc) in 
+  Format.eprintf "%s" (expr_to_string e);
+  print_blockchain blockchain vars;
+  Hashtbl.clear vars;
   let (blockchain, _blockchain', sigma, e) = add_external_store a1 (Val a1) contract ct vars blockchain sigma (gv, gsv, ga, gc) in 
   Format.eprintf "%s" (expr_to_string e);
   print_blockchain blockchain vars;
